@@ -278,6 +278,9 @@
  </Config>
  <Folder name="PhobosAdditions">
   <Folder name="unstd">
+   <File path="unstd\traits.d" />
+   <File path="unstd\generictuple.d" />
+   <File path="unstd\typecons.d" />
   </Folder>
   <File path="unittest.d" />
  </Folder>
