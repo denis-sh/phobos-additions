@@ -12,11 +12,22 @@ module unstd.traits;
 public import std.traits;
 
 import unstd.generictuple;
+import std.typecons: tuple;
 
 
 // https://github.com/D-Programming-Language/phobos/pull/776
 /**
 Returns the element type of an array.
+
+For ranges, see also $(XREF range, ElementEncodingType).
+
+Example:
+---
+import std.traits;
+static assert(is(ArrayElementType!(int[]) == int));
+static assert(is(ArrayElementType!string == immutable(char)));
+static assert(is(ArrayElementType!(int[7][8]) == int[7]));
+---
 */
 template ArrayElementType(T : T[])
 {
@@ -27,8 +38,123 @@ unittest
 {
 	static assert( is(ArrayElementType!(int[]) == int));
 	static assert( is(ArrayElementType!(long[0]) == long));
+	static assert(is(ArrayElementType!string == immutable(char)));
+	static assert(is(ArrayElementType!(int[7][8]) == int[7]));
+	static assert(is(ArrayElementType!(int[0][]) == int[0]));
+	static assert(is(ArrayElementType!(int[][0]) == int[]));
 
 	static assert(!is(ArrayElementType!int));
+}
+
+
+/**
+Get static array dimensions.
+
+Example:
+---
+import std.traits;
+static assert(staticArrayDimensions!(int[]) == 0);
+static assert(staticArrayDimensions!(int[0]) == 1);
+static assert(staticArrayDimensions!(int[7][8]) == 2);
+static assert(staticArrayDimensions!(int[0][]) == 0);
+static assert(staticArrayDimensions!(int[][0]) == 1);
+---
+*/
+template staticArrayDimensions(T)
+{
+	static if(isStaticArray!T)
+		enum staticArrayDimensions = 1 + staticArrayDimensions!(ArrayElementType!T);
+	else
+		enum staticArrayDimensions = 0;
+}
+
+unittest
+{
+	static assert(staticArrayDimensions!(int[]) == 0);
+	static assert(staticArrayDimensions!string == 0);
+	static assert(staticArrayDimensions!(int[0]) == 1);
+	static assert(staticArrayDimensions!(int[7][8]) == 2);
+	static assert(staticArrayDimensions!(int[0][]) == 0);
+	static assert(staticArrayDimensions!(int[][0]) == 1);
+	static assert(staticArrayDimensions!(int[0][0]) == 2);
+}
+
+
+/**
+Get multidimensional static array element type considering 
+$(D T) to be $(D n)-dimensioanl static array.
+
+Example:
+---
+import std.traits;
+static assert(is(MultidimensionalStaticArrayElementType!(int[]) == int[]));
+static assert(is(MultidimensionalStaticArrayElementType!(int[0]) == int));
+static assert(!__traits(compiles, MultidimensionalStaticArrayElementType!(int[7][8], 3)));
+static assert(is(MultidimensionalStaticArrayElementType!(int[7][8]) == int));
+static assert(is(MultidimensionalStaticArrayElementType!(int[7][8], 1) == int[7]));
+static assert(is(MultidimensionalStaticArrayElementType!(int[7][8], 0) == int[7][8]));
+static assert(is(MultidimensionalStaticArrayElementType!(int[0][]) == int[0][]));
+static assert(is(MultidimensionalStaticArrayElementType!(int[][0]) == int[]));
+---
+*/
+template MultidimensionalStaticArrayElementType(T, size_t n = staticArrayDimensions!T)
+{
+	static assert(staticArrayDimensions!T >= n, "Not enough static array dimensions");
+	static if(n)
+		alias MultidimensionalStaticArrayElementType!(ArrayElementType!T, n-1) MultidimensionalStaticArrayElementType;
+	else
+		alias T MultidimensionalStaticArrayElementType;
+}
+
+unittest
+{
+	static assert(is(MultidimensionalStaticArrayElementType!(int[]) == int[]));
+	static assert(is(MultidimensionalStaticArrayElementType!string == string));
+	static assert(is(MultidimensionalStaticArrayElementType!(int[0]) == int));
+	static assert(!__traits(compiles, MultidimensionalStaticArrayElementType!(int[7][8], 3)));
+	static assert(is(MultidimensionalStaticArrayElementType!(int[7][8]) == int));
+	static assert(is(MultidimensionalStaticArrayElementType!(int[7][8], 1) == int[7]));
+	static assert(is(MultidimensionalStaticArrayElementType!(int[7][8], 0) == int[7][8]));
+	static assert(is(MultidimensionalStaticArrayElementType!(int[0][]) == int[0][]));
+	static assert(is(MultidimensionalStaticArrayElementType!(int[][0]) == int[]));
+}
+
+
+/**
+Get, as an expression tuple, multidimensional static array lengths considering
+$(D T) to be $(D n)-dimensioanl static array.
+
+Example:
+---
+alias multidimensionalStaticArrayLengths!(int[7][8]) e1;
+static assert(e1.length == 2 && e1[0] == 8 && e1[1] == 7);
+
+alias multidimensionalStaticArrayLengths!(int[7][8], 1) e2;
+static assert(e2.length == 1 && e2[0] == 8);
+static assert(multidimensionalStaticArrayLengths!(int[7][8], 0).length == 0);
+---
+*/
+template multidimensionalStaticArrayLengths(T, size_t n = staticArrayDimensions!T)
+{
+	static assert(staticArrayDimensions!T >= n, "Not enough static array dimensions");
+
+	static if(n)
+		alias expressionTuple!(T.length, multidimensionalStaticArrayLengths!(ArrayElementType!T, n-1)) multidimensionalStaticArrayLengths;
+	else
+		alias expressionTuple!() multidimensionalStaticArrayLengths;
+}
+
+unittest
+{
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[])).equals!());
+	static assert(Pack!(multidimensionalStaticArrayLengths!string).equals!());
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[0])).equals!(0));
+	static assert(!__traits(compiles, multidimensionalStaticArrayLengths!(int[7][8], 3)));
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[7][8])).equals!(8, 7));
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[7][8], 1)).equals!(8));
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[7][8], 0)).equals!());
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[0][])).equals!());
+	static assert(Pack!(multidimensionalStaticArrayLengths!(int[][0])).equals!(0));
 }
 
 
