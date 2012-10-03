@@ -133,10 +133,7 @@ static assert(is(Inst!(PointerTarget, int*) == int));
 */
 template Inst(alias Template, A...)
 {
-	static if(__traits(compiles, { enum e = Template!A; }))
-		enum Inst = Template!A;
-	else
-		alias Template!A Inst;
+	alias Template!A Inst;
 }
 
 unittest
@@ -145,6 +142,7 @@ unittest
 	static assert( Inst!(isPointer, int*));
 	static assert(!Inst!(isPointer, int ));
 	static assert(is(Inst!(PointerTarget, int*) == int));
+	static assert(Inst!(Alias, 5)[0] == 5);
 }
 
 
