@@ -284,3 +284,50 @@ unittest
 			res += staticRange_foo!i();
 	assert(res == 1 + 3^^2);
 }
+
+
+/**
+true iff $(D T) is a type. Usable for analysing generic tuples.
+
+Example:
+---
+static assert(isType!int && isType!string);
+static assert(!isType!0 && !isType!"str");
+static assert(!isType!isType);
+---
+*/
+template isType(T)
+{
+	enum isType = true;
+}
+
+/// ditto
+template isType(alias T)
+{
+	enum isType = false;
+}
+
+unittest
+{
+	static assert(isType!(int));
+	static assert(isType!(int[]));
+	static assert(isType!(string));
+	static assert(isType!(TypeTuple!string));
+	static assert(!__traits(compiles, isType!()));
+	static assert(!__traits(compiles, isType!(int, string)));
+
+	static assert(!isType!0);
+	static assert(!isType!'a');
+	static assert(!isType!"str");
+	static assert(!isType!isType);
+
+	static @property void __vp() { }
+	static @property int __ip() { return 0; }
+	static assert(!isType!(__vp));
+	static assert(!isType!(__ip));
+
+	static void __vf() { }
+	static int __if() { return 0; }
+	//static assert(!isType!(__vf())); //FIXME
+	static assert(!isType!(__if()));
+}
