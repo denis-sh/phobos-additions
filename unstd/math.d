@@ -33,15 +33,15 @@ unittest
 
 
 /// Returns smallest power of 2 which >= $(D n)
-uint toPowerOf2(uint n)
+uint roundUpToPowerOf2(uint n)
 in { assert(n > 0); }
 body { return 1 << (bsr(n) + !isPowerOf2(n)); }
 
 unittest
 {
-	static assert(toPowerOf2(1) == 1);
-	static assert(toPowerOf2(2) == 2);
-	static assert(toPowerOf2(3) == 4);
-	static assert(toPowerOf2(4) == 4);
-	static assert(toPowerOf2(5) == 8);
+	static assert(roundUpToPowerOf2(1) == 1);
+	static assert(roundUpToPowerOf2(2) == 2);
+	static assert(roundUpToPowerOf2(3) == 4);
+	static assert(roundUpToPowerOf2(4) == 4);
+	static assert(roundUpToPowerOf2(5) == 8);
 }
