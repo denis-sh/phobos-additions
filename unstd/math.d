@@ -24,11 +24,11 @@ body { return !((n - 1) & n); }
 
 unittest
 {
-	assert( isPowerOf2(1));
-	assert( isPowerOf2(2));
-	assert(!isPowerOf2(3));
-	assert( isPowerOf2(4));
-	assert(!isPowerOf2(5));
+	static assert( isPowerOf2(1));
+	static assert( isPowerOf2(2));
+	static assert(!isPowerOf2(3));
+	static assert( isPowerOf2(4));
+	static assert(!isPowerOf2(5));
 }
 
 
@@ -39,9 +39,9 @@ body { return 1 << (bsr(n) + !isPowerOf2(n)); }
 
 unittest
 {
-	assert(toPowerOf2(1) == 1);
-	assert(toPowerOf2(2) == 2);
-	assert(toPowerOf2(3) == 4);
-	assert(toPowerOf2(4) == 4);
-	assert(toPowerOf2(5) == 8);
+	static assert(toPowerOf2(1) == 1);
+	static assert(toPowerOf2(2) == 2);
+	static assert(toPowerOf2(3) == 4);
+	static assert(toPowerOf2(4) == 4);
+	static assert(toPowerOf2(5) == 8);
 }
