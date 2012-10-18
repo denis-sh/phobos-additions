@@ -281,6 +281,7 @@
    <File path="unstd\traits.d" />
    <File path="unstd\generictuple.d" />
    <File path="unstd\typecons.d" />
+   <File path="unstd\math.d" />
    <File path="unstd\multidimensionalarray.d" />
   </Folder>
   <File path="unittest.d" />
