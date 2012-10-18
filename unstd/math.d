@@ -48,7 +48,7 @@ unittest
 
 
 /// Aligns $(D n) up or down. $(D alignment) must be power of 2.
-uint alignDown(uint alignment, uint n)
+uint alignDown()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
 body
 {
@@ -60,7 +60,7 @@ uint alignDown(uint alignment)(uint n) if(isPowerOf2(alignment))
 { return alignDown(alignment, n); }
 
 /// ditto
-uint alignUp(uint alignment, uint n)
+uint alignUp()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
 body
 {
