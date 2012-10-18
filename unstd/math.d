@@ -14,6 +14,9 @@ public import std.math;
 import core.bitop: bsr;
 
 
+@safe pure nothrow:
+
+
 /// Returns $(D true) iff $(D n) is a power of 2
 bool isPowerOf2(uint n)
 in { assert(n > 0); }
