@@ -32,18 +32,20 @@ unittest
 }
 
 
-/// Returns smallest power of 2 which >= $(D n)
+/// Returns smallest power of 2 which >= $(D n). $(D n) must be non-zero.
 uint roundUpToPowerOf2(uint n)
 in { assert(n > 0); }
 body { return 1 << (bsr(n) + !isPowerOf2(n)); }
 
 unittest
 {
-	static assert(roundUpToPowerOf2(1) == 1);
-	static assert(roundUpToPowerOf2(2) == 2);
-	static assert(roundUpToPowerOf2(3) == 4);
-	static assert(roundUpToPowerOf2(4) == 4);
-	static assert(roundUpToPowerOf2(5) == 8);
+	alias roundUpToPowerOf2 up;
+	static assert(!__traits(compiles, { enum e = up(0); }));
+	static assert(up(1) == 1);
+	static assert(up(2) == 2);
+	static assert(up(3) == 4 && up(4) == 4);
+	static assert(up(5) == 8 && up(6) == 8);
+	static assert(up(7) == 8 && up(8) == 8);
 }
 
 
