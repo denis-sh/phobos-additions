@@ -32,7 +32,7 @@ struct R
 {
 	size_t from, to;
 
-	@disable void opCall(); //@@@BUG@@@ 6688 workaround @disable this();
+	@disable this();
 
 	static AllR opSlice()
 	{
@@ -52,7 +52,7 @@ private template RCount(T...)
 	static if(T.length)
 		enum RCount = (is(Unqual!(T[0]) == R) || is(Unqual!(T[0]) == AllR)) + RCount!(T[1 .. $]);
 	else
-		enum RCount = 0u; //Can't be 0 because of @@@BUG@@@ 3467
+		enum RCount = 0u;
 }
 
 private template isROrSize(T)
@@ -110,8 +110,6 @@ matrices[0, 1, 1] = 9;                // setting an element at a crossing of the
 // first two rows and three columns of the secon matrix
 array2d = matrices[1, R[0 .. 2], R[0 .. 3]]);
 ----
-
-Bugs: MultidimensionalArray!(int, 3u) an MultidimensionalArray!(int, 3) are distinct tupes because of a compiller bug. [$(BUGZILLA 3467)]
 */
 struct MultidimensionalArray(T, size_t n) if(n >= 1)
 {
@@ -123,17 +121,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 	else
 		alias TypeTuple!(size_t, MultidimensionalArray!(T, n-1).SizeTypes) SizeTypes;
 
-	alias size_t[n] size_t_n; //IFTI @@@BUG@@@ 6764 workaround
-
-	//@@@BUG@@@ 6763 workaround (or it makes SizeTypes ref too)
-	static if(n == 1)
-		enum RefSizeTypes = "ref size_t";
-	else
-		enum RefSizeTypes = "ref size_t, " ~ MultidimensionalArray!(T, n-1).RefSizeTypes;
-	mixin(`alias int delegate(`~RefSizeTypes~`, ref T) RefDelegate;`);
-
-	//IFTI @@@BUG@@@ 6764 workaround
-	this(in size_t_n p_lengths...)
+	this(in size_t[n] p_lengths...)
 	{
 		this.p_lengths = p_lengths;
 		strides[$-1] = 1;
@@ -146,8 +134,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 		data = new T[strides[0] * p_lengths[0]];
 	}
 
-	//IFTI @@@BUG@@@ 6764 workaround
-	this(T[] data, in size_t_n p_lengths...)
+	this(T[] data, in size_t[n] p_lengths...)
 	{
 		this.p_lengths = p_lengths;
 		strides[$-1] = 1;
@@ -476,10 +463,8 @@ auto matrix = mdimArray!int(2, 3, 4);
 foreach(z, y, x, ref el; matrices)
 	el = z * 100 + y * 10 + x;
 ----
-
-	Bugs: One can specify $(D ref) indices because of a compiller bug. [$(BUGZILLA 2443)]
 	*/
-	int opApply(RefDelegate dg) //@@@BUG@@@ 6763 workaround int delegate(ref SizeTypes, ref T)
+	int opApply(int delegate(SizeTypes, ref T) dg)
 	{
 		if(!elements)
 			return 0;
@@ -487,12 +472,12 @@ foreach(z, y, x, ref el; matrices)
 		indices[$-1] = -1;
 		for(;;)
 		{
-			foreach_reverse(plane, dummy2411; indices) //@@@BUG@@@ 2411 can't use ref index
+			foreach_reverse(plane, ref index; indices)
 			{
-				if(++indices[plane] < p_lengths[plane])
+				if(++index < p_lengths[plane])
 					break;
 				else if(plane)
-					indices[plane] = 0;
+					index = 0;
 				else
 					return 0;
 			}
@@ -548,9 +533,7 @@ a23[] = take(a46[] = a234[] = iota(24), 6);
 	}
 
 	/// ditto
-	//@@@BUG@@@ ???? Cant't use auto opSliceAssign(U)(MultidimensionalArray!(U, n) value) if(is(Unqual!U == T))
-	auto opSliceAssign(RArr)(RArr value)
-	if(is(RArr == MultidimensionalArray!(T, n)) || is(RArr == MultidimensionalArray!(immutable T, n)) || is(RArr == MultidimensionalArray!(const T, n)))
+	auto opSliceAssign(U)(MultidimensionalArray!(U, n) value) if(is(Unqual!U == T))
 	{
 		debug enforce(value.p_lengths == p_lengths, format("MultidimensionalArray.opSliceAssign(MultidimensionalArray): value lengths %s aren't equal to this lengths %s", value.p_lengths, p_lengths));
 		opSliceAssign(value.byElementForward);
@@ -596,7 +579,7 @@ $(TABLE
 	Bugs:
 	A bit ugly syntax is used because dmd hasn't support for a better one yet (see  $(BUGZILLA 6798)).
 	*/
-	ref opIndex()(in size_t_n indices...) //IFTI @@@BUG@@@ 6764 workaround size_t[n]
+	ref opIndex()(in size_t[n] indices...)
 	{
 		debug enforce(goodGetOffset(indices), format("MultidimensionalArray.opIndex(size_t[n]): indices %s are out of bounds (lengths are %s)", indices, p_lengths));
 		return data[offset(indices)];
@@ -685,7 +668,7 @@ assert(b.lengths == [4, 2, 3]);
 assert(&a[1, 2, 3] == &b[3, 1, 2]);
 	----
 	*/
-	auto reorderIndices(in size_t_n newOrder...) //IFTI @@@BUG@@@ 6764 workaround size_t[n]
+	auto reorderIndices(in size_t[n] newOrder...)
 	{
 		typeof(this) res;
 		debug bool[n] used;
@@ -814,15 +797,6 @@ auto mdimArray(T, size_t n)(size_t[n] lengths...) if(n > 0)
 	return MultidimensionalArray!(T, n)(lengths);
 }
 
-//IFTI @@@BUG@@@ 6764 or ???? (other) and another workaround
-auto mdimArray(T, U...)(U lengths)
-//DEBUG if(U.length > 0 && __traits(compiles,    mdimArray!(T, size_t[U.length])(lengths)    ))
-{
-	//@@@BUG@@@ 6810 can't even call
-	//return mdimArray!(T, U.length)(lengths);
-	return MultidimensionalArray!(T, U.length)(lengths);
-}
-
 /// ditto
 // #2: use existing storage
 auto mdimArray(size_t n, T)(T[] data, size_t[n] lengths...) if(n > 0)
@@ -833,14 +807,6 @@ auto mdimArray(size_t n, T)(T[] data, size_t[n] lengths...) if(n > 0)
 private auto mdimArray_BUG(size_t n, T)(T[] data, size_t[n] lengths...) if(n > 0)
 {
 	return MultidimensionalArray!(T, n)(data, lengths);
-}
-
-//IFTI @@@BUG@@@ 6764 or ???? (other) workaround
-auto mdimArray(T, U...)(T[] data, U lengths)
-//DEBUG if(U.length > 0 && __traits(compiles,    mdimArray_BUG!(U.length, T)(data, lengths)    ))
-{
-//    return MultidimensionalArray!(T, U.length)(data, lengths);
-	return mdimArray_BUG!(U.length, T)(data, lengths);
 }
 
 /// ditto
