@@ -134,7 +134,9 @@ struct FlagEnumImpl(string name, Args...)
 
 			defVal = cast(Base) (val << 1);
 
-			s ~= xformat("enum FlagEnumImpl %s = FlagEnumImpl(%s);", m.name, val);
+			// With enum: `enum FlagEnumImpl %s = FlagEnumImpl(%s);`
+			// Can't use enum because it is an lvalue, see Issue @@@8915@@@
+			s ~= xformat("static @property FlagEnumImpl %s() { return FlagEnumImpl(%s); }", m.name, val);
 		}
 		s ~= xformat("private enum Base m_unused = %s;", ~used);
 		return s;
@@ -212,6 +214,13 @@ unittest
 	static assert((AB.a | AB.b | AB.cc).value == (1 | 2 | 4));
 	static assert((AB.a | AB.b & AB.cc) == AB.a);
 	static assert(cast(AB) (1 | 2) == (AB.a | AB.b));
+
+	// Not an lvalue
+	static void refAB(ref AB) { }
+	/+ Tests disabled because of [implementation] @@@BUG@@@
+	static assert(!__traits(compiles, refAB(AB.init)));
+	+/
+	static assert(!__traits(compiles, refAB(AB.a)));
 	
 	// Immutability
 	/+ Tests disabled because of implementation @@@BUG@@@
