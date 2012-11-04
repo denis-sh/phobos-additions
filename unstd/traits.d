@@ -120,7 +120,7 @@ unittest
 
 
 /**
-Get total multidimensional static array elements element count considering 
+Get total multidimensional static array elements count considering 
 $(D T) to be $(D n)-dimensioanl static array.
 
 Example:
