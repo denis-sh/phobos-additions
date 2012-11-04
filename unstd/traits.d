@@ -226,7 +226,7 @@ static assert(is(ExtractTypes!S2 == TypeTuple!(
 )));
 ---
 */
-template ExtractTypes(T, Extracted...)
+template ExtractTypes(T, Extracted...) if(isTypeTuple!Extracted)
 {
 	static if(staticIndexOf!(T, Extracted) != -1)
 	{
@@ -267,6 +267,7 @@ unittest
 	static assert(is(ExtractTypes!int == TypeTuple!int));
 	static assert(is(ExtractTypes!(int*) == TypeTuple!(int*, int)));
 	static assert(is(ExtractTypes!(int*, int) == TypeTuple!(int*)));
+	static assert(!__traits(compiles, ExtractTypes!(int*, 0)));
 
 	static struct S1 { int i; real r; }
 	static assert(is(ExtractTypes!S1 == TypeTuple!(S1, int, real)));
