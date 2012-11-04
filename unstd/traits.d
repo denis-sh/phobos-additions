@@ -197,7 +197,34 @@ unittest
 
 
 /**
-TODO docs
+Get all types $(D T) include except $(D Extracted) without duplicates
+in such order that every compound type precedes types it includes.
+
+Example:
+---
+static assert(is(ExtractTypes!int == TypeTuple!int));
+static assert(is(ExtractTypes!(int*) == TypeTuple!(int*, int)));
+static assert(is(ExtractTypes!(int*, int) == TypeTuple!(int*)));
+
+struct S1 { int i; real r; }
+static assert(is(ExtractTypes!S1 == TypeTuple!(S1, int, real)));
+static assert(is(ExtractTypes!(S1, int) == TypeTuple!(S1, real)));
+
+struct S2
+{
+	int* iptr;
+	S1* s1ptr1, s1ptr2;
+	S2[] s2darr;
+	S2[3]* s2sarr;
+}
+static assert(is(ExtractTypes!S2 == TypeTuple!(
+	S2,                // for `S2` itself
+	int*, int,         // for `int*`
+	S1*, S1, real,     // for `S1*`
+	S2[],              // for `S2[]`
+	S2[3]*, S2[3]      // for `S2[3]*`
+)));
+---
 */
 template ExtractTypes(T, Extracted...)
 {
@@ -237,8 +264,13 @@ template ExtractTypes(T, Extracted...)
 
 unittest
 {
+	static assert(is(ExtractTypes!int == TypeTuple!int));
+	static assert(is(ExtractTypes!(int*) == TypeTuple!(int*, int)));
+	static assert(is(ExtractTypes!(int*, int) == TypeTuple!(int*)));
+
 	static struct S1 { int i; real r; }
 	static assert(is(ExtractTypes!S1 == TypeTuple!(S1, int, real)));
+	static assert(is(ExtractTypes!(S1, int) == TypeTuple!(S1, real)));
 
 	static struct S2
 	{
