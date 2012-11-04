@@ -238,7 +238,7 @@ template ExtractTypes(T, Extracted...)
 unittest
 {
 	static struct S1 { int i; real r; }
-	static assert(Pack!(ExtractTypes!S1).equals!(S1, int, real));
+	static assert(is(ExtractTypes!S1 == TypeTuple!(S1, int, real)));
 
 	static struct S2
 	{
@@ -247,13 +247,13 @@ unittest
 		S2[] s2darr;
 		S2[3]* s2sarr;
 	}
-	static assert(Pack!(ExtractTypes!S2).equals!(S2, int*, int, S1*, S1, real, S2[], S2[3]*, S2[3]));
+	static assert(is(ExtractTypes!S2 == TypeTuple!(S2, int*, int, S1*, S1, real, S2[], S2[3]*, S2[3])));
 
 	static class C { real n; }
-	static assert(Pack!(ExtractTypes!C).equals!(C, real));
+	static assert(is(ExtractTypes!C == TypeTuple!(C, real)));
 
 	static struct S3 { C c; S1* s1ptr1, s1ptr2; C* cptr; }
-	static assert(Pack!(ExtractTypes!S3).equals!(S3, C, real, S1*, S1, int, C*));
+	static assert(is(ExtractTypes!S3 == TypeTuple!(S3, C, real, S1*, S1, int, C*)));
 }
 
 
