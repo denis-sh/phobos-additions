@@ -118,6 +118,45 @@ unittest
 
 
 /**
+Get total multidimensional static array elements element count considering 
+$(D T) to be $(D n)-dimensioanl static array.
+
+Example:
+---
+static assert(multidimensionalStaticArrayElementsCount!int == 1);
+static assert(multidimensionalStaticArrayElementsCount!(int[]) == 1);
+static assert(multidimensionalStaticArrayElementsCount!string == 1);
+static assert(multidimensionalStaticArrayElementsCount!(int[0]) == 0);
+static assert(!__traits(compiles, multidimensionalStaticArrayElementsCount!(int[7][8], 3)));
+static assert(multidimensionalStaticArrayElementsCount!(int[7][8]) == 7 * 8);
+static assert(multidimensionalStaticArrayElementsCount!(int[7][8], 1) == 8);
+static assert(multidimensionalStaticArrayElementsCount!(int[7][8], 0) == 1);
+static assert(multidimensionalStaticArrayElementsCount!(int[0][]) == 1);
+static assert(multidimensionalStaticArrayElementsCount!(int[][0]) == 0);
+---
+*/
+template multidimensionalStaticArrayElementsCount(T, size_t n = staticArrayDimensions!T)
+{
+	static assert(staticArrayDimensions!T >= n, "Not enough static array dimensions");
+	enum multidimensionalStaticArrayElementsCount = T.sizeof / MultidimensionalStaticArrayElementType!(T, n).sizeof;
+}
+
+unittest
+{
+	static assert(multidimensionalStaticArrayElementsCount!int == 1);
+	static assert(multidimensionalStaticArrayElementsCount!(int[]) == 1);
+	static assert(multidimensionalStaticArrayElementsCount!string == 1);
+	static assert(multidimensionalStaticArrayElementsCount!(int[0]) == 0);
+	static assert(!__traits(compiles, multidimensionalStaticArrayElementsCount!(int[7][8], 3)));
+	static assert(multidimensionalStaticArrayElementsCount!(int[7][8]) == 7 * 8);
+	static assert(multidimensionalStaticArrayElementsCount!(int[7][8], 1) == 8);
+	static assert(multidimensionalStaticArrayElementsCount!(int[7][8], 0) == 1);
+	static assert(multidimensionalStaticArrayElementsCount!(int[0][]) == 1);
+	static assert(multidimensionalStaticArrayElementsCount!(int[][0]) == 0);
+}
+
+
+/**
 Get, as an expression tuple, multidimensional static array lengths considering
 $(D T) to be $(D n)-dimensioanl static array.
 
