@@ -23,7 +23,6 @@ For ranges, see also $(XREF range, ElementEncodingType).
 
 Example:
 ---
-import std.traits;
 static assert(is(ArrayElementType!(int[]) == int));
 static assert(is(ArrayElementType!string == immutable(char)));
 static assert(is(ArrayElementType!(int[7][8]) == int[7]));
@@ -52,7 +51,6 @@ Get static array dimensions.
 
 Example:
 ---
-import std.traits;
 static assert(staticArrayDimensions!(int[]) == 0);
 static assert(staticArrayDimensions!(int[0]) == 1);
 static assert(staticArrayDimensions!(int[7][8]) == 2);
@@ -86,7 +84,6 @@ $(D T) to be $(D n)-dimensioanl static array.
 
 Example:
 ---
-import std.traits;
 static assert(is(MultidimensionalStaticArrayElementType!(int[]) == int[]));
 static assert(is(MultidimensionalStaticArrayElementType!(int[0]) == int));
 static assert(!__traits(compiles, MultidimensionalStaticArrayElementType!(int[7][8], 3)));
