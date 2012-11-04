@@ -84,6 +84,7 @@ $(D T) to be $(D n)-dimensioanl static array.
 
 Example:
 ---
+static assert(is(MultidimensionalStaticArrayElementType!int == int));
 static assert(is(MultidimensionalStaticArrayElementType!(int[]) == int[]));
 static assert(is(MultidimensionalStaticArrayElementType!(int[0]) == int));
 static assert(!__traits(compiles, MultidimensionalStaticArrayElementType!(int[7][8], 3)));
@@ -105,6 +106,7 @@ template MultidimensionalStaticArrayElementType(T, size_t n = staticArrayDimensi
 
 unittest
 {
+	static assert(is(MultidimensionalStaticArrayElementType!int == int));
 	static assert(is(MultidimensionalStaticArrayElementType!(int[]) == int[]));
 	static assert(is(MultidimensionalStaticArrayElementType!string == string));
 	static assert(is(MultidimensionalStaticArrayElementType!(int[0]) == int));
