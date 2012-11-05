@@ -47,7 +47,7 @@ unittest
 
 
 /**
-Get static array dimensions.
+Gets the rank (number of dimensions) of a static array type.
 
 Example:
 ---
@@ -79,8 +79,8 @@ unittest
 
 
 /**
-Get multidimensional static array element type considering 
-$(D T) to be $(D n)-dimensioanl static array.
+Gets the element type of the innermost array in a multidimensional static array type. 
+Considers $(D T) to be an $(D n)-dimensional static array type.
 
 Example:
 ---
@@ -120,8 +120,8 @@ unittest
 
 
 /**
-Get total multidimensional static array elements count considering 
-$(D T) to be $(D n)-dimensioanl static array.
+Calculates the total element count of a multidimensional static array.
+Considers $(D T) to be an $(D n)-dimensional static array type.
 
 Example:
 ---
