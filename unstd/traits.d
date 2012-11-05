@@ -51,6 +51,7 @@ Gets the rank (number of dimensions) of a static array type.
 
 Example:
 ---
+static assert(staticArrayDimensions!int == 0);
 static assert(staticArrayDimensions!(int[]) == 0);
 static assert(staticArrayDimensions!(int[0]) == 1);
 static assert(staticArrayDimensions!(int[7][8]) == 2);
@@ -68,6 +69,7 @@ template staticArrayDimensions(T)
 
 unittest
 {
+	static assert(staticArrayDimensions!int == 0);
 	static assert(staticArrayDimensions!(int[]) == 0);
 	static assert(staticArrayDimensions!string == 0);
 	static assert(staticArrayDimensions!(int[0]) == 1);
@@ -127,7 +129,6 @@ Example:
 ---
 static assert(multidimensionalStaticArrayElementsCount!int == 1);
 static assert(multidimensionalStaticArrayElementsCount!(int[]) == 1);
-static assert(multidimensionalStaticArrayElementsCount!string == 1);
 static assert(multidimensionalStaticArrayElementsCount!(int[0]) == 0);
 static assert(!__traits(compiles, multidimensionalStaticArrayElementsCount!(int[7][8], 3)));
 static assert(multidimensionalStaticArrayElementsCount!(int[7][8]) == 7 * 8);
@@ -184,6 +185,7 @@ template multidimensionalStaticArrayLengths(T, size_t n = staticArrayDimensions!
 
 unittest
 {
+	static assert(Pack!(multidimensionalStaticArrayLengths!int).equals!());
 	static assert(Pack!(multidimensionalStaticArrayLengths!(int[])).equals!());
 	static assert(Pack!(multidimensionalStaticArrayLengths!string).equals!());
 	static assert(Pack!(multidimensionalStaticArrayLengths!(int[0])).equals!(0));
