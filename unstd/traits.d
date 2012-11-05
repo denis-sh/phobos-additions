@@ -19,7 +19,8 @@ import std.typecons: tuple;
 /**
 Returns the element type of an array.
 
-For ranges, see also $(XREF range, ElementEncodingType).
+For ranges, see also
+$(LINK2 http://dlang.org/phobos/std_range.html#ElementEncodingType, std.range.ElementEncodingType).
 
 Example:
 ---

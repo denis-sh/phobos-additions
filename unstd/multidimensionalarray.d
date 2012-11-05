@@ -31,6 +31,10 @@ import std.algorithm;
 Represents value as a flat (single-dimention) static array.
 Considers $(D T) to be an $(D n)-dimensional static array type.
 
+See also
+$(LINK2 unstd.traits.html#MultidimensionalStaticArrayElementType, MultidimensionalStaticArrayElementType),
+$(LINK2 unstd.traits.html#multidimensionalStaticArrayElementsCount, multidimensionalStaticArrayElementsCount).
+
 Example:
 ---
 int i;
