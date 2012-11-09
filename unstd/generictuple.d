@@ -208,8 +208,10 @@ template UnaryPred(alias Pred)
 		{
 			static if(__traits(compiles, { enum e = __A[0]; }))
 				enum a = __A[0];
-			else
+			else static if(is(__A[0]))
 				alias __A[0] T;
+			else
+				alias __A[0] A;
 
 			static if(__traits(compiles, { enum e = mixin(Pred); }))
 				enum bool UnaryPred = mixin(Pred);
@@ -230,9 +232,9 @@ unittest
 	static assert(Inst!(UnaryPred!` __traits(isUnsigned, T)`, uint));
 	static assert(Inst!(UnaryPred!`!__traits(isUnsigned, T)`,  int));
 	static assert(Inst!(Inst!(UnaryPred!TemplateNot, isPointer), int));
-	static assert(Inst!(Inst!(UnaryPred!`TemplateNot!T`, isPointer), int));
+	static assert(Inst!(Inst!(UnaryPred!`TemplateNot!A`, isPointer), int));
 	static assert(Inst!(Inst!(UnaryPred!(TemplateNot!TemplateNot), isPointer), int*));
-	static assert(Inst!(Inst!(UnaryPred!`Inst!(TemplateNot!TemplateNot, T)`, isPointer), int*));
+	static assert(Inst!(Inst!(UnaryPred!`Inst!(TemplateNot!TemplateNot, A)`, isPointer), int*));
 
 	static assert(is(Inst!(UnaryPred!`T[]`, int) == int[]));
 	static assert(is(MapTuple!(UnaryPred!`T[]`, int, long) == TypeTuple!(int[], long[])));
