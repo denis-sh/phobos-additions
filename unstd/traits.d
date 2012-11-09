@@ -254,7 +254,7 @@ template ExtractTypes(T, Extracted...) if(isTypeTuple!Extracted)
 		}
 		else static if(is(T == struct) || is(T == class) || is(T == union))
 		{
-			alias TypeTuple!(T, NoDuplicates!(TemplateMap!(Extract, FieldTypeTuple!T))) ExtractTypes;
+			alias TypeTuple!(T, NoDuplicates!(MapTuple!(Extract, FieldTypeTuple!T))) ExtractTypes;
 		}
 		else static if(isArray!T)
 		{

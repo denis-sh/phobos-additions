@@ -14,7 +14,7 @@ public import std.typecons;
 import std.string: strip, xformat;
 import std.array: appender;
 import std.traits: isIntegral, IntegralTypeOf;
-import unstd.generictuple: TemplateMap;
+import unstd.generictuple: MapTuple;
 
 
 private struct EnumMember(Base)
@@ -43,7 +43,7 @@ private template enumMembers(Base, members...)
 		}
 	}
 
-	alias TemplateMap!(enumMember, members) enumMembers;
+	alias MapTuple!(enumMember, members) enumMembers;
 }
 
 struct FlagEnumImpl(string name, Args...)

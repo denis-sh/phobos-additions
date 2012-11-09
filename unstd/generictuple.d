@@ -13,7 +13,7 @@ public import std.typetuple:
 	staticIndexOf,
 	Erase, EraseAll, NoDuplicates, Replace, ReplaceAll, Reverse,
 	MostDerived, DerivedToFront,
-	TemplateMap = staticMap,
+	MapTuple = staticMap,
 	allSatisfy, anySatisfy;
 
 import std.traits;
@@ -235,7 +235,7 @@ unittest
 	static assert(Inst!(Inst!(UnaryPred!`Inst!(TemplateNot!TemplateNot, T)`, isPointer), int*));
 
 	static assert(is(Inst!(UnaryPred!`T[]`, int) == int[]));
-	static assert(is(TemplateMap!(UnaryPred!`T[]`, int, long) == TypeTuple!(int[], long[])));
+	static assert(is(MapTuple!(UnaryPred!`T[]`, int, long) == TypeTuple!(int[], long[])));
 
 	static assert(Inst!(UnaryPred!`a == 5`, 5));
 	static assert(Inst!(UnaryPred!`a == 7`w, 7));
