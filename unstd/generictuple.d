@@ -16,9 +16,10 @@ public import std.typetuple:
 	MapTuple = staticMap,
 	allSatisfy, anySatisfy;
 
-import std.traits;
 import std.ascii: isDigit;
-import unstd.templates: Inst;
+import std.algorithm: min, max, StoppingPolicy;
+import unstd.traits;
+import unstd.templates;
 
 
 /**
@@ -365,6 +366,99 @@ unittest
 
 	static assert(is(FilterTuple!(UnaryPred!`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
 		TypeTuple!(size_t, immutable ushort, char)));
+}
+
+
+/**
+TODO docs
+*/
+template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
+{
+	alias ZipTupleImpl!(stoppingPolicy, empty, packedTuples) ZipTuple;
+}
+
+/// ditto
+template ZipTuple(StoppingPolicy stoppingPolicy, packedTuples...)
+{
+	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!void, packedTuples) ZipTuple;
+}
+
+/// ditto
+template ZipTuple(packedTuples...)
+{
+	alias ZipTuple!(StoppingPolicy.shortest, packedTuples) ZipTuple;
+}
+
+private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, packedTuples...)
+	if(packedTuples.length && allSatisfy!(isPackedTuple, default_, packedTuples) && default_.Tuple.length == 1)
+{
+	alias MapTuple!(UnaryTemplate!`A.Tuple.length`, packedTuples) lengths;
+
+	static if(stoppingPolicy == StoppingPolicy.requireSameLength)
+		static assert(FilterTuple!(TemplateBind!(isSame, lengths[0], arg!0).Res, lengths).length == packedTuples.length,
+			"Inequal-length packed tuples passed to ZipTuple(StoppingPolicy.requireSameLength, ...)");
+
+	template Impl(size_t n, packedTuples...)
+	{
+		static if(n)
+		{
+			template tupleFrontOrDefault(alias packedTuple)
+			{
+				static if(packedTuple.Tuple.length)
+					alias packedTuple.Tuple[0 .. 1] tupleFrontOrDefault;
+				else
+					alias default_.Tuple tupleFrontOrDefault;
+			}
+			alias GenericTuple!(PackedGenericTuple!(MapTuple!(tupleFrontOrDefault, packedTuples)),
+				Impl!(n - 1, MapTuple!(UnaryTemplate!`PackedGenericTuple!(A.Tuple[!!A.Tuple.length .. $])`, packedTuples))) Impl;
+		}
+		else
+			alias GenericTuple!() Impl;
+	}
+	static if(packedTuples.length == 1 || stoppingPolicy == StoppingPolicy.requireSameLength)
+		enum length = lengths[0];
+	else static if(stoppingPolicy == StoppingPolicy.longest)
+		enum length = max(lengths);
+	else
+		enum length = min(lengths);
+
+	alias Impl!(length, packedTuples) ZipTupleImpl;
+}
+
+unittest
+{
+	alias PackedGenericTuple!(iotaTuple!5) packedIota5;
+	alias PackedGenericTuple!(iotaTuple!(1, 6)) packedIota16;
+	alias PackedGenericTuple!(iotaTuple!(1, 4)) packedIota14;
+	alias PackedGenericTuple!(iotaTuple!(1, 8)) packedIota18;
+
+	void test(size_t length, size_t filledLength, size_t longerIdx, zip...)()
+	{
+		static assert(zip.length == length);
+		foreach (i, e; zip)
+			static assert(e.Tuple[0] == (i < filledLength || longerIdx == 0 ? i : -2) &&
+				e.Tuple[1] == (i < filledLength || longerIdx == 1 ? i + 1 : -3));
+	}
+
+	with(StoppingPolicy) foreach(stoppingPolicy; expressionTuple!(shortest, longest, requireSameLength))
+	{
+		static if(stoppingPolicy == longest)
+			alias PackedGenericTuple!void def;
+		else
+			alias expressionTuple!() def;
+
+		alias ZipTuple!(stoppingPolicy, def, packedIota5, packedIota16) zip;
+		test!(5, 5, -1, zip)();
+	}
+
+	static assert(!__traits(compiles, ZipTuple!(StoppingPolicy.requireSameLength, packedIota5, packedIota14)));
+	static assert(!__traits(compiles, ZipTuple!(StoppingPolicy.requireSameLength, packedIota5, packedIota18)));
+
+	test!(3, 3, -1, ZipTuple!(packedIota5, packedIota14))();
+	test!(5, 5, -1, ZipTuple!(packedIota5, packedIota18))();
+
+	test!(5, 3, 0, ZipTuple!(StoppingPolicy.longest, PackedGenericTuple!(-3), packedIota5, packedIota14))();
+	test!(7, 5, 1, ZipTuple!(StoppingPolicy.longest, PackedGenericTuple!(-2), packedIota5, packedIota18))();
 }
 
 
