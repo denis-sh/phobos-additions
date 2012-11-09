@@ -1,6 +1,7 @@
 MODULES = 
 	$(MODULE unstd.traits)
 	$(MODULE unstd.generictuple)
+	$(MODULE unstd.templates)
 	$(MODULE unstd.typecons)
 	$(MODULE unstd.math)
 	$(MODULE unstd.multidimensionalarray)
