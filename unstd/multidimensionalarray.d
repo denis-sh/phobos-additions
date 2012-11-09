@@ -657,7 +657,7 @@ $(TABLE
 	See $(D MultidimensionalArray) examples.
 
 	Bugs:
-	A bit ugly syntax is used because dmd hasn't support for a better one yet (see  $(BUGZILLA 6798)).
+	A bit ugly syntax is used because dmd hasn't support for a better one yet (see  $(DBUGZILLA 6798)).
 	*/
 	ref opIndex()(in size_t[n] indices...)
 	{

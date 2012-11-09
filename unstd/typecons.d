@@ -178,10 +178,10 @@ writeln(fileAccess & Access.write);  // Writes "Access.{}"
 ----
 
 Bugs:
-As it is implemented as a $(D struct), $(D Enum.init) behaves like lvalue (except it can't be assigned to), see  $(BUGZILLA 8915).
+As it is implemented as a $(D struct), $(D Enum.init) behaves like lvalue (except it can't be assigned to), see  $(DBUGZILLA 8915).
 I.e. $(D (ref Enum e){ } (Enum.init)) compiles.
 
-As it is a $(D struct), op assignment operators are allowed for rvalues, see  $(BUGZILLA 8916).
+As it is a $(D struct), op assignment operators are allowed for rvalues, see  $(DBUGZILLA 8916).
 I.e. things like $(D Enum.init |= Enum.a) and $(D Enum.a |= Enum.a) compiles.
 */
 mixin template flagEnum(string name, Args...)

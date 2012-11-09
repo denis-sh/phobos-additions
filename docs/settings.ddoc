@@ -10,3 +10,5 @@ LOGOALT = $(PROJECTNAME)
 LOGOLINK = $(REFERENCETOP)
 COPYRIGHT = Denis Shelomovskij
 COPYRIGHTFOOTER = &copy; $(COPYRIGHT) 2011-$(YEAR)
+
+DBUGZILLA = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$0, D Bugzilla $0)
