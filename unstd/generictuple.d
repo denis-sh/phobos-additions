@@ -202,7 +202,7 @@ unittest
 {
 	import std.traits;
 
-	static assert(is(TemplateFilter!(isNumeric, int, size_t, void, immutable short, char) ==
+	static assert(is(FilterTuple!(isNumeric, int, size_t, void, immutable short, char) ==
 					 TypeTuple!(int, size_t, immutable short)));
 
 	static assert(Inst!(UnaryPred!` __traits(isUnsigned, T)`, uint));
@@ -297,22 +297,22 @@ Example:
 ----
 import std.traits;
 
-static assert(is(TemplateFilter!(isNumeric, int, void, immutable short, char) ==
+static assert(is(FilterTuple!(isNumeric, int, void, immutable short, char) ==
               TypeTuple!(int, immutable short)));
 ----
 */
-template TemplateFilter(alias Pred, A...)
+template FilterTuple(alias Pred, A...)
 {
 	static if (A.length == 0)
-		alias GenericTuple!() TemplateFilter;
+		alias GenericTuple!() FilterTuple;
 	else
 	{
-		alias TemplateFilter!(Pred, A[1 .. $]) Tail;
+		alias FilterTuple!(Pred, A[1 .. $]) Tail;
 
 		static if(Pred!(A[0]))
-			alias GenericTuple!(A[0], Tail) TemplateFilter;
+			alias GenericTuple!(A[0], Tail) FilterTuple;
 		else
-			alias Tail TemplateFilter;
+			alias Tail FilterTuple;
 	}
 }
 
@@ -320,10 +320,10 @@ unittest
 {
 	import std.traits;
 
-	static assert(is(TemplateFilter!(isNumeric, int, size_t, void, immutable short, char) ==
+	static assert(is(FilterTuple!(isNumeric, int, size_t, void, immutable short, char) ==
 		TypeTuple!(int, size_t, immutable short)));
 
-	static assert(is(TemplateFilter!(UnaryPred!`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
+	static assert(is(FilterTuple!(UnaryPred!`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
 		TypeTuple!(size_t, immutable ushort, char)));
 }
 
