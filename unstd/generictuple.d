@@ -372,6 +372,26 @@ unittest
 /**
 TODO docs
 */
+template RetroTuple(A...)
+{
+	static if (A.length == 0)
+		alias GenericTuple!() RetroTuple;
+	else
+		alias GenericTuple!(.RetroTuple!(A[1 .. $]), A[0]) RetroTuple;
+}
+
+unittest
+{
+	static assert(is(RetroTuple!() == GenericTuple!()));
+	static assert(is(RetroTuple!int == TypeTuple!int));
+	static assert(is(RetroTuple!(int, bool, long) == TypeTuple!(long, bool, int)));
+	static assert(equalTuple!(PackedGenericTuple!(RetroTuple!(1, bool, "x")), PackedGenericTuple!("x", bool, 1)));
+}
+
+
+/**
+TODO docs
+*/
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
 	alias ZipTupleImpl!(stoppingPolicy, empty, packedTuples) ZipTuple;
