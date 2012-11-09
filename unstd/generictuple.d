@@ -200,11 +200,11 @@ unittest {
 /**
 TODO docs
 */
-template UnaryPred(alias Pred)
+template UnaryTemplate(alias Pred, EnumType = void)
 {
 	static if(isSomeString!(typeof(Pred)))
 	{
-		template UnaryPred(__A...) if(__A.length == 1)
+		template UnaryTemplate(__A...) if(__A.length == 1)
 		{
 			static if(__traits(compiles, { enum e = __A[0]; }))
 				enum a = __A[0];
@@ -214,12 +214,28 @@ template UnaryPred(alias Pred)
 				alias __A[0] A;
 
 			static if(__traits(compiles, { enum e = mixin(Pred); }))
-				enum bool UnaryPred = mixin(Pred);
+			{
+				static if(is(EnumType == void))
+					enum UnaryTemplate = mixin(Pred);
+				else
+					enum EnumType UnaryTemplate = mixin(Pred);
+			}
 			else
-				mixin(`alias `~Pred~` UnaryPred;`);
+			{
+				mixin(`alias `~Pred~` UnaryTemplate;`);
+			}
 		}
 	} else
-		alias Pred UnaryPred;
+		alias Pred UnaryTemplate;
+}
+
+
+/**
+TODO docs
+*/
+template UnaryPred(alias Pred)
+{
+	alias UnaryTemplate!(Pred, bool) UnaryPred;
 }
 
 unittest
