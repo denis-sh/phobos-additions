@@ -97,8 +97,8 @@ unittest
 	static assert(!__traits(compiles, { enum e = alignDown(0, 1); }));
 	static assert(!__traits(compiles, { enum e = alignUp  (0, 1); }));
 
-	import unstd.generictuple: staticRange;
-	foreach(n; staticRange!5)
+	import unstd.generictuple: iotaTuple;
+	foreach(n; iotaTuple!5)
 	{
 		static assert(alignDown!1(n) == n);
 		static assert(alignUp!1(n) == n);

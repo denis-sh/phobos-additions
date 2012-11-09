@@ -208,7 +208,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 		static if(n > 1)
 		{
 			strides[$-2] = p_lengths[$-1];
-			foreach_reverse(i; staticRange!(n-2))
+			foreach_reverse(i; iotaTuple!(n-2))
 				strides[i] = p_lengths[i+1] * strides[i+1];
 		}
 		data = new T[strides[0] * p_lengths[0]];
@@ -218,7 +218,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 	{
 		this.p_lengths = p_lengths;
 		strides[$-1] = 1;
-		foreach_reverse(i; staticRange!(n-1))
+		foreach_reverse(i; iotaTuple!(n-1))
 			strides[i] = p_lengths[i+1] * strides[i+1];
 		debug
 		{
@@ -238,7 +238,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 	@property size_t elements() const
 	{
 		size_t res = p_lengths[0];
-		foreach(i; staticRange!(n-1))
+		foreach(i; iotaTuple!(n-1))
 			res *= p_lengths[i + 1];
 		return res;
 	}
@@ -252,7 +252,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 		static if(n > 1)
 		{
 			size_t packedStride = 1;
-			foreach_reverse(i; staticRange!n)
+			foreach_reverse(i; iotaTuple!n)
 			{
 				static if(i < n-1)
 					packedStride *= p_lengths[i+1];
@@ -288,7 +288,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 			{
 				assert(!empty, "Trying to call popFront() on an empty MultidimensionalArray.byElementForward");
 				--rest;
-				foreach_reverse(i; staticRange!n)
+				foreach_reverse(i; iotaTuple!n)
 				{
 					shift += e.strides[i];
 					if(++indices[i] < e.p_lengths[i])
@@ -347,7 +347,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 
 				i += frontIndex;
 				size_t shift;
-				foreach_reverse(j; staticRange!n)
+				foreach_reverse(j; iotaTuple!n)
 				{
 					//TODO: do % and / in one operation
 					immutable size_t currIndex = i % e.p_lengths[j];
@@ -363,7 +363,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 				assert(!empty, "Trying to call popFront() on an empty MultidimensionalArray.byElementRandomAccess");
 				++frontIndex;
 				--rest;
-				foreach_reverse(i; staticRange!n)
+				foreach_reverse(i; iotaTuple!n)
 				{
 					frontShift += e.strides[i];
 					if(++frontIndices[i] < e.p_lengths[i])
@@ -381,7 +381,7 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 			{
 				assert(!empty, "Trying to call popBack() on an empty MultidimensionalArray.byElementRandomAccess");
 				--rest;
-				foreach_reverse(i; staticRange!n)
+				foreach_reverse(i; iotaTuple!n)
 				{
 					backShift -= e.strides[i];
 					if(--afterBackIndices[i] > 0)
@@ -805,14 +805,14 @@ private:
 	in { foreach(plane, index; indices) assert(index >= 0 && index <= p_lengths[plane]); }
 	body {
 		size_t res = 0;
-		foreach(plane; staticRange!n)
+		foreach(plane; iotaTuple!n)
 			res += indices[plane] * strides[plane];
 		return res;
 	}
 
 	bool goodGetOffset(in size_t[n] indices...) const
 	{
-		foreach(plane; staticRange!n)
+		foreach(plane; iotaTuple!n)
 			if(indices[plane] < 0 || indices[plane] >= p_lengths[plane])
 				return false;
 		return true;

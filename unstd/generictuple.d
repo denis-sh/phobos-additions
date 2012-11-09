@@ -335,62 +335,62 @@ If $(D m) >= $(D n) the range is empty.
 Example:
 ---
 int res;
-foreach(i; staticRange!5) // same as res += foo!1(); res += foo!3();
+foreach(i; iotaTuple!5) // same as res += foo!1(); res += foo!3();
 	static if(i & 1)
 		res += foo!i();
 ---
 */
-template staticRange(size_t n)
+template iotaTuple(size_t n)
 {
 	static if(n)
-		alias expressionTuple!(staticRange!(n-1), n-1) staticRange;
+		alias expressionTuple!(iotaTuple!(n-1), n-1) iotaTuple;
 	else
-		alias expressionTuple!() staticRange;
+		alias expressionTuple!() iotaTuple;
 }
 
-version(unittest) int staticRange_foo(int i)() if(i == 1 || i == 3) { return i * i; }
+version(unittest) int iotaTuple_foo(int i)() if(i == 1 || i == 3) { return i * i; }
 
 unittest
 {
-	static assert(staticRange!0 .length == 0);
+	static assert(iotaTuple!0 .length == 0);
 
-	foreach(i, j; staticRange!5)
+	foreach(i, j; iotaTuple!5)
 		static assert(i == j);
 
-	foreach_reverse(i, j; staticRange!5)
+	foreach_reverse(i, j; iotaTuple!5)
 		static assert(i == j);
 
 	int res;
-	foreach(i; staticRange!5)
+	foreach(i; iotaTuple!5)
 		static if(i & 1)
-			res += staticRange_foo!i();
+			res += iotaTuple_foo!i();
 	assert(res == 1 + 3^^2);
 }
 
 /// ditto
-template staticRange(int m, int n)
+template iotaTuple(int m, int n)
 {
 	static if(n > m)
-		alias expressionTuple!(staticRange!(m, n-1), n-1) staticRange;
+		alias expressionTuple!(iotaTuple!(m, n-1), n-1) iotaTuple;
 	else
-		alias expressionTuple!() staticRange;
+		alias expressionTuple!() iotaTuple;
 }
 
 unittest
 {
-	static assert(staticRange!(5, 3) .length == 0);
-	static assert(staticRange!(3, 3) .length == 0);
+	static assert(iotaTuple!(5, 3) .length == 0);
+	static assert(iotaTuple!(3, 3) .length == 0);
 
-	foreach(i, j; staticRange!(1, 5))
+	foreach(i, j; iotaTuple!(1, 5))
 		static assert(i + 1 == j);
 
-	foreach_reverse(i, j; staticRange!(1, 5))
+	foreach_reverse(i, j; iotaTuple!(1, 5))
 		static assert(i + 1 == j);
 
 	int res;
-	foreach(i; staticRange!(1, 5))
+	foreach(i; iotaTuple!(1, 5))
 		static if(i & 1)
-			res += staticRange_foo!i();
+			res += iotaTuple_foo!i();
 	assert(res == 1 + 3^^2);
 }
 
