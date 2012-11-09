@@ -348,8 +348,6 @@ template iotaTuple(size_t n)
 		alias expressionTuple!() iotaTuple;
 }
 
-version(unittest) int iotaTuple_foo(int i)() if(i == 1 || i == 3) { return i * i; }
-
 unittest
 {
 	static assert(iotaTuple!0 .length == 0);
@@ -360,10 +358,11 @@ unittest
 	foreach_reverse(i, j; iotaTuple!5)
 		static assert(i == j);
 
+	int foo(int i)() if(i == 1 || i == 3) { return i * i; }
 	int res;
 	foreach(i; iotaTuple!5)
 		static if(i & 1)
-			res += iotaTuple_foo!i();
+			res += foo!i();
 	assert(res == 1 + 3^^2);
 }
 
@@ -387,10 +386,11 @@ unittest
 	foreach_reverse(i, j; iotaTuple!(1, 5))
 		static assert(i + 1 == j);
 
+	int foo(int i)() if(i == 1 || i == 3) { return i * i; }
 	int res;
 	foreach(i; iotaTuple!(1, 5))
 		static if(i & 1)
-			res += iotaTuple_foo!i();
+			res += foo!i();
 	assert(res == 1 + 3^^2);
 }
 
