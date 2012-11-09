@@ -42,6 +42,30 @@ template GenericTuple(Args...)
 	alias Args GenericTuple;
 }
 
+/**
+Creates a packed generic tuple out of a sequence of zero or more types, expressions, or aliases.
+
+Packed version doesn't alias itself to its content, i.e. it doesn't auto-unpack.
+
+Example:
+---
+alias PackedGenericTuple!(long, 3) MyPackedTuple;
+
+MyPackedTuple.Tuple[0] myVar = MyPackedTuple.Tuple[1]; // same as `long myVar = 3;`
+
+template MyTemplate(alias packed)
+{ alias packed.Tuple[0][] MyTemplate; }
+
+// It is passed as a single template alias parameter:
+static assert(is(MyTemplate!MyPackedTuple == long[]));
+---
+*/
+template PackedGenericTuple(Args...)
+{
+	/// Use this member of to access its content as a generic tuple.
+	alias Args Tuple;
+}
+
 
 /**
 Creates a typetuple out of a sequence of zero or more types.
@@ -77,6 +101,17 @@ unittest
 	static assert(is(TypeTuple!(int, TypeTuple!()) == TypeTuple!int));
 	static assert(is(TypeTuple!(int, TypeTuple!char) == TypeTuple!(int, char)));
 	static assert(is(TypeTuple!(int, TypeTuple!(char, bool)) == TypeTuple!(int, char, bool)));
+}
+
+
+/**
+Creates a packed typetuple out of a sequence of zero or more types.
+Same as $(D PackedGenericTuple), except it contains only types.
+*/
+template PackedTypeTuple(T...) if(isTypeTuple!T)
+{
+	/// Use this member of to access its content as a typetuple.
+	alias T Types;
 }
 
 
@@ -119,6 +154,17 @@ unittest
 	static assert(Pack!(expressionTuple!(5, 'c', "str")).equals!(5, 'c', "str"));
 	static assert(!__traits(compiles, expressionTuple!(int, 5)));
 	static assert(!__traits(compiles, expressionTuple!void));
+}
+
+
+/**
+Creates a packed expression tuple out of a sequence of zero or more expressions.
+Same as $(D PackedGenericTuple), except it contains only expressions.
+*/
+template packedExpressionTuple(expr...) if(isExpressionTuple!expr)
+{
+	/// Use this member of to access its content as a typetuple.
+	alias expr expressions;
 }
 
 
