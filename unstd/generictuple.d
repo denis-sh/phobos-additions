@@ -528,6 +528,47 @@ unittest
 	assert(res == 1 + 3^^2);
 }
 
+
+/**
+Detect whether $(D packedTuple1) and $(D packedTuple2) elements are equal according to $(D pred).
+$(D isSame) is used if not predicacte specified.
+*/
+template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
+	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
+{
+	template instForPackedTuple(alias packedTuple)
+		if(isPackedTuple!packedTuple && packedTuple.Tuple.length == 2)
+	{
+		enum instForPackedTuple = pred!(packedTuple.Tuple);
+	}
+
+	static if(packedTuple1.Tuple.length == packedTuple2.Tuple.length)
+		enum equalTuple = allSatisfy!(instForPackedTuple, ZipTuple!(packedTuple1, packedTuple2));
+	else
+		enum equalTuple = false;
+}
+
+/// ditto
+template equalTuple(alias packedTuple1, alias packedTuple2)
+{
+	enum equalTuple = equalTuple!(isSame, packedTuple1, packedTuple2);
+}
+
+version(unittest) template __truePred(A...) { enum __truePred = true; }
+
+unittest
+{
+	static assert( equalTuple!(PackedGenericTuple!(), PackedGenericTuple!()));
+	static assert( equalTuple!(PackedGenericTuple!0, PackedGenericTuple!0));
+	static assert(!equalTuple!(PackedGenericTuple!0, PackedGenericTuple!int));
+	static assert(!equalTuple!(PackedGenericTuple!0, PackedGenericTuple!(0, 1)));
+	static assert( equalTuple!(PackedGenericTuple!(0, 1), PackedGenericTuple!(iotaTuple!2)));
+	static assert( equalTuple!(PackedGenericTuple!(int, "a"), PackedGenericTuple!(int, "a")));
+
+	static assert(!equalTuple!(__truePred, PackedGenericTuple!1, PackedGenericTuple!()));
+	static assert( equalTuple!(__truePred, PackedGenericTuple!1, PackedGenericTuple!int));
+}
+
 //  internal templates from std.typetuple:
 
 private template isSame(ab...)
