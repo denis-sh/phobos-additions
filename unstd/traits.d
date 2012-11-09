@@ -199,6 +199,19 @@ unittest
 }
 
 
+/// Detect whether tuple $(D A) is $(D PackedGenericTuple).
+template isPackedTuple(alias A)
+{
+	enum isPackedTuple = __traits(compiles, A.Tuple);
+}
+
+/// ditto
+template isPackedTuple(A)
+{
+	enum isPackedTuple = false;
+}
+
+
 /**
 Get all types $(D T) include except $(D Extracted) without duplicates
 in such order that every compound type precedes types it includes.
