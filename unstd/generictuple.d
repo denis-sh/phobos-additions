@@ -550,6 +550,47 @@ unittest
 
 
 /**
+TODO docs
+*/
+template cmpTuple(alias pred, alias packedTuple1, alias packedTuple2)
+	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
+{
+	static if (!packedTuple1.Tuple.length)
+		enum cmpTuple = -cast(int) !!packedTuple2.Tuple.length;
+	else static if (!packedTuple2.Tuple.length)
+		enum cmpTuple = cast(int) !!packedTuple1.Tuple.length;
+	else static if (pred!(packedTuple1.Tuple[0], packedTuple2.Tuple[0]))
+		enum cmpTuple = -1;
+	else static if (pred!(packedTuple2.Tuple[0], packedTuple1.Tuple[0]))
+		enum cmpTuple = 1;
+	else
+		enum cmpTuple = cmpTuple!(pred, PackedGenericTuple!(packedTuple1.Tuple[1 .. $]), PackedGenericTuple!(packedTuple2.Tuple[1 .. $]));
+}
+
+/// ditto
+template cmpTuple(alias packedTuple1, alias packedTuple2)
+{
+	template less(A...) if(A.length == 2)
+	{ enum less = A[0] < A[1]; }
+	enum cmpTuple = cmpTuple!(less, packedTuple1, packedTuple2);
+}
+
+unittest
+{
+	static assert(cmpTuple!(PackedGenericTuple!(), PackedGenericTuple!()) == 0);
+	static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!0) == 0);
+	static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!1) < 0);
+	static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!(0, 0)) < 0);
+	static assert(cmpTuple!(PackedGenericTuple!(0, 0), PackedGenericTuple!0) > 0);
+	static assert(cmpTuple!(PackedGenericTuple!1, PackedGenericTuple!(0, 0)) > 0);
+
+	static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"a") == 0);
+	static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"ab") < 0);
+	static assert(cmpTuple!(PackedGenericTuple!"b", PackedGenericTuple!"ab") > 0);
+}
+
+
+/**
 Detect whether $(D packedTuple1) and $(D packedTuple2) elements are equal according to $(D pred).
 $(D isSame) is used if not predicacte specified.
 */
