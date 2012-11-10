@@ -65,6 +65,12 @@ template PackedGenericTuple(Args...)
 {
 	/// Use this member of to access its content as a generic tuple.
 	alias Args Tuple;
+
+	/// Its content length.
+	enum length = Tuple.length;
+
+	/// Detect whether it's empty.
+	enum empty = !length;
 }
 
 
@@ -410,9 +416,9 @@ template ZipTuple(packedTuples...)
 }
 
 private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, packedTuples...)
-	if(packedTuples.length && allSatisfy!(isPackedTuple, default_, packedTuples) && default_.Tuple.length == 1)
+	if(packedTuples.length && allSatisfy!(isPackedTuple, default_, packedTuples) && default_.length == 1)
 {
-	alias MapTuple!(UnaryTemplate!`A.Tuple.length`, packedTuples) lengths;
+	alias MapTuple!(UnaryTemplate!`A.length`, packedTuples) lengths;
 
 	static if(stoppingPolicy == StoppingPolicy.requireSameLength)
 		static assert(FilterTuple!(TemplateBind!(isSame, lengths[0], arg!0).Res, lengths).length == packedTuples.length,
@@ -424,13 +430,13 @@ private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, pac
 		{
 			template tupleFrontOrDefault(alias packedTuple)
 			{
-				static if(packedTuple.Tuple.length)
+				static if(!packedTuple.empty)
 					alias packedTuple.Tuple[0 .. 1] tupleFrontOrDefault;
 				else
 					alias default_.Tuple tupleFrontOrDefault;
 			}
 			alias GenericTuple!(PackedGenericTuple!(MapTuple!(tupleFrontOrDefault, packedTuples)),
-				Impl!(n - 1, MapTuple!(UnaryTemplate!`PackedGenericTuple!(A.Tuple[!!A.Tuple.length .. $])`, packedTuples))) Impl;
+				Impl!(n - 1, MapTuple!(UnaryTemplate!`PackedGenericTuple!(A.Tuple[!A.empty .. $])`, packedTuples))) Impl;
 		}
 		else
 			alias GenericTuple!() Impl;
@@ -555,10 +561,10 @@ TODO docs
 template cmpTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
 {
-	static if (!packedTuple1.Tuple.length)
-		enum cmpTuple = -cast(int) !!packedTuple2.Tuple.length;
-	else static if (!packedTuple2.Tuple.length)
-		enum cmpTuple = cast(int) !!packedTuple1.Tuple.length;
+	static if (packedTuple1.empty)
+		enum cmpTuple = -cast(int) !packedTuple2.empty;
+	else static if (packedTuple2.empty)
+		enum cmpTuple = cast(int) !packedTuple1.empty;
 	else static if (pred!(packedTuple1.Tuple[0], packedTuple2.Tuple[0]))
 		enum cmpTuple = -1;
 	else static if (pred!(packedTuple2.Tuple[0], packedTuple1.Tuple[0]))
@@ -598,12 +604,12 @@ template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
 {
 	template instForPackedTuple(alias packedTuple)
-		if(isPackedTuple!packedTuple && packedTuple.Tuple.length == 2)
+		if(isPackedTuple!packedTuple && packedTuple.length == 2)
 	{
 		enum instForPackedTuple = pred!(packedTuple.Tuple);
 	}
 
-	static if(packedTuple1.Tuple.length == packedTuple2.Tuple.length)
+	static if(packedTuple1.length == packedTuple2.length)
 		enum equalTuple = allSatisfy!(instForPackedTuple, ZipTuple!(packedTuple1, packedTuple2));
 	else
 		enum equalTuple = false;
