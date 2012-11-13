@@ -1,5 +1,8 @@
 ﻿/** Additions to std.typetuple
 
+Macros:
+PHOBOSREF = $(HTTP dlang.org/phobos/std_$1#$2, std.$1.$2)
+
 Copyright: Denis Shelomovskij 2011-2012
 
 License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
@@ -339,6 +342,8 @@ unittest {
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF range, retro) for generic tuples.
 */
 template RetroTuple(A...)
 {
@@ -359,6 +364,9 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF range, stride) for generic tuples
+except $(D n) is the first argument.
 */
 template StrideTuple(size_t n, A...)
 	if(n > 0)
@@ -382,6 +390,8 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF range, chain) for generic tuples.
 */
 template ChainTuple(packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
@@ -400,6 +410,8 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF range, roundRobin) for generic tuples.
 */
 template RoundRobinTuple(packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
@@ -418,6 +430,10 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF range, radial) for generic tuples
+except $(D startingIndex) is the first argument and
+there is no overload without it.
 */
 template RadialTuple(size_t startingIndex, A...)
 {
@@ -439,6 +455,11 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF array, replicate) and $(PHOBOSREF range, repeat) for generic tuples
+except $(D n) is the first argument and there is no overload
+without it as tuples can't be infinite.
+Also it repeats a generic tuple, not only one value.
 */
 template RepeatTuple(size_t n, A...)
 {
@@ -456,6 +477,10 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF range, zip) for generic tuples
+except $(D empty) value must be explicitly specified
+for $(D StoppingPolicy.longest).
 */
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
@@ -564,6 +589,8 @@ foreach(i; iotaTuple!5) // same as res += foo!1(); res += foo!3();
 	static if(i & 1)
 		res += foo!i();
 ---
+
+Analog of $(PHOBOSREF range, iota) for generic tuples.
 */
 template iotaTuple(size_t n)
 {
@@ -622,6 +649,8 @@ unittest
 
 /**
 TODO docs
+
+Analog of $(PHOBOSREF algorithm, cmp) for generic tuples.
 */
 template cmpTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
@@ -664,6 +693,8 @@ unittest
 /**
 Detect whether $(D packedTuple1) and $(D packedTuple2) elements are equal according to $(D pred).
 $(D isSame) is used if not predicacte specified.
+
+Analog of $(PHOBOSREF algorithm, equal) for generic tuples.
 */
 template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
@@ -712,6 +743,8 @@ import std.traits;
 static assert(is(FilterTuple!(isNumeric, int, void, immutable short, char) ==
               TypeTuple!(int, immutable short)));
 ----
+
+Analog of $(PHOBOSREF algorithm, filter) for generic tuples.
 */
 template FilterTuple(alias Pred, A...)
 {
