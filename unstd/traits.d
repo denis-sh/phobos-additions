@@ -186,6 +186,7 @@ template multidimensionalStaticArrayLengths(T, size_t n = staticArrayDimensions!
 
 unittest
 {
+	alias PackedGenericTuple Pack;
 	static assert(Pack!(multidimensionalStaticArrayLengths!int).equals!());
 	static assert(Pack!(multidimensionalStaticArrayLengths!(int[])).equals!());
 	static assert(Pack!(multidimensionalStaticArrayLengths!string).equals!());

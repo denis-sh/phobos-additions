@@ -121,6 +121,7 @@ version(unittest)
 
 unittest
 {
+	alias PackedGenericTuple Pack;
 	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
 	static assert(Pack!(TemplateBind!(Alias, 1, 2, int).Res!3).equals!(1, 2, int));
 	static assert(Pack!(TemplateBind!(Alias, arg!0).Res!3).equals!(3));
@@ -267,6 +268,7 @@ unittest
 		static assert(Pack!(Res!(Args[0 .. n])).equals!(Args[n .. $]));
 	}
 
+	alias PackedGenericTuple Pack;
 	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
 	test!(
 		q{ Alias!(1, 2, int) },

@@ -200,7 +200,7 @@ template expressionTuple(expressions...) if(isExpressionTuple!expressions)
 unittest
 {
 	static assert(expressionTuple!().length == 0);
-	static assert(Pack!(expressionTuple!(5, 'c', "str")).equals!(5, 'c', "str"));
+	static assert(PackedGenericTuple!(expressionTuple!(5, 'c', "str")).equals!(5, 'c', "str"));
 	static assert(!__traits(compiles, expressionTuple!(int, 5)));
 	static assert(!__traits(compiles, expressionTuple!void));
 }
@@ -944,25 +944,3 @@ private template isSame(ab...)
 }
 private template expectType(T) {}
 private template expectBool(bool b) {}
-
-package template Pack(T...)
-{
-    alias T tuple;
-
-    // For convenience
-    template equals(U...)
-    {
-        static if (T.length == U.length)
-        {
-            static if (T.length == 0)
-                enum equals = true;
-            else
-                enum equals = isSame!(T[0], U[0]) &&
-                    Pack!(T[1 .. $]).equals!(U[1 .. $]);
-        }
-        else
-        {
-            enum equals = false;
-        }
-    }
-}
