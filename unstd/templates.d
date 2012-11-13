@@ -40,6 +40,14 @@ unittest
 
 /**
 TODO docs
+
+Example:
+----
+static assert(Inst!(UnaryTemplate!`__traits(isUnsigned, T)`, uint));
+static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
+static assert(Inst!(UnaryTemplate!`a == 5`, 5));
+static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
+----
 */
 template Template(alias Pred, int argumentsCount, EnumType = void)
 	if(argumentsCount >= -1)
@@ -118,6 +126,12 @@ unittest
 
 /**
 TODO docs
+
+Example:
+----
+static assert(Inst!(unaryPred!`__traits(isUnsigned, T)`, uint));
+static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
+----
 */
 template unaryPred(alias Pred)
 {
