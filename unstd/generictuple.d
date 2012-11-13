@@ -401,6 +401,36 @@ unittest
 /**
 TODO docs
 */
+template RoundRobinTuple(packedTuples...)
+	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
+{
+	template Impl(packedTuples...)
+	{
+		alias FilterTuple!(UnaryPred!`!A.empty`, packedTuples) nonEmptyPackedTuples;
+		static if(nonEmptyPackedTuples.length)
+		{
+			// Can't use UnaryTemplate!`A.Tuple[0 .. 1]` because of Issue 9017
+			template pred(alias packedTuple) { alias packedTuple.Tuple[0 .. 1] pred; }
+			alias GenericTuple!(MapTuple!(pred, nonEmptyPackedTuples),
+				Impl!(MapTuple!(UnaryTemplate!`PackedGenericTuple!(A.Tuple[1 .. $])`, nonEmptyPackedTuples))) Impl;
+		}
+		else
+			alias GenericTuple!() Impl;
+	}
+
+	alias Impl!packedTuples RoundRobinTuple;
+}
+
+unittest
+{
+	alias RoundRobinTuple!(PackedGenericTuple!(1, 2, 3), PackedGenericTuple!(10, 20, 30, 40)) roundRobin;
+	static assert(equalTuple!(PackedGenericTuple!roundRobin, PackedGenericTuple!(1, 10, 2, 20, 3, 30, 40)));
+}
+
+
+/**
+TODO docs
+*/
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
 	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!empty, packedTuples) ZipTuple;
