@@ -433,7 +433,7 @@ unittest
 	static assert(is(RetroTuple!() == GenericTuple!()));
 	static assert(is(RetroTuple!int == TypeTuple!int));
 	static assert(is(RetroTuple!(int, bool, long) == TypeTuple!(long, bool, int)));
-	static assert(equalTuple!(PackedGenericTuple!(RetroTuple!(1, bool, "x")), PackedGenericTuple!("x", bool, 1)));
+	static assert(PackedGenericTuple!(RetroTuple!(1, bool, "x")).equals!("x", bool, 1));
 }
 
 
@@ -456,10 +456,10 @@ unittest
 {
 	static assert(is(StrideTuple!1 == GenericTuple!()));
 	alias iotaTuple!(1, 11) iota;
-	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(1, iota)), PackedGenericTuple!iota));
-	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(2, iota)), PackedGenericTuple!(1, 3, 5, 7, 9)));
-	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(3, iota)), PackedGenericTuple!(1, 4, 7, 10)));
-	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(4, iota)), PackedGenericTuple!(1, 5, 9)));
+	static assert(PackedGenericTuple!(StrideTuple!(1, iota)).equals!iota);
+	static assert(PackedGenericTuple!(StrideTuple!(2, iota)).equals!(1, 3, 5, 7, 9));
+	static assert(PackedGenericTuple!(StrideTuple!(3, iota)).equals!(1, 4, 7, 10));
+	static assert(PackedGenericTuple!(StrideTuple!(4, iota)).equals!(1, 5, 9));
 }
 
 
@@ -479,7 +479,7 @@ template ChainTuple(packedTuples...)
 unittest
 {
 	alias ChainTuple!(PackedGenericTuple!(1, 2, 3, 4), PackedGenericTuple!(5, 6), PackedGenericTuple!(), PackedGenericTuple!7) chain;
-	static assert(equalTuple!(PackedGenericTuple!chain, PackedGenericTuple!(1, 2, 3, 4, 5, 6, 7)));
+	static assert(PackedGenericTuple!chain.equals!(1, 2, 3, 4, 5, 6, 7));
 }
 
 
@@ -499,7 +499,7 @@ template RoundRobinTuple(packedTuples...)
 unittest
 {
 	alias RoundRobinTuple!(PackedGenericTuple!(1, 2, 3), PackedGenericTuple!(10, 20, 30, 40)) roundRobin;
-	static assert(equalTuple!(PackedGenericTuple!roundRobin, PackedGenericTuple!(1, 10, 2, 20, 3, 30, 40)));
+	static assert(PackedGenericTuple!roundRobin.equals!(1, 10, 2, 20, 3, 30, 40));
 }
 
 
@@ -518,13 +518,13 @@ template RadialTuple(size_t startingIndex, A...)
 
 unittest
 {
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1)), PackedGenericTuple!1));
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2)), PackedGenericTuple!(1, 2)));
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3)), PackedGenericTuple!(2, 3, 1)));
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4)), PackedGenericTuple!(2, 3, 1, 4)));
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)), PackedGenericTuple!(3, 4, 2, 5, 1)));
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5, 6)), PackedGenericTuple!(3, 4, 2, 5, 1, 6)));
-	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(1, 1, 2, 3, 4, 5)), PackedGenericTuple!(2, 3, 1, 4, 5)));
+	static assert(PackedGenericTuple!(RadialTuple!(-1, 1)).equals!1);
+	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2)).equals!(1, 2));
+	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3)).equals!(2, 3, 1));
+	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4)).equals!(2, 3, 1, 4));
+	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
+	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5, 6)).equals!(3, 4, 2, 5, 1, 6));
+	static assert(PackedGenericTuple!(RadialTuple!(1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
 }
 
 
@@ -546,7 +546,7 @@ template RepeatTuple(size_t n, A...)
 
 unittest
 {
-	static assert(equalTuple!(PackedGenericTuple!(RepeatTuple!(4, 5)), PackedGenericTuple!(5, 5, 5, 5)));
+	static assert(PackedGenericTuple!(RepeatTuple!(4, 5)).equals!(5, 5, 5, 5));
 }
 
 
@@ -709,12 +709,12 @@ unittest
 	static assert(iotaTuple!(2, 2, 0).length == 0);
 	static assert(!__traits(compiles, iotaTuple!(1, 2, 0)));
 
-	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!1), PackedGenericTuple!0));
-	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!3), PackedGenericTuple!(0, 1, 2)));
-	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(1.0, 3)), PackedGenericTuple!(1.0, 2.0)));
-	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(1, 3.1f)), PackedGenericTuple!(1.0, 2.0, 3.0)));
-	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(3, 0, -1)), PackedGenericTuple!(3, 2, 1)));
-	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(3, 2, -.5)), PackedGenericTuple!(3.0, 2.5)));
+	static assert(PackedGenericTuple!(iotaTuple!1).equals!0);
+	static assert(PackedGenericTuple!(iotaTuple!3).equals!(0, 1, 2));
+	static assert(PackedGenericTuple!(iotaTuple!(1.0, 3)).equals!(1.0, 2.0));
+	static assert(PackedGenericTuple!(iotaTuple!(1, 3.1f)).equals!(1.0, 2.0, 3.0));
+	static assert(PackedGenericTuple!(iotaTuple!(3, 0, -1)).equals!(3, 2, 1));
+	static assert(PackedGenericTuple!(iotaTuple!(3, 2, -.5)).equals!(3.0, 2.5));
 }
 
 
@@ -734,7 +734,7 @@ template IndexedTuple(alias packedSourceTuple, alias packedIndicesTuple)
 unittest
 {
 	alias IndexedTuple!(PackedGenericTuple!(1, 2, 3, 4, 5), PackedGenericTuple!(4, 3, 1, 2, 0, 4)) indexed;
-	static assert(equalTuple!(PackedGenericTuple!indexed, PackedGenericTuple!(5, 4, 2, 3, 1, 5)));
+	static assert(PackedGenericTuple!indexed.equals!(5, 4, 2, 3, 1, 5));
 }
 
 
@@ -756,9 +756,9 @@ template ChunksTuple(size_t chunkSize, A...)
 unittest
 {
 	alias ChunksTuple!(4,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10) chunks;
-	static assert(equalTuple!(chunks[0], PackedGenericTuple!(1, 2, 3, 4)));
-	static assert(equalTuple!(chunks[1], PackedGenericTuple!(5, 6, 7, 8)));
-	static assert(equalTuple!(chunks[2], PackedGenericTuple!(9, 10)));
+	static assert(chunks[0].equals!(1, 2, 3, 4));
+	static assert(chunks[1].equals!(5, 6, 7, 8));
+	static assert(chunks[2].equals!(9, 10));
 }
 
 
@@ -910,11 +910,11 @@ template MapTuple(alias Func, A...)
 unittest
 {
 	static assert(MapTuple!`1`.length == 0);
-	static assert(equalTuple!(PackedGenericTuple!(MapTuple!(`1`, const int)),  PackedGenericTuple!1));
+	static assert(PackedGenericTuple!(MapTuple!(`1`, const int)).equals!1);
 	static assert(is(MapTuple!(Unqual, int, immutable int) == TypeTuple!(int, int)));
 	static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
 	alias MapTuple!(`a * a`, iotaTuple!4) squares;
-	static assert(equalTuple!(PackedGenericTuple!squares, PackedGenericTuple!(0, 1, 4, 9)));
+	static assert(PackedGenericTuple!squares.equals!(0, 1, 4, 9));
 }
 
 //  internal templates from std.typetuple:
