@@ -1,6 +1,35 @@
 ﻿/** Additions to std.typetuple
 
+$(BOOKTABLE Generic tuple manipulation functions,
+	$(TR $(TH Category) $(TH Functions))
+	$(TR $(TD Creation)
+		$(TD
+			$(BTREF RetroTuple)
+			$(BTREF StrideTuple)
+			$(BTREF ChainTuple)
+			$(BTREF RoundRobinTuple)
+			$(BTREF RadialTuple)
+			$(BTREF RepeatTuple)
+			$(BTREF ZipTuple)
+			$(BTREF iotaTuple)
+		)
+	)
+	$(TR $(TD Comparison)
+		$(TD
+			$(BTREF cmpTuple)
+			$(BTREF equalTuple)
+		)
+	)
+	$(TR $(TD Iteration)
+		$(TD
+			$(BTREF FilterTuple)
+		)
+	)
+)
+
 Macros:
+BTREF = $(MREF $0)&nbsp;&nbsp;
+
 PHOBOSREF = $(HTTP dlang.org/phobos/std_$1#$2, std.$1.$2)
 
 Copyright: Denis Shelomovskij 2011-2012
