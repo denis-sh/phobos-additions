@@ -327,23 +327,23 @@ unittest
 /**
 TODO docs
 */
-template UnaryPred(alias Pred)
+template unaryPred(alias Pred)
 {
-	alias UnaryTemplate!(Pred, bool) UnaryPred;
+	alias UnaryTemplate!(Pred, bool) unaryPred;
 }
 
 /// ditto
-template BinaryPred(alias Pred)
+template binaryPred(alias Pred)
 {
-	alias BinaryTemplate!(Pred, bool) BinaryPred;
+	alias BinaryTemplate!(Pred, bool) binaryPred;
 }
 
 unittest
 {
-	static assert(Inst!(UnaryPred!` __traits(isUnsigned, T)`, uint));
-	static assert(Inst!(UnaryPred!`!__traits(isUnsigned, T)`,  int));
-	static assert(Inst!(UnaryPred!`a == 5`, 5));
-	static assert(Inst!(BinaryPred!`a == U.sizeof`, 4, int));
+	static assert(Inst!(unaryPred!` __traits(isUnsigned, T)`, uint));
+	static assert(Inst!(unaryPred!`!__traits(isUnsigned, T)`,  int));
+	static assert(Inst!(unaryPred!`a == 5`, 5));
+	static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
 }
 
 
@@ -376,7 +376,7 @@ unittest {
 	static assert( allSatisfy!(isSignedIntegral,  int,  short, long));
 	static assert(!anySatisfy!(isSignedIntegral, uint, ushort, ulong));
 
-	alias TemplateAnd!(isSignedIntegral, UnaryPred!`is(T == short)`) isShort;
+	alias TemplateAnd!(isSignedIntegral, unaryPred!`is(T == short)`) isShort;
 	static assert( isShort!short);
 	static assert(!anySatisfy!(isShort, int, long, uint, ushort, ulong));
 }
@@ -411,7 +411,7 @@ unittest {
 	static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
 	static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
 
-	alias TemplateOr!(isIntegralOrFloating, UnaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
+	alias TemplateOr!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
 	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int,  short, long, float, double, char));
 	static assert(!isIntegralOrFloatingOrChar!bool);
 }
@@ -857,7 +857,7 @@ Analog of $(PHOBOSREF algorithm, cmp) for generic tuples.
 template cmpTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
 {
-	alias BinaryPred!pred predTemplate;
+	alias binaryPred!pred predTemplate;
 
 	static if (packedTuple1.empty)
 		enum cmpTuple = -cast(int) !packedTuple2.empty;
@@ -912,7 +912,7 @@ Analog of $(PHOBOSREF algorithm, equal) for generic tuples.
 template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
 {
-	alias BinaryPred!pred predTemplate;
+	alias binaryPred!pred predTemplate;
 
 	template instForPackedTuple(alias packedTuple)
 		if(isPackedTuple!packedTuple && packedTuple.length == 2)
