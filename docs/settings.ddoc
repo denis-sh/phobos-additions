@@ -15,3 +15,4 @@ DBUGZILLA = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$0, D Bugzilla
 BOOKTABLE = <table cellspacing=0 cellpadding=5 class="table"><caption>$1</caption>$2</table>
 LEADINGROW = <tr class=leadingrow><td colspan=2><b><em>&nbsp;&nbsp;&nbsp;&nbsp;$0</em></b></td></tr>
 TD = <td valign=top>$0</td>
+PHOBOSREF = $(HTTP dlang.org/phobos/std_$1#$2, std.$1.$2)

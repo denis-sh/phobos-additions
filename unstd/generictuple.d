@@ -37,8 +37,6 @@ $(BOOKTABLE Generic tuple manipulation functions,
 Macros:
 BTREF = $(MREF $0)&nbsp;&nbsp;
 
-PHOBOSREF = $(HTTP dlang.org/phobos/std_$1#$2, std.$1.$2)
-
 Copyright: Denis Shelomovskij 2011-2012
 
 License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
