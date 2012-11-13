@@ -105,6 +105,14 @@ template PackedGenericTuple(Args...)
 
 	/// Detect whether it's empty.
 	enum empty = !length;
+
+	/// Convenient equality check template. Same as $(MREF equalTuple).
+	template equals(A...)
+	{ enum equals = equalTuple!(PackedGenericTuple!Args, PackedGenericTuple!A); }
+
+	/// Convenient comparison template. Same as $(MREF cmpTuple).
+	template cmp(A...)
+	{ enum cmp = cmpTuple!(PackedGenericTuple!Args, PackedGenericTuple!A); }
 }
 
 
