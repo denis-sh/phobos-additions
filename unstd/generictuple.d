@@ -404,21 +404,9 @@ TODO docs
 template RoundRobinTuple(packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
 {
-	template Impl(packedTuples...)
-	{
-		alias FilterTuple!(UnaryPred!`!A.empty`, packedTuples) nonEmptyPackedTuples;
-		static if(nonEmptyPackedTuples.length)
-		{
-			// Can't use UnaryTemplate!`A.Tuple[0 .. 1]` because of Issue 9017
-			template pred(alias packedTuple) { alias packedTuple.Tuple[0 .. 1] pred; }
-			alias GenericTuple!(MapTuple!(pred, nonEmptyPackedTuples),
-				Impl!(MapTuple!(UnaryTemplate!`PackedGenericTuple!(A.Tuple[1 .. $])`, nonEmptyPackedTuples))) Impl;
-		}
-		else
-			alias GenericTuple!() Impl;
-	}
-
-	alias Impl!packedTuples RoundRobinTuple;
+	struct _Empty;
+	template pred(alias A) { enum pred = !is(A == _Empty); }
+	alias FilterTuple!(pred, ChainTuple!(ZipTuple!(StoppingPolicy.longest, GenericTuple!_Empty, packedTuples))) RoundRobinTuple;
 }
 
 unittest
