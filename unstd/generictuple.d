@@ -403,7 +403,13 @@ TODO docs
 */
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
-	alias ZipTupleImpl!(stoppingPolicy, empty, packedTuples) ZipTuple;
+	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!empty, packedTuples) ZipTuple;
+}
+
+/// ditto
+template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, empty, packedTuples...)
+{
+	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!empty, packedTuples) ZipTuple;
 }
 
 /// ditto
@@ -486,8 +492,8 @@ unittest
 	test!(3, 3, -1, ZipTuple!(packedIota5, packedIota14))();
 	test!(5, 5, -1, ZipTuple!(packedIota5, packedIota18))();
 
-	test!(5, 3, 0, ZipTuple!(StoppingPolicy.longest, PackedGenericTuple!(-3), packedIota5, packedIota14))();
-	test!(7, 5, 1, ZipTuple!(StoppingPolicy.longest, PackedGenericTuple!(-2), packedIota5, packedIota18))();
+	test!(5, 3, 0, ZipTuple!(StoppingPolicy.longest, -3, packedIota5, packedIota14))();
+	test!(7, 5, 1, ZipTuple!(StoppingPolicy.longest, -2, packedIota5, packedIota18))();
 }
 
 
