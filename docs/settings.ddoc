@@ -3,6 +3,8 @@ REFERENCETOP = index.html
 REPOSRCTREE = http://github.com/denis-sh/phobos-additions/tree/master
 TITLEBARTEXT = <a href="https://github.com/denis-sh/phobos-additions">Github Page</a>
 RESOURCEROOT = bootDoc/
+ISSUETRACKER = https://github.com/denis-sh/phobos-additions/issues/$1
+DEFAULTPACKAGE = unstd
 PACKAGESEP = .
 FAVICON = $(RESOURCEROOT)assets/ico/favicon.ico
 LOGOSRC = $(RESOURCEROOT)assets/img/icon-github.png
