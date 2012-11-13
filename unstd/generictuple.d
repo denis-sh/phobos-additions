@@ -23,6 +23,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 	$(TR $(TD Iteration)
 		$(TD
 			$(BTREF FilterTuple)
+			$(BTREF MapTuple)
 		)
 	)
 )
@@ -45,7 +46,6 @@ public import std.typetuple:
 	staticIndexOf,
 	Erase, EraseAll, NoDuplicates, Replace, ReplaceAll, Reverse,
 	MostDerived, DerivedToFront,
-	MapTuple = staticMap,
 	allSatisfy, anySatisfy;
 
 import std.ascii: isDigit;
@@ -573,7 +573,7 @@ template ZipTuple(packedTuples...)
 private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, default_, packedTuples) && default_.length == 1)
 {
-	alias MapTuple!(UnaryTemplate!`A.length`, packedTuples) lengths;
+	alias MapTuple!(`A.length`, packedTuples) lengths;
 
 	static if(stoppingPolicy == StoppingPolicy.requireSameLength)
 		static assert(FilterTuple!(TemplateBind!(isSame, lengths[0], arg!0).Res, lengths).length == packedTuples.length,
@@ -591,7 +591,7 @@ private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, pac
 					alias default_.Tuple tupleFrontOrDefault;
 			}
 			alias GenericTuple!(PackedGenericTuple!(MapTuple!(tupleFrontOrDefault, packedTuples)),
-				Impl!(n - 1, MapTuple!(UnaryTemplate!`PackedGenericTuple!(A.Tuple[!A.empty .. $])`, packedTuples))) Impl;
+				Impl!(n - 1, MapTuple!(`PackedGenericTuple!(A.Tuple[!A.empty .. $])`, packedTuples))) Impl;
 		}
 		else
 			alias GenericTuple!() Impl;
@@ -833,6 +833,39 @@ unittest
 
 	static assert(is(FilterTuple!(`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
 		TypeTuple!(size_t, immutable ushort, char)));
+}
+
+
+/**
+TODO docs
+
+Example:
+---
+alias MapTuple!(`a * a`, iotaTuple!4) squares; // Creates expression tuple (0, 1, 4, 9)
+static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
+---
+
+Analog of $(PHOBOSREF algorithm, map) for generic tuples
+except $(D Func) can return any count of elements.
+*/
+template MapTuple(alias Func, A...)
+{
+	alias UnaryTemplate!Func FuncTemplate;
+
+	static if (A.length)
+		alias GenericTuple!(FuncTemplate!(A[0]), MapTuple!(FuncTemplate, A[1 .. $])) MapTuple;
+	else
+		alias GenericTuple!() MapTuple;
+}
+
+unittest
+{
+	static assert(MapTuple!`1`.length == 0);
+	static assert(equalTuple!(PackedGenericTuple!(MapTuple!(`1`, const int)),  PackedGenericTuple!1));
+	static assert(is(MapTuple!(Unqual, int, immutable int) == TypeTuple!(int, int)));
+	static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
+	alias MapTuple!(`a * a`, iotaTuple!4) squares;
+	static assert(equalTuple!(PackedGenericTuple!squares, PackedGenericTuple!(0, 1, 4, 9)));
 }
 
 //  internal templates from std.typetuple:
