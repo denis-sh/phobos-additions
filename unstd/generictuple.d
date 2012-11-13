@@ -811,17 +811,10 @@ template FilterTuple(alias Pred, A...)
 {
 	alias UnaryTemplate!Pred PredTemplate;
 
-	static if (A.length == 0)
-		alias GenericTuple!() FilterTuple;
-	else
-	{
-		alias FilterTuple!(PredTemplate, A[1 .. $]) Tail;
+	template func(A...) if(A.length == 1)
+	{ alias A[0 .. PredTemplate!(A[0])] func; }
 
-		static if(PredTemplate!(A[0]))
-			alias GenericTuple!(A[0], Tail) FilterTuple;
-		else
-			alias Tail FilterTuple;
-	}
+	alias MapTuple!(func, A) FilterTuple;
 }
 
 unittest
