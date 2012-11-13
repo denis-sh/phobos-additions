@@ -560,12 +560,14 @@ template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, empty,
 
 /// ditto
 template ZipTuple(StoppingPolicy stoppingPolicy, packedTuples...)
+	if(stoppingPolicy != StoppingPolicy.longest) // probably a compiler @@@BUG@@@ workaround
 {
 	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!void, packedTuples) ZipTuple;
 }
 
 /// ditto
 template ZipTuple(packedTuples...)
+	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples)) // probably a compiler @@@BUG@@@ workaround
 {
 	alias ZipTuple!(StoppingPolicy.shortest, packedTuples) ZipTuple;
 }
@@ -624,7 +626,7 @@ unittest
 	with(StoppingPolicy) foreach(stoppingPolicy; expressionTuple!(shortest, longest, requireSameLength))
 	{
 		static if(stoppingPolicy == longest)
-			alias PackedGenericTuple!void def;
+			alias void def;
 		else
 			alias expressionTuple!() def;
 
