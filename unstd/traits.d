@@ -2,7 +2,7 @@
 
 Copyright: Denis Shelomovskij 2011-2012
 
-License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
+License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
 
 Authors: Denis Shelomovskij
 */
@@ -20,7 +20,7 @@ import std.typecons: tuple;
 Returns the element type of an array.
 
 For ranges, see also
-$(LINK2 http://dlang.org/phobos/std_range.html#ElementEncodingType, std.range.ElementEncodingType).
+$(PHOBOSREF range, ElementEncodingType).
 
 Example:
 ---

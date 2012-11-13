@@ -3,7 +3,7 @@ Functions and types that manipulate multidimensional rectangular arrays.
 
 Copyright: Denis Shelomovskij 2011-2012
 
-License: $(WEB boost.org/LICENSE_1_0.txt, Boost License 1.0).
+License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
 
 Authors: Denis Shelomovskij
 
@@ -32,8 +32,8 @@ Represents value as a flat (single-dimention) static array.
 Considers $(D T) to be an $(D n)-dimensional static array type.
 
 See also
-$(LINK2 unstd.traits.html#MultidimensionalStaticArrayElementType, MultidimensionalStaticArrayElementType),
-$(LINK2 unstd.traits.html#multidimensionalStaticArrayElementsCount, multidimensionalStaticArrayElementsCount).
+$(DPREF traits, MultidimensionalStaticArrayElementType),
+$(DPREF traits, multidimensionalStaticArrayElementsCount).
 
 Example:
 ---
