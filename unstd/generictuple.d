@@ -383,6 +383,24 @@ unittest
 /**
 TODO docs
 */
+template ChainTuple(packedTuples...)
+	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
+{
+	// Can't use UnaryTemplate!`A.Tuple` because of Issue 9017
+	template Pred(alias packedTuple) { alias packedTuple.Tuple Pred; }
+	alias MapTuple!(Pred, packedTuples) ChainTuple;
+}
+
+unittest
+{
+	alias ChainTuple!(PackedGenericTuple!(1, 2, 3, 4), PackedGenericTuple!(5, 6), PackedGenericTuple!(), PackedGenericTuple!7) chain;
+	static assert(equalTuple!(PackedGenericTuple!chain, PackedGenericTuple!(1, 2, 3, 4, 5, 6, 7)));
+}
+
+
+/**
+TODO docs
+*/
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
 	alias ZipTupleImpl!(stoppingPolicy, empty, packedTuples) ZipTuple;
