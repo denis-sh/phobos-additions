@@ -440,6 +440,23 @@ unittest
 /**
 TODO docs
 */
+template RepeatTuple(size_t n, A...)
+{
+	static if(n)
+		alias GenericTuple!(A, RepeatTuple!(n - 1, A)) RepeatTuple;
+	else
+		alias GenericTuple!() RepeatTuple;
+}
+
+unittest
+{
+	static assert(equalTuple!(PackedGenericTuple!(RepeatTuple!(4, 5)), PackedGenericTuple!(5, 5, 5, 5)));
+}
+
+
+/**
+TODO docs
+*/
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
 	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!empty, packedTuples) ZipTuple;
