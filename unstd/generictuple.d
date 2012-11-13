@@ -714,24 +714,24 @@ Analog of $(PHOBOSREF algorithm, cmp) for generic tuples.
 template cmpTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
 {
+	alias BinaryPred!pred predTemplate;
+
 	static if (packedTuple1.empty)
 		enum cmpTuple = -cast(int) !packedTuple2.empty;
 	else static if (packedTuple2.empty)
 		enum cmpTuple = cast(int) !packedTuple1.empty;
-	else static if (pred!(packedTuple1.Tuple[0], packedTuple2.Tuple[0]))
+	else static if (predTemplate!(packedTuple1.Tuple[0], packedTuple2.Tuple[0]))
 		enum cmpTuple = -1;
-	else static if (pred!(packedTuple2.Tuple[0], packedTuple1.Tuple[0]))
+	else static if (predTemplate!(packedTuple2.Tuple[0], packedTuple1.Tuple[0]))
 		enum cmpTuple = 1;
 	else
-		enum cmpTuple = cmpTuple!(pred, PackedGenericTuple!(packedTuple1.Tuple[1 .. $]), PackedGenericTuple!(packedTuple2.Tuple[1 .. $]));
+		enum cmpTuple = cmpTuple!(predTemplate, PackedGenericTuple!(packedTuple1.Tuple[1 .. $]), PackedGenericTuple!(packedTuple2.Tuple[1 .. $]));
 }
 
 /// ditto
 template cmpTuple(alias packedTuple1, alias packedTuple2)
 {
-	template less(A...) if(A.length == 2)
-	{ enum less = A[0] < A[1]; }
-	enum cmpTuple = cmpTuple!(less, packedTuple1, packedTuple2);
+	enum cmpTuple = cmpTuple!(`__A[0] < __A[1]`, packedTuple1, packedTuple2);
 }
 
 unittest
@@ -746,6 +746,8 @@ unittest
 	static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"a") == 0);
 	static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"ab") < 0);
 	static assert(cmpTuple!(PackedGenericTuple!"b", PackedGenericTuple!"ab") > 0);
+
+	static assert(cmpTuple!(`__A[0].sizeof < __A[1].sizeof`, PackedGenericTuple!int, PackedGenericTuple!long) < 0);
 }
 
 
@@ -758,10 +760,12 @@ Analog of $(PHOBOSREF algorithm, equal) for generic tuples.
 template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
 {
+	alias BinaryPred!pred predTemplate;
+
 	template instForPackedTuple(alias packedTuple)
 		if(isPackedTuple!packedTuple && packedTuple.length == 2)
 	{
-		enum instForPackedTuple = pred!(packedTuple.Tuple);
+		enum instForPackedTuple = predTemplate!(packedTuple.Tuple);
 	}
 
 	static if(packedTuple1.length == packedTuple2.length)
@@ -776,8 +780,6 @@ template equalTuple(alias packedTuple1, alias packedTuple2)
 	enum equalTuple = equalTuple!(isSame, packedTuple1, packedTuple2);
 }
 
-version(unittest) template __truePred(A...) { enum __truePred = true; }
-
 unittest
 {
 	static assert( equalTuple!(PackedGenericTuple!(), PackedGenericTuple!()));
@@ -787,8 +789,8 @@ unittest
 	static assert( equalTuple!(PackedGenericTuple!(0, 1), PackedGenericTuple!(iotaTuple!2)));
 	static assert( equalTuple!(PackedGenericTuple!(int, "a"), PackedGenericTuple!(int, "a")));
 
-	static assert(!equalTuple!(__truePred, PackedGenericTuple!1, PackedGenericTuple!()));
-	static assert( equalTuple!(__truePred, PackedGenericTuple!1, PackedGenericTuple!int));
+	static assert(!equalTuple!(`true`, PackedGenericTuple!1, PackedGenericTuple!()));
+	static assert( equalTuple!(`true`, PackedGenericTuple!1, PackedGenericTuple!int));
 }
 
 
@@ -807,13 +809,15 @@ Analog of $(PHOBOSREF algorithm, filter) for generic tuples.
 */
 template FilterTuple(alias Pred, A...)
 {
+	alias UnaryTemplate!Pred PredTemplate;
+
 	static if (A.length == 0)
 		alias GenericTuple!() FilterTuple;
 	else
 	{
-		alias FilterTuple!(Pred, A[1 .. $]) Tail;
+		alias FilterTuple!(PredTemplate, A[1 .. $]) Tail;
 
-		static if(Pred!(A[0]))
+		static if(PredTemplate!(A[0]))
 			alias GenericTuple!(A[0], Tail) FilterTuple;
 		else
 			alias Tail FilterTuple;
@@ -827,7 +831,7 @@ unittest
 	static assert(is(FilterTuple!(isNumeric, int, size_t, void, immutable short, char) ==
 		TypeTuple!(int, size_t, immutable short)));
 
-	static assert(is(FilterTuple!(UnaryPred!`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
+	static assert(is(FilterTuple!(`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
 		TypeTuple!(size_t, immutable ushort, char)));
 }
 
