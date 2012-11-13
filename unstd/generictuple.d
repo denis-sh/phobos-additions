@@ -579,8 +579,12 @@ unittest
 
 
 /**
-Expression tuple usable for CT $(D foreach) iteration 0 .. $(D n) or $(D m) .. $(D n).
-If $(D m) >= $(D n) the range is empty.
+Returns expression tuple with elements going through the numbers $(D begin), $(D begin +
+step), $(D begin + 2 * step), $(D ...), up to and excluding $(D end).
+The two-arguments version has $(D step = 1).
+The one-argument version also has $(D begin = 0).
+If $(D begin < end && step < 0) or $(D begin > end && step > 0) or $(D begin == end),
+then an empty tuple is returned.
 
 Example:
 ---
@@ -592,58 +596,48 @@ foreach(i; iotaTuple!5) // same as res += foo!1(); res += foo!3();
 
 Analog of $(PHOBOSREF range, iota) for generic tuples.
 */
-template iotaTuple(size_t n)
+template iotaTuple(alias begin, alias end, alias step)
 {
-	static if(n)
-		alias expressionTuple!(iotaTuple!(n-1), n-1) iotaTuple;
-	else
-		alias expressionTuple!() iotaTuple;
-}
-
-unittest
-{
-	static assert(iotaTuple!0 .length == 0);
-
-	foreach(i, j; iotaTuple!5)
-		static assert(i == j);
-
-	foreach_reverse(i, j; iotaTuple!5)
-		static assert(i == j);
-
-	int foo(int i)() if(i == 1 || i == 3) { return i * i; }
-	int res;
-	foreach(i; iotaTuple!5)
-		static if(i & 1)
-			res += foo!i();
-	assert(res == 1 + 3^^2);
+	alias iotaTupleImpl!(CommonType!(typeof(begin), typeof(end), typeof(step)), begin, end, step) iotaTuple;
 }
 
 /// ditto
-template iotaTuple(int m, int n)
+template iotaTuple(alias begin, alias end)
 {
-	static if(n > m)
-		alias expressionTuple!(iotaTuple!(m, n-1), n-1) iotaTuple;
+	alias iotaTupleImpl!(CommonType!(typeof(begin), typeof(end)), begin, end, 1) iotaTuple;
+}
+
+/// ditto
+template iotaTuple(alias end)
+{
+	alias iotaTupleImpl!(typeof(end), 0, end, 1) iotaTuple;
+}
+
+private template iotaTupleImpl(T, T begin, T end, T step)
+	if(isIntegral!T || isFloatingPoint!T && step)
+{
+	static if(begin < end && step < 0 || begin > end && step > 0 || begin == end)
+		alias expressionTuple!() iotaTupleImpl;
+	else static if(step)
+		alias expressionTuple!(begin, iotaTupleImpl!(T, begin + step, end, step)) iotaTupleImpl;
 	else
-		alias expressionTuple!() iotaTuple;
+		static assert(0, "iotaTuple: `step` can't be zero for nonequal `begin` and `end`");
 }
 
 unittest
 {
-	static assert(iotaTuple!(5, 3) .length == 0);
-	static assert(iotaTuple!(3, 3) .length == 0);
+	static assert(iotaTuple!0.length == 0);
+	static assert(iotaTuple!(10, 1).length == 0);
+	static assert(iotaTuple!(1, 10, -1).length == 0);
+	static assert(iotaTuple!(2, 2, 0).length == 0);
+	static assert(!__traits(compiles, iotaTuple!(1, 2, 0)));
 
-	foreach(i, j; iotaTuple!(1, 5))
-		static assert(i + 1 == j);
-
-	foreach_reverse(i, j; iotaTuple!(1, 5))
-		static assert(i + 1 == j);
-
-	int foo(int i)() if(i == 1 || i == 3) { return i * i; }
-	int res;
-	foreach(i; iotaTuple!(1, 5))
-		static if(i & 1)
-			res += foo!i();
-	assert(res == 1 + 3^^2);
+	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!1), PackedGenericTuple!0));
+	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!3), PackedGenericTuple!(0, 1, 2)));
+	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(1.0, 3)), PackedGenericTuple!(1.0, 2.0)));
+	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(1, 3.1f)), PackedGenericTuple!(1.0, 2.0, 3.0)));
+	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(3, 0, -1)), PackedGenericTuple!(3, 2, 1)));
+	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(3, 2, -.5)), PackedGenericTuple!(3.0, 2.5)));
 }
 
 
