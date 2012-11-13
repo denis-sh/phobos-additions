@@ -25,6 +25,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 	$(TR $(TD Iteration)
 		$(TD
 			$(BTREF FilterTuple)
+			$(BTREF JoinTuple)
 			$(BTREF MapTuple)
 		)
 	)
@@ -979,6 +980,43 @@ unittest
 
 	static assert(is(FilterTuple!(`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
 		TypeTuple!(size_t, immutable ushort, char)));
+}
+
+
+/**
+Joins $(D packedTuples) using $(D packedSeparatorTuple) as a separator.
+
+Example:
+----
+alias PackedGenericTuple!"+" sep;
+alias PackedGenericTuple!(void, int) part1;
+alias PackedGenericTuple!0 part2;
+static assert(PackedGenericTuple!(JoinTuple!(sep, part1, part2)).equals!(void, int, "+", 0));
+----
+
+Analog of $(PHOBOSREF array, join) and $(PHOBOSREF algorithm, joiner) for generic tuples.
+*/
+template JoinTuple(alias packedSeparatorTuple, packedTuples...)
+	if(allSatisfy!(isPackedTuple, packedSeparatorTuple, packedTuples))
+{
+	template Prefix(alias packedTuple)
+	{ alias ChainTuple!(packedSeparatorTuple, packedTuple) Prefix; }
+
+	static if(packedTuples.length)
+		alias GenericTuple!(packedTuples[0].Tuple, MapTuple!(Prefix, packedTuples[1 .. $])) JoinTuple;
+	else
+		alias GenericTuple!() JoinTuple;
+}
+
+unittest
+{
+	alias PackedGenericTuple!"+" sep;
+	alias PackedGenericTuple!(void, int) part1;
+	alias PackedGenericTuple!0 part2;
+
+	static assert(JoinTuple!sep.length == 0);
+	static assert(is(JoinTuple!(sep, part1) == TypeTuple!(void, int)));
+	static assert(PackedGenericTuple!(JoinTuple!(sep, part1, part2)).equals!(void, int, "+", 0));
 }
 
 
