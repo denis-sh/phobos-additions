@@ -68,16 +68,16 @@ template Template(alias Pred, int argumentsCount, EnumType = void)
 				}
 			}
 
-			static if(__traits(compiles, { enum e = mixin(Pred); }))
+			static if(is(EnumType == void))
 			{
-				static if(is(EnumType == void))
+				static if(__traits(compiles, { enum e = mixin(Pred); }))
 					enum Template = mixin(Pred);
 				else
-					enum EnumType Template = mixin(Pred);
+					mixin(`alias `~Pred~` Template;`);
 			}
 			else
 			{
-				mixin(`alias `~Pred~` Template;`);
+				enum EnumType Template = mixin(Pred);
 			}
 		}
 	} else
@@ -111,6 +111,8 @@ unittest
 	static assert(Inst!(UnaryTemplate!`a == 7`w, 7));
 
 	static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
+
+	static assert(!__traits(compiles, Inst!(Template!(`T`, bool), int)));
 }
 
 
@@ -134,6 +136,7 @@ unittest
 	static assert(Inst!(unaryPred!`!__traits(isUnsigned, T)`,  int));
 	static assert(Inst!(unaryPred!`a == 5`, 5));
 	static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
+	static assert(!__traits(compiles, Inst!(unaryPred!`T`, int)));
 }
 
 
