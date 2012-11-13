@@ -28,6 +28,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 			$(BTREF JoinTuple)
 			$(BTREF MapTuple)
 			$(BTREF ReduceTuple)
+			$(BTREF UniqTuple)
 		)
 	)
 )
@@ -999,6 +1000,50 @@ unittest
 	static assert(ReduceTuple!(`true`, void, int) == true);
 	static assert(ReduceTuple!(`a + U.sizeof`, 0, bool, short, int) == 1 + 2 + 4);
 	static assert(is(ReduceTuple!(`Select!(T.sizeof > U.sizeof, T, U)`, void, bool, long, int) == long));
+}
+
+
+/**
+TODO docs
+
+Example:
+----
+alias expressionTuple!(1, 2, 2, 2, 3, 3, 4, 1, 1) expr;
+static assert(PackedGenericTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3, 4, 1));
+static assert(PackedGenericTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
+----
+
+Analog of $(PHOBOSREF algorithm, uniq) for generic tuples
+except $(D pred) must be explicitly specified.
+*/
+template UniqTuple(alias pred, A...)
+{
+	alias binaryPred!pred predTemplate;
+
+	template Impl(A...) if(A.length >= 1)
+	{
+		static if(A.length >= 2)
+		{
+			static if(predTemplate!(A[0], A[1]))
+				alias Impl!(A[0], A[2 .. $]) Impl;
+			else
+				alias GenericTuple!(A[1], Impl!(A[1], A[2 .. $])) Impl;
+		}
+		else
+			alias A[1 .. $] Impl;
+	}
+
+	static if(A.length <= 1)
+		alias A UniqTuple;
+	else
+		alias GenericTuple!(A[0], Impl!(A[0], A[1 .. $])) UniqTuple;
+}
+
+unittest
+{
+	alias expressionTuple!(1, 2, 2, 2, 3, 3, 4, 1, 1) expr;
+	static assert(PackedGenericTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3, 4, 1));
+	static assert(PackedGenericTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
 }
 
 //  internal templates from std.typetuple:
