@@ -360,6 +360,29 @@ unittest
 /**
 TODO docs
 */
+template StrideTuple(size_t n, A...)
+	if(n > 0)
+{
+	static if(A.length)
+		alias GenericTuple!(A[0], StrideTuple!(n, A[min(n, $) .. $])) StrideTuple;
+	else
+		alias GenericTuple!() StrideTuple;
+}
+
+unittest
+{
+	static assert(is(StrideTuple!1 == GenericTuple!()));
+	alias iotaTuple!(1, 11) iota;
+	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(1, iota)), PackedGenericTuple!iota));
+	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(2, iota)), PackedGenericTuple!(1, 3, 5, 7, 9)));
+	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(3, iota)), PackedGenericTuple!(1, 4, 7, 10)));
+	static assert(equalTuple!(PackedGenericTuple!(StrideTuple!(4, iota)), PackedGenericTuple!(1, 5, 9)));
+}
+
+
+/**
+TODO docs
+*/
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
 	alias ZipTupleImpl!(stoppingPolicy, empty, packedTuples) ZipTuple;
