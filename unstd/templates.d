@@ -154,6 +154,105 @@ unittest
 }
 
 
+/**
+TODO docs
+*/
+template TemplateNot(alias Template) {
+	template TemplateNot(T...) {
+		static if(__traits(compiles, { enum e = Template!T; }))
+			enum bool TemplateNot = !Template!T;
+		else
+			template TemplateNot(U...) {
+				enum bool TemplateNot = !Inst!(Template!T, U);
+			}
+	}
+}
+
+unittest {
+	import std.traits;
+	alias TemplateNot!isPointer notPointer;
+	static assert( notPointer! int );
+	static assert(!notPointer!(int*));
+	static assert( Inst!(TemplateNot!isPointer, int ));
+	static assert(!Inst!(TemplateNot!isPointer, int*));
+
+	alias TemplateNot!TemplateNot staticYes;
+	alias staticYes!isPointer _isPointer;
+	static assert(!_isPointer! int );
+	static assert( _isPointer!(int*));
+}
+
+
+/**
+TODO docs
+*/
+template TemplateAnd(Templates...)
+{
+	template TemplateAnd(T...)
+	{
+		static if(Templates.length == 0)
+			enum TemplateAnd = true;
+		else static if(Inst!(Templates[0], T))
+			enum TemplateAnd = Inst!(.TemplateAnd!(Templates[1 .. $]), T);
+		else
+			enum TemplateAnd = false;
+	}
+}
+
+unittest {
+	alias TemplateAnd!() _true;
+	static assert(_true!() && _true!int && _true!(int, int*));
+
+	import std.traits;
+
+	alias TemplateAnd!isPointer _isPointer;
+	static assert(_isPointer!(int*) && !_isPointer!int);
+
+	alias TemplateAnd!(isIntegral, isSigned) isSignedIntegral;
+	static assert( allSatisfy!(isSignedIntegral,  int,  short, long));
+	static assert(!anySatisfy!(isSignedIntegral, uint, ushort, ulong));
+
+	alias TemplateAnd!(isSignedIntegral, unaryPred!`is(T == short)`) isShort;
+	static assert( isShort!short);
+	static assert(!anySatisfy!(isShort, int, long, uint, ushort, ulong));
+}
+
+
+/**
+TODO docs
+*/
+template TemplateOr(Templates...)
+{
+	template TemplateOr(T...)
+	{
+		static if(Templates.length == 0)
+			enum TemplateOr = false;
+		else static if(!Inst!(Templates[0], T))
+			enum TemplateOr = Inst!(.TemplateOr!(Templates[1 .. $]), T);
+		else
+			enum TemplateOr = true;
+	}
+}
+
+unittest {
+	alias TemplateOr!() _false;
+	static assert(!_false!() && !_false!int && !_false!(int, int*));
+
+	import std.traits;
+
+	alias TemplateOr!isPointer _isPointer;
+	static assert(_isPointer!(int*) && !_isPointer!int);
+
+	alias TemplateOr!(isIntegral, isFloatingPoint) isIntegralOrFloating;
+	static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
+	static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
+
+	alias TemplateOr!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
+	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int,  short, long, float, double, char));
+	static assert(!isIntegralOrFloatingOrChar!bool);
+}
+
+
 private struct _Arg { size_t n; }
 private struct _ArgsRange { size_t from, to; }
 private struct _ArgsToEnd { size_t from; }
