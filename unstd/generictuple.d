@@ -13,6 +13,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 			$(BTREF ZipTuple)
 			$(BTREF iotaTuple)
 			$(BTREF IndexedTuple)
+			$(BTREF ChunksTuple)
 		)
 	)
 	$(TR $(TD Comparison)
@@ -726,6 +727,30 @@ unittest
 {
 	alias IndexedTuple!(PackedGenericTuple!(1, 2, 3, 4, 5), PackedGenericTuple!(4, 3, 1, 2, 0, 4)) indexed;
 	static assert(equalTuple!(PackedGenericTuple!indexed, PackedGenericTuple!(5, 4, 2, 3, 1, 5)));
+}
+
+
+/**
+TODO docs
+
+Analog of $(PHOBOSREF range, chunks) for generic tuples
+except $(D chunkSize) is the first argument.
+*/
+template ChunksTuple(size_t chunkSize, A...)
+{
+	static if(A.length > chunkSize)
+		alias GenericTuple!(PackedGenericTuple!(A[0 .. chunkSize]),
+			ChunksTuple!(chunkSize, A[chunkSize .. $])) ChunksTuple;
+	else
+		alias GenericTuple!(PackedGenericTuple!A) ChunksTuple;
+}
+
+unittest
+{
+	alias ChunksTuple!(4,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10) chunks;
+	static assert(equalTuple!(chunks[0], PackedGenericTuple!(1, 2, 3, 4)));
+	static assert(equalTuple!(chunks[1], PackedGenericTuple!(5, 6, 7, 8)));
+	static assert(equalTuple!(chunks[2], PackedGenericTuple!(9, 10)));
 }
 
 
