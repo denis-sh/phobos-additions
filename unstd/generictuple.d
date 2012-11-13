@@ -419,6 +419,27 @@ unittest
 /**
 TODO docs
 */
+template RadialTuple(size_t startingIndex, A...)
+{
+	enum i = (startingIndex == -1 ? (A.length - !!A.length) / 2 : startingIndex) + !!A.length;
+	alias RoundRobinTuple!(PackedGenericTuple!(RetroTuple!(A[0 .. i])), PackedGenericTuple!(A[i .. $])) RadialTuple;
+}
+
+unittest
+{
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1)), PackedGenericTuple!1));
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2)), PackedGenericTuple!(1, 2)));
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3)), PackedGenericTuple!(2, 3, 1)));
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4)), PackedGenericTuple!(2, 3, 1, 4)));
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)), PackedGenericTuple!(3, 4, 2, 5, 1)));
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5, 6)), PackedGenericTuple!(3, 4, 2, 5, 1, 6)));
+	static assert(equalTuple!(PackedGenericTuple!(RadialTuple!(1, 1, 2, 3, 4, 5)), PackedGenericTuple!(2, 3, 1, 4, 5)));
+}
+
+
+/**
+TODO docs
+*/
 template ZipTuple(StoppingPolicy stoppingPolicy : StoppingPolicy.longest, alias empty, packedTuples...)
 {
 	alias ZipTupleImpl!(stoppingPolicy, PackedGenericTuple!empty, packedTuples) ZipTuple;
