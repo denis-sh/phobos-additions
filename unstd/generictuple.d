@@ -294,6 +294,23 @@ template BinaryTemplate(alias Pred, EnumType = void)
 	alias Template!(Pred, 2, EnumType) BinaryTemplate;
 }
 
+unittest
+{
+	static assert(Inst!(UnaryTemplate!` __traits(isUnsigned, T)`, uint));
+	static assert(Inst!(UnaryTemplate!`!__traits(isUnsigned, T)`,  int));
+	static assert(Inst!(Inst!(UnaryTemplate!TemplateNot, isPointer), int));
+	static assert(Inst!(Inst!(UnaryTemplate!`TemplateNot!A`, isPointer), int));
+	static assert(Inst!(Inst!(UnaryTemplate!(TemplateNot!TemplateNot), isPointer), int*));
+	static assert(Inst!(Inst!(UnaryTemplate!`Inst!(TemplateNot!TemplateNot, A)`, isPointer), int*));
+
+	static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
+
+	static assert(Inst!(UnaryTemplate!`a == 5`, 5));
+	static assert(Inst!(UnaryTemplate!`a == 7`w, 7));
+
+	static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
+}
+
 
 /**
 TODO docs
@@ -311,23 +328,10 @@ template BinaryPred(alias Pred)
 
 unittest
 {
-	import std.traits;
-
-	static assert(is(FilterTuple!(isNumeric, int, size_t, void, immutable short, char) ==
-					 TypeTuple!(int, size_t, immutable short)));
-
 	static assert(Inst!(UnaryPred!` __traits(isUnsigned, T)`, uint));
 	static assert(Inst!(UnaryPred!`!__traits(isUnsigned, T)`,  int));
-	static assert(Inst!(Inst!(UnaryPred!TemplateNot, isPointer), int));
-	static assert(Inst!(Inst!(UnaryPred!`TemplateNot!A`, isPointer), int));
-	static assert(Inst!(Inst!(UnaryPred!(TemplateNot!TemplateNot), isPointer), int*));
-	static assert(Inst!(Inst!(UnaryPred!`Inst!(TemplateNot!TemplateNot, A)`, isPointer), int*));
-
-	static assert(is(Inst!(UnaryPred!`T[]`, int) == int[]));
-	static assert(is(MapTuple!(UnaryPred!`T[]`, int, long) == TypeTuple!(int[], long[])));
-
 	static assert(Inst!(UnaryPred!`a == 5`, 5));
-	static assert(Inst!(UnaryPred!`a == 7`w, 7));
+	static assert(Inst!(BinaryPred!`a == U.sizeof`, 4, int));
 }
 
 
