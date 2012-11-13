@@ -25,6 +25,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 	$(TR $(TD Iteration)
 		$(TD
 			$(BTREF FilterTuple)
+			$(BTREF groupTuple)
 			$(BTREF JoinTuple)
 			$(BTREF MapTuple)
 			$(BTREF ReduceTuple)
@@ -883,6 +884,78 @@ unittest
 
 	static assert(is(FilterTuple!(`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
 		TypeTuple!(size_t, immutable ushort, char)));
+}
+
+
+/**
+TODO docs
+
+Example:
+----
+alias GenericTuple!(1, 2, 2, 2, "x", "x", int, 1, 1) tuple;
+
+alias groupTuple!(isSame, tuple) group;
+static assert(group.length == 5);
+static assert(group[0].equals!(1, 1));
+static assert(group[1].equals!(2, 3));
+static assert(group[2].equals!("x", 2));
+static assert(group[3].equals!(int, 1));
+static assert(group[4].equals!(1, 2));
+
+alias groupTuple!(TemplateNot!isSame, tuple) group2;
+static assert(group2.length == 3);
+static assert(group2[0].equals!(1, 7));
+static assert(group2[1].equals!(1, 1));
+static assert(group2[2].equals!(1, 1));
+----
+
+Analog of $(PHOBOSREF algorithm, group) for generic tuples
+except $(D pred) must be explicitly specified.
+*/
+template groupTuple(alias pred, A...)
+{
+	alias binaryPred!pred predTemplate;
+
+	template impl(size_t count, A...) if(A.length >= 1)
+	{
+		static if(A.length == 1 || !predTemplate!(A[0], A[1]))
+		{
+			alias PackedGenericTuple!(A[0], count) curr;
+
+			static if(A.length == 1)
+				alias GenericTuple!(curr) impl;
+			else
+				alias GenericTuple!(curr, impl!(1, A[1], A[2 .. $])) impl;
+		}
+		else
+			alias impl!(count + 1, A[0], A[2 .. $]) impl;
+	}
+
+	static if(A.length)
+		alias impl!(1, A) groupTuple;
+	else
+		alias GenericTuple!() groupTuple;
+}
+
+unittest
+{
+	static assert(groupTuple!isSame.length == 0);
+
+	alias GenericTuple!(1, 2, 2, 2, "x", "x", int, 1, 1) tuple;
+
+	alias groupTuple!(isSame, tuple) group;
+	static assert(group.length == 5);
+	static assert(group[0].equals!(1, 1));
+	static assert(group[1].equals!(2, 3));
+	static assert(group[2].equals!("x", 2));
+	static assert(group[3].equals!(int, 1));
+	static assert(group[4].equals!(1, 2));
+
+	alias groupTuple!(TemplateNot!isSame, tuple) group2;
+	static assert(group2.length == 3);
+	static assert(group2[0].equals!(1, 7));
+	static assert(group2[1].equals!(1, 1));
+	static assert(group2[2].equals!(1, 1));
 }
 
 
