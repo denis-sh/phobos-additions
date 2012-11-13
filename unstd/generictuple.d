@@ -239,33 +239,59 @@ unittest {
 /**
 TODO docs
 */
-template UnaryTemplate(alias Pred, EnumType = void)
+template Template(alias Pred, int argumentsCount, EnumType = void)
+	if(argumentsCount >= -1)
 {
 	static if(isSomeString!(typeof(Pred)))
 	{
-		template UnaryTemplate(__A...) if(__A.length == 1)
+		template Template(__A...) if(argumentsCount == -1 || __A.length == argumentsCount)
 		{
-			static if(__traits(compiles, { enum e = __A[0]; }))
-				enum a = __A[0];
-			else static if(is(__A[0]))
-				alias __A[0] T;
-			else
-				alias __A[0] A;
+			static if(argumentsCount >= 1 && argumentsCount <= 2)
+			{
+				static if(__traits(compiles, { enum e = __A[0]; }))
+					enum a = __A[0];
+				else static if(is(__A[0]))
+					alias __A[0] T;
+				else
+					alias __A[0] A;
+
+				static if(argumentsCount == 2)
+				{
+					static if(__traits(compiles, { enum e = __A[1]; }))
+						enum b = __A[1];
+					else static if(is(__A[1]))
+						alias __A[1] U;
+					else
+						alias __A[1] B;
+				}
+			}
 
 			static if(__traits(compiles, { enum e = mixin(Pred); }))
 			{
 				static if(is(EnumType == void))
-					enum UnaryTemplate = mixin(Pred);
+					enum Template = mixin(Pred);
 				else
-					enum EnumType UnaryTemplate = mixin(Pred);
+					enum EnumType Template = mixin(Pred);
 			}
 			else
 			{
-				mixin(`alias `~Pred~` UnaryTemplate;`);
+				mixin(`alias `~Pred~` Template;`);
 			}
 		}
 	} else
-		alias Pred UnaryTemplate;
+		alias Pred Template;
+}
+
+/// ditto
+template UnaryTemplate(alias Pred, EnumType = void)
+{
+	alias Template!(Pred, 1, EnumType) UnaryTemplate;
+}
+
+/// ditto
+template BinaryTemplate(alias Pred, EnumType = void)
+{
+	alias Template!(Pred, 2, EnumType) BinaryTemplate;
 }
 
 
@@ -275,6 +301,12 @@ TODO docs
 template UnaryPred(alias Pred)
 {
 	alias UnaryTemplate!(Pred, bool) UnaryPred;
+}
+
+/// ditto
+template BinaryPred(alias Pred)
+{
+	alias BinaryTemplate!(Pred, bool) BinaryPred;
 }
 
 unittest
