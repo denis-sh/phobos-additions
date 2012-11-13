@@ -104,6 +104,28 @@ template PackedGenericTuple(Args...)
 	/// Use this member of to access its content as a generic tuple.
 	alias Args Tuple;
 
+	version(D_Ddoc)
+	{
+		/**
+		Use this member of to access its content as a typetuple.
+		Defined if $(D Args) is a typetuple.
+		*/
+		alias Args Types;
+
+		/**
+		Use this member of to access its content as an expression tuple.
+		Defined if $(D Args) is an expression tuple.
+		*/
+		alias Args expressions;
+	}
+	else
+	{
+		static if(isTypeTuple!Args)
+			alias Args Types;
+		else static if(isExpressionTuple!Args)
+			alias Args expressions;
+	}
+
 	/// Its content length.
 	enum length = Tuple.length;
 
@@ -117,6 +139,14 @@ template PackedGenericTuple(Args...)
 	/// Convenient comparison template. Same as $(MREF cmpTuple).
 	template cmp(A...)
 	{ enum cmp = cmpTuple!(PackedGenericTuple!Args, PackedGenericTuple!A); }
+}
+
+unittest
+{
+	static assert(isPackedTuple!(PackedGenericTuple!()));
+
+	static assert(is(PackedGenericTuple!int.Types == TypeTuple!int));
+	static assert(PackedGenericTuple!3.expressions[0] == 3);
 }
 
 
@@ -163,8 +193,13 @@ Same as $(D PackedGenericTuple), except it contains only types.
 */
 template PackedTypeTuple(T...) if(isTypeTuple!T)
 {
-	/// Use this member of to access its content as a typetuple.
-	alias T Types;
+	alias PackedGenericTuple!T PackedTypeTuple;
+}
+
+unittest
+{
+	static assert(isPackedTuple!(PackedTypeTuple!()));
+	static assert(is(PackedTypeTuple!int.Types == TypeTuple!int));
 }
 
 
@@ -216,8 +251,13 @@ Same as $(D PackedGenericTuple), except it contains only expressions.
 */
 template packedExpressionTuple(expr...) if(isExpressionTuple!expr)
 {
-	/// Use this member of to access its content as a typetuple.
-	alias expr expressions;
+	alias PackedGenericTuple!expr packedExpressionTuple;
+}
+
+unittest
+{
+	static assert(isPackedTuple!(packedExpressionTuple!()));
+	static assert(packedExpressionTuple!3.expressions[0] == 3);
 }
 
 
