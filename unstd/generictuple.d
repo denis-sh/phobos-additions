@@ -426,8 +426,8 @@ TODO docs
 
 Example:
 ---
-alias ChainTuple!(PackedGenericTuple!(1, 2, 3), PackedGenericTuple!(4, 5)) chain;
-static assert(PackedGenericTuple!chain.equals!(1, 2, 3, 4, 5));
+alias ChainTuple!(packedExpressionTuple!(1, 2, 3), packedExpressionTuple!(4, 5)) chain;
+static assert(packedExpressionTuple!chain.equals!(1, 2, 3, 4, 5));
 ---
 
 Analog of $(PHOBOSREF range, chain) for generic tuples.
@@ -442,8 +442,8 @@ template ChainTuple(packedTuples...)
 
 unittest
 {
-	alias ChainTuple!(PackedGenericTuple!(1, 2, 3, 4), PackedGenericTuple!(5, 6), PackedGenericTuple!(), PackedGenericTuple!7) chain;
-	static assert(PackedGenericTuple!chain.equals!(1, 2, 3, 4, 5, 6, 7));
+	alias ChainTuple!(packedExpressionTuple!(1, 2, 3, 4), packedExpressionTuple!(5, 6), packedExpressionTuple!(), packedExpressionTuple!7) chain;
+	static assert(packedExpressionTuple!chain.equals!(1, 2, 3, 4, 5, 6, 7));
 }
 
 
@@ -452,8 +452,8 @@ TODO docs
 
 Example:
 ---
-alias RoundRobinTuple!(PackedGenericTuple!(1, 2, 3), PackedGenericTuple!(10, 20, 30, 40)) roundRobin;
-static assert(PackedGenericTuple!roundRobin.equals!(1, 10, 2, 20, 3, 30, 40));
+alias RoundRobinTuple!(packedExpressionTuple!(1, 2, 3), packedExpressionTuple!(10, 20, 30, 40)) roundRobin;
+static assert(packedExpressionTuple!roundRobin.equals!(1, 10, 2, 20, 3, 30, 40));
 ---
 
 Analog of $(PHOBOSREF range, roundRobin) for generic tuples.
@@ -468,8 +468,8 @@ template RoundRobinTuple(packedTuples...)
 
 unittest
 {
-	alias RoundRobinTuple!(PackedGenericTuple!(1, 2, 3), PackedGenericTuple!(10, 20, 30, 40)) roundRobin;
-	static assert(PackedGenericTuple!roundRobin.equals!(1, 10, 2, 20, 3, 30, 40));
+	alias RoundRobinTuple!(packedExpressionTuple!(1, 2, 3), packedExpressionTuple!(10, 20, 30, 40)) roundRobin;
+	static assert(packedExpressionTuple!roundRobin.equals!(1, 10, 2, 20, 3, 30, 40));
 }
 
 
@@ -478,8 +478,8 @@ TODO docs
 
 Example:
 ---
-static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
-static assert(PackedGenericTuple!(RadialTuple!( 1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
+static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
+static assert(packedExpressionTuple!(RadialTuple!( 1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
 ---
 
 Analog of $(PHOBOSREF range, radial) for generic tuples
@@ -494,13 +494,13 @@ template RadialTuple(size_t startingIndex, A...)
 
 unittest
 {
-	static assert(PackedGenericTuple!(RadialTuple!(-1, 1)).equals!1);
-	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2)).equals!(1, 2));
-	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3)).equals!(2, 3, 1));
-	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4)).equals!(2, 3, 1, 4));
-	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
-	static assert(PackedGenericTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5, 6)).equals!(3, 4, 2, 5, 1, 6));
-	static assert(PackedGenericTuple!(RadialTuple!(1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
+	static assert(packedExpressionTuple!(RadialTuple!(-1, 1)).equals!1);
+	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2)).equals!(1, 2));
+	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3)).equals!(2, 3, 1));
+	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4)).equals!(2, 3, 1, 4));
+	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
+	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5, 6)).equals!(3, 4, 2, 5, 1, 6));
+	static assert(packedExpressionTuple!(RadialTuple!(1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
 }
 
 
@@ -510,7 +510,7 @@ TODO docs
 Example:
 ---
 static assert(is(RepeatTuple!(2, int) == TypeTuple!(int, int)));
-static assert(PackedGenericTuple!(RepeatTuple!(4, 5)).equals!(5, 5, 5, 5));
+static assert(packedExpressionTuple!(RepeatTuple!(4, 5)).equals!(5, 5, 5, 5));
 ---
 
 Analog of $(PHOBOSREF array, replicate) and $(PHOBOSREF range, repeat) for generic tuples
@@ -529,7 +529,7 @@ template RepeatTuple(size_t n, A...)
 unittest
 {
 	static assert(is(RepeatTuple!(2, int) == TypeTuple!(int, int)));
-	static assert(PackedGenericTuple!(RepeatTuple!(4, 5)).equals!(5, 5, 5, 5));
+	static assert(packedExpressionTuple!(RepeatTuple!(4, 5)).equals!(5, 5, 5, 5));
 }
 
 
@@ -538,8 +538,8 @@ TODO docs
 
 Example:
 ---
-alias PackedGenericTuple!(1, 2, 3) packed1;
-alias PackedGenericTuple!(short, int, long) packed2;
+alias packedExpressionTuple!(1, 2, 3) packed1;
+alias PackedTypeTuple!(short, int, long) packed2;
 alias ZipTuple!(packed1, packed2) zip;
 
 static assert(zip[0].equals!(1, short));
@@ -614,8 +614,8 @@ private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, pac
 
 unittest
 {
-	alias PackedGenericTuple!(1, 2, 3) packed1;
-	alias PackedGenericTuple!(short, int, long) packed2;
+	alias packedExpressionTuple!(1, 2, 3) packed1;
+	alias PackedTypeTuple!(short, int, long) packed2;
 	alias ZipTuple!(packed1, packed2) zip;
 
 	static assert(zip[0].equals!(1, short));
@@ -625,10 +625,10 @@ unittest
 
 unittest
 {
-	alias PackedGenericTuple!(iotaTuple!5) packedIota5;
-	alias PackedGenericTuple!(iotaTuple!(1, 6)) packedIota16;
-	alias PackedGenericTuple!(iotaTuple!(1, 4)) packedIota14;
-	alias PackedGenericTuple!(iotaTuple!(1, 8)) packedIota18;
+	alias packedExpressionTuple!(iotaTuple!5) packedIota5;
+	alias packedExpressionTuple!(iotaTuple!(1, 6)) packedIota16;
+	alias packedExpressionTuple!(iotaTuple!(1, 4)) packedIota14;
+	alias packedExpressionTuple!(iotaTuple!(1, 8)) packedIota18;
 
 	void test(size_t length, size_t filledLength, size_t longerIdx, zip...)()
 	{
@@ -714,12 +714,12 @@ unittest
 	static assert(iotaTuple!(2, 2, 0).length == 0);
 	static assert(!__traits(compiles, iotaTuple!(1, 2, 0)));
 
-	static assert(PackedGenericTuple!(iotaTuple!1).equals!0);
-	static assert(PackedGenericTuple!(iotaTuple!3).equals!(0, 1, 2));
-	static assert(PackedGenericTuple!(iotaTuple!(1.0, 3)).equals!(1.0, 2.0));
-	static assert(PackedGenericTuple!(iotaTuple!(1, 3.1f)).equals!(1.0, 2.0, 3.0));
-	static assert(PackedGenericTuple!(iotaTuple!(3, 0, -1)).equals!(3, 2, 1));
-	static assert(PackedGenericTuple!(iotaTuple!(3, 2, -.5)).equals!(3.0, 2.5));
+	static assert(packedExpressionTuple!(iotaTuple!1).equals!0);
+	static assert(packedExpressionTuple!(iotaTuple!3).equals!(0, 1, 2));
+	static assert(packedExpressionTuple!(iotaTuple!(1.0, 3)).equals!(1.0, 2.0));
+	static assert(packedExpressionTuple!(iotaTuple!(1, 3.1f)).equals!(1.0, 2.0, 3.0));
+	static assert(packedExpressionTuple!(iotaTuple!(3, 0, -1)).equals!(3, 2, 1));
+	static assert(packedExpressionTuple!(iotaTuple!(3, 2, -.5)).equals!(3.0, 2.5));
 }
 
 
@@ -728,8 +728,8 @@ TODO docs
 
 Example:
 ---
-alias IndexedTuple!(PackedGenericTuple!(short, int, long, double),
-                    PackedGenericTuple!(1, 0, 2, 2)) indexed;
+alias IndexedTuple!(PackedTypeTuple!(short, int, long, double),
+                    packedExpressionTuple!(1, 0, 2, 2)) indexed;
 static assert(is(indexed == TypeTuple!(int, short, long, long)));
 ---
 
@@ -745,11 +745,11 @@ template IndexedTuple(alias packedSourceTuple, alias packedIndicesTuple)
 
 unittest
 {
-	alias IndexedTuple!(PackedGenericTuple!(short, int, long, double), PackedGenericTuple!(1, 0, 2, 2)) indexed;
+	alias IndexedTuple!(PackedTypeTuple!(short, int, long, double), packedExpressionTuple!(1, 0, 2, 2)) indexed;
 	static assert(is(indexed == TypeTuple!(int, short, long, long)));
 
-	alias IndexedTuple!(PackedGenericTuple!(1, 2, 3, 4, 5), PackedGenericTuple!(4, 3, 1, 2, 0, 4)) indexed2;
-	static assert(PackedGenericTuple!indexed2.equals!(5, 4, 2, 3, 1, 5));
+	alias IndexedTuple!(packedExpressionTuple!(1, 2, 3, 4, 5), packedExpressionTuple!(4, 3, 1, 2, 0, 4)) indexed2;
+	static assert(packedExpressionTuple!indexed2.equals!(5, 4, 2, 3, 1, 5));
 }
 
 
@@ -790,9 +790,9 @@ TODO docs
 
 Example:
 ---
-static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!0) == 0);
-static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"ab") < 0);
-static assert(cmpTuple!(`T.sizeof < U.sizeof`, PackedGenericTuple!int, PackedGenericTuple!long) < 0);
+static assert(cmpTuple!(packedExpressionTuple!0, packedExpressionTuple!0) == 0);
+static assert(cmpTuple!(packedExpressionTuple!"a", packedExpressionTuple!"ab") < 0);
+static assert(cmpTuple!(`T.sizeof < U.sizeof`, PackedTypeTuple!int, PackedTypeTuple!long) < 0);
 ---
 
 Analog of $(PHOBOSREF algorithm, cmp) for generic tuples.
@@ -823,17 +823,17 @@ template cmpTuple(alias packedTuple1, alias packedTuple2)
 unittest
 {
 	static assert(cmpTuple!(PackedGenericTuple!(), PackedGenericTuple!()) == 0);
-	static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!0) == 0);
-	static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!1) < 0);
-	static assert(cmpTuple!(PackedGenericTuple!0, PackedGenericTuple!(0, 0)) < 0);
-	static assert(cmpTuple!(PackedGenericTuple!(0, 0), PackedGenericTuple!0) > 0);
-	static assert(cmpTuple!(PackedGenericTuple!1, PackedGenericTuple!(0, 0)) > 0);
+	static assert(cmpTuple!(packedExpressionTuple!0, packedExpressionTuple!0) == 0);
+	static assert(cmpTuple!(packedExpressionTuple!0, packedExpressionTuple!1) < 0);
+	static assert(cmpTuple!(packedExpressionTuple!0, packedExpressionTuple!(0, 0)) < 0);
+	static assert(cmpTuple!(packedExpressionTuple!(0, 0), packedExpressionTuple!0) > 0);
+	static assert(cmpTuple!(packedExpressionTuple!1, packedExpressionTuple!(0, 0)) > 0);
 
-	static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"a") == 0);
-	static assert(cmpTuple!(PackedGenericTuple!"a", PackedGenericTuple!"ab") < 0);
-	static assert(cmpTuple!(PackedGenericTuple!"b", PackedGenericTuple!"ab") > 0);
+	static assert(cmpTuple!(packedExpressionTuple!"a", packedExpressionTuple!"a") == 0);
+	static assert(cmpTuple!(packedExpressionTuple!"a", packedExpressionTuple!"ab") < 0);
+	static assert(cmpTuple!(packedExpressionTuple!"b", packedExpressionTuple!"ab") > 0);
 
-	static assert(cmpTuple!(`T.sizeof < U.sizeof`, PackedGenericTuple!int, PackedGenericTuple!long) < 0);
+	static assert(cmpTuple!(`T.sizeof < U.sizeof`, PackedTypeTuple!int, PackedTypeTuple!long) < 0);
 }
 
 
@@ -843,11 +843,11 @@ $(D isSame) is used if not predicacte specified.
 
 Example:
 ---
-static assert( equalTuple!(PackedGenericTuple!(0, 1), PackedGenericTuple!(iotaTuple!2)));
+static assert( equalTuple!(packedExpressionTuple!(0, 1), packedExpressionTuple!(iotaTuple!2)));
 static assert( equalTuple!(PackedGenericTuple!(int, "a"), PackedGenericTuple!(int, "a")));
 
-static assert( equalTuple!(`true`, PackedGenericTuple!1, PackedGenericTuple!int));
-static assert(!equalTuple!(`true`, PackedGenericTuple!1, PackedGenericTuple!()));
+static assert( equalTuple!(`true`, packedExpressionTuple!1, PackedTypeTuple!int));
+static assert(!equalTuple!(`true`, packedExpressionTuple!1, packedExpressionTuple!()));
 ---
 
 Analog of $(PHOBOSREF algorithm, equal) for generic tuples.
@@ -878,14 +878,14 @@ template equalTuple(alias packedTuple1, alias packedTuple2)
 unittest
 {
 	static assert( equalTuple!(PackedGenericTuple!(), PackedGenericTuple!()));
-	static assert( equalTuple!(PackedGenericTuple!0, PackedGenericTuple!0));
-	static assert(!equalTuple!(PackedGenericTuple!0, PackedGenericTuple!int));
-	static assert(!equalTuple!(PackedGenericTuple!0, PackedGenericTuple!(0, 1)));
-	static assert( equalTuple!(PackedGenericTuple!(0, 1), PackedGenericTuple!(iotaTuple!2)));
+	static assert( equalTuple!(packedExpressionTuple!0, packedExpressionTuple!0));
+	static assert(!equalTuple!(packedExpressionTuple!0, PackedTypeTuple!int));
+	static assert(!equalTuple!(packedExpressionTuple!0, packedExpressionTuple!(0, 1)));
+	static assert( equalTuple!(packedExpressionTuple!(0, 1), packedExpressionTuple!(iotaTuple!2)));
 	static assert( equalTuple!(PackedGenericTuple!(int, "a"), PackedGenericTuple!(int, "a")));
 
-	static assert(!equalTuple!(`true`, PackedGenericTuple!1, PackedGenericTuple!()));
-	static assert( equalTuple!(`true`, PackedGenericTuple!1, PackedGenericTuple!int));
+	static assert(!equalTuple!(`true`, packedExpressionTuple!1, packedExpressionTuple!()));
+	static assert( equalTuple!(`true`, packedExpressionTuple!1, PackedTypeTuple!int));
 }
 
 
@@ -1004,9 +1004,9 @@ Joins $(D packedTuples) using $(D packedSeparatorTuple) as a separator.
 
 Example:
 ----
-alias PackedGenericTuple!"+" sep;
-alias PackedGenericTuple!(void, int) part1;
-alias PackedGenericTuple!0 part2;
+alias packedExpressionTuple!"+" sep;
+alias PackedTypeTuple!(void, int) part1;
+alias packedExpressionTuple!0 part2;
 static assert(PackedGenericTuple!(JoinTuple!(sep, part1, part2)).equals!(void, int, "+", 0));
 ----
 
@@ -1026,9 +1026,9 @@ template JoinTuple(alias packedSeparatorTuple, packedTuples...)
 
 unittest
 {
-	alias PackedGenericTuple!"+" sep;
-	alias PackedGenericTuple!(void, int) part1;
-	alias PackedGenericTuple!0 part2;
+	alias packedExpressionTuple!"+" sep;
+	alias PackedTypeTuple!(void, int) part1;
+	alias packedExpressionTuple!0 part2;
 
 	static assert(JoinTuple!sep.length == 0);
 	static assert(is(JoinTuple!(sep, part1) == TypeTuple!(void, int)));
@@ -1042,7 +1042,7 @@ TODO docs
 Example:
 ---
 alias MapTuple!(`a * a`, iotaTuple!4) squares;
-static assert(PackedGenericTuple!squares.equals!(0, 1, 4, 9));
+static assert(packedExpressionTuple!squares.equals!(0, 1, 4, 9));
 
 static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
 ---
@@ -1063,11 +1063,11 @@ template MapTuple(alias Func, A...)
 unittest
 {
 	static assert(MapTuple!`1`.length == 0);
-	static assert(PackedGenericTuple!(MapTuple!(`1`, const int)).equals!1);
+	static assert(packedExpressionTuple!(MapTuple!(`1`, const int)).equals!1);
 	static assert(is(MapTuple!(Unqual, int, immutable int) == TypeTuple!(int, int)));
 	static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
 	alias MapTuple!(`a * a`, iotaTuple!4) squares;
-	static assert(PackedGenericTuple!squares.equals!(0, 1, 4, 9));
+	static assert(packedExpressionTuple!squares.equals!(0, 1, 4, 9));
 }
 
 
@@ -1122,8 +1122,8 @@ TODO docs
 Example:
 ----
 alias expressionTuple!(1, 2, 2, 2, 3, 3, 4, 1, 1) expr;
-static assert(PackedGenericTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3, 4, 1));
-static assert(PackedGenericTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
+static assert(packedExpressionTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3, 4, 1));
+static assert(packedExpressionTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
 ----
 
 Analog of $(PHOBOSREF algorithm, uniq) for generic tuples
@@ -1155,8 +1155,8 @@ template UniqTuple(alias pred, A...)
 unittest
 {
 	alias expressionTuple!(1, 2, 2, 2, 3, 3, 4, 1, 1) expr;
-	static assert(PackedGenericTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3, 4, 1));
-	static assert(PackedGenericTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
+	static assert(packedExpressionTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3, 4, 1));
+	static assert(packedExpressionTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
 }
 
 //  internal templates from std.typetuple:
