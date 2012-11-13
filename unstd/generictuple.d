@@ -338,44 +338,6 @@ unittest {
 
 
 /**
-Filters a generic tuple $(D A) using a predicate $(D Pred).
-
-Example:
-----
-import std.traits;
-
-static assert(is(FilterTuple!(isNumeric, int, void, immutable short, char) ==
-              TypeTuple!(int, immutable short)));
-----
-*/
-template FilterTuple(alias Pred, A...)
-{
-	static if (A.length == 0)
-		alias GenericTuple!() FilterTuple;
-	else
-	{
-		alias FilterTuple!(Pred, A[1 .. $]) Tail;
-
-		static if(Pred!(A[0]))
-			alias GenericTuple!(A[0], Tail) FilterTuple;
-		else
-			alias Tail FilterTuple;
-	}
-}
-
-unittest
-{
-	import std.traits;
-
-	static assert(is(FilterTuple!(isNumeric, int, size_t, void, immutable short, char) ==
-		TypeTuple!(int, size_t, immutable short)));
-
-	static assert(is(FilterTuple!(UnaryPred!`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
-		TypeTuple!(size_t, immutable ushort, char)));
-}
-
-
-/**
 TODO docs
 */
 template RetroTuple(A...)
@@ -634,6 +596,44 @@ unittest
 
 	static assert(!equalTuple!(__truePred, PackedGenericTuple!1, PackedGenericTuple!()));
 	static assert( equalTuple!(__truePred, PackedGenericTuple!1, PackedGenericTuple!int));
+}
+
+
+/**
+Filters a generic tuple $(D A) using a predicate $(D Pred).
+
+Example:
+----
+import std.traits;
+
+static assert(is(FilterTuple!(isNumeric, int, void, immutable short, char) ==
+              TypeTuple!(int, immutable short)));
+----
+*/
+template FilterTuple(alias Pred, A...)
+{
+	static if (A.length == 0)
+		alias GenericTuple!() FilterTuple;
+	else
+	{
+		alias FilterTuple!(Pred, A[1 .. $]) Tail;
+
+		static if(Pred!(A[0]))
+			alias GenericTuple!(A[0], Tail) FilterTuple;
+		else
+			alias Tail FilterTuple;
+	}
+}
+
+unittest
+{
+	import std.traits;
+
+	static assert(is(FilterTuple!(isNumeric, int, size_t, void, immutable short, char) ==
+		TypeTuple!(int, size_t, immutable short)));
+
+	static assert(is(FilterTuple!(UnaryPred!`__traits(isUnsigned, T)`, int, size_t, void, immutable ushort, char) ==
+		TypeTuple!(size_t, immutable ushort, char)));
 }
 
 //  internal templates from std.typetuple:
