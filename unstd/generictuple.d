@@ -27,6 +27,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 			$(BTREF FilterTuple)
 			$(BTREF JoinTuple)
 			$(BTREF MapTuple)
+			$(BTREF ReduceTuple)
 		)
 	)
 )
@@ -1052,6 +1053,51 @@ unittest
 	static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
 	alias MapTuple!(`a * a`, iotaTuple!4) squares;
 	static assert(PackedGenericTuple!squares.equals!(0, 1, 4, 9));
+}
+
+
+/**
+TODO docs
+
+Example:
+----
+static assert(ReduceTuple!(`a + U.sizeof`, 0, bool, short, int) == 1 + 2 + 4);
+static assert(is(ReduceTuple!(`Select!(T.sizeof > U.sizeof, T, U)`, void, bool, long, int) == long));
+----
+
+Analog of $(PHOBOSREF algorithm, reduce) for generic tuples
+except $(D Init) value must be explicitly specified.
+*/
+template ReduceTuple(alias Func, alias init, A...)
+{
+	alias init Init;
+	mixin ReduceTupleImpl;
+	alias Res ReduceTuple;
+}
+
+template ReduceTuple(alias Func, Init, A...)
+{
+	mixin ReduceTupleImpl;
+	alias Res ReduceTuple;
+}
+
+private mixin template ReduceTupleImpl()
+{
+	alias BinaryTemplate!Func FuncTemplate;
+
+	static if(A.length)
+		alias .ReduceTuple!(FuncTemplate, FuncTemplate!(Init, A[0]), A[1 .. $]) Res;
+	else
+		alias Init Res;
+}
+
+unittest
+{
+	static assert(is(ReduceTuple!(`true`, void) == void));
+	static assert(ReduceTuple!(`true`, 0) == 0);
+	static assert(ReduceTuple!(`true`, void, int) == true);
+	static assert(ReduceTuple!(`a + U.sizeof`, 0, bool, short, int) == 1 + 2 + 4);
+	static assert(is(ReduceTuple!(`Select!(T.sizeof > U.sizeof, T, U)`, void, bool, long, int) == long));
 }
 
 //  internal templates from std.typetuple:
