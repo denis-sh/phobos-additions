@@ -12,6 +12,7 @@ $(BOOKTABLE Generic tuple manipulation functions,
 			$(BTREF RepeatTuple)
 			$(BTREF ZipTuple)
 			$(BTREF iotaTuple)
+			$(BTREF IndexedTuple)
 		)
 	)
 	$(TR $(TD Comparison)
@@ -705,6 +706,26 @@ unittest
 	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(1, 3.1f)), PackedGenericTuple!(1.0, 2.0, 3.0)));
 	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(3, 0, -1)), PackedGenericTuple!(3, 2, 1)));
 	static assert(equalTuple!(PackedGenericTuple!(iotaTuple!(3, 2, -.5)), PackedGenericTuple!(3.0, 2.5)));
+}
+
+
+/**
+TODO docs
+
+Analog of $(PHOBOSREF range, indexed) for generic tuples.
+*/
+template IndexedTuple(alias packedSourceTuple, alias packedIndicesTuple)
+	if(isPackedTuple!packedSourceTuple && isPackedTuple!packedIndicesTuple)
+{
+	template Func(A...) if(A.length == 1)
+	{ alias packedSourceTuple.Tuple[A[0] .. A[0] + 1] Func; }
+	alias MapTuple!(Func, packedIndicesTuple.Tuple) IndexedTuple;
+}
+
+unittest
+{
+	alias IndexedTuple!(PackedGenericTuple!(1, 2, 3, 4, 5), PackedGenericTuple!(4, 3, 1, 2, 0, 4)) indexed;
+	static assert(equalTuple!(PackedGenericTuple!indexed, PackedGenericTuple!(5, 4, 2, 3, 1, 5)));
 }
 
 
