@@ -283,6 +283,7 @@
    <File path="unstd\templates.d" />
    <File path="unstd\typecons.d" />
    <File path="unstd\math.d" />
+   <File path="unstd\array.d" />
    <File path="unstd\multidimensionalarray.d" />
   </Folder>
   <File path="unittest.d" />

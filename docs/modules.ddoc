@@ -4,4 +4,5 @@ MODULES =
 	$(MODULE unstd.templates)
 	$(MODULE unstd.typecons)
 	$(MODULE unstd.math)
+	$(MODULE unstd.array)
 	$(MODULE unstd.multidimensionalarray)
