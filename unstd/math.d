@@ -17,7 +17,12 @@ import core.bitop: bsr;
 @safe pure nothrow:
 
 
-/// Returns $(D true) iff $(D n) is a power of 2
+/**
+Returns $(D true) iff $(D n) is a power of 2.
+
+Preconditions:
+$(D n) must be non-zero.
+*/
 bool isPowerOf2(uint n)
 in { assert(n > 0); }
 body { return !((n - 1) & n); }
@@ -32,7 +37,12 @@ unittest
 }
 
 
-/// Returns largest power of 2 which <= $(D n). $(D n) must be non-zero.
+/**
+Returns largest power of 2 which <= $(D n).
+
+Preconditions:
+$(D n) must be non-zero.
+*/
 uint roundDownToPowerOf2(uint n)
 in { assert(n > 0); }
 body { return 1 << bsr(n); }
@@ -49,7 +59,12 @@ unittest
 }
 
 
-/// Returns smallest power of 2 which >= $(D n). $(D n) must be non-zero.
+/**
+Returns smallest power of 2 which >= $(D n).
+
+Preconditions:
+$(D n) must be non-zero.
+*/
 uint roundUpToPowerOf2(uint n)
 in { assert(n > 0); }
 body { return 1 << (bsr(n) + !isPowerOf2(n)); }
@@ -104,7 +119,12 @@ unittest
 }
 
 
-/// Aligns $(D n) up or down. $(D alignment) must be power of 2.
+/**
+Aligns $(D n) up or down.
+
+Preconditions:
+$(D alignment) must be power of 2.
+*/
 uint alignDown()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
 body
