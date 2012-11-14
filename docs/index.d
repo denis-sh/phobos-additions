@@ -134,6 +134,8 @@ $(MEMBERSDESC
 	$(FREF math, isPowerOf2)
 	$(FREF math, roundDownToPowerOf2)
 	$(FREF math, roundUpToPowerOf2)
+	$(FREF math, log2RoundedDown)
+	$(FREF math, log2RoundedUp)
 	$(FREF math, alignDown)
 	$(FREF math, alignUp)
 	,

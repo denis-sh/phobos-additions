@@ -66,6 +66,44 @@ unittest
 }
 
 
+/**
+Returns the base-2 logarithm of smallest power of 2 which >= $(D n).
+
+Preconditions:
+$(D n) must be non-zero.
+*/
+ubyte log2RoundedDown(size_t n)
+in { assert(n > 0); }
+body { return cast(ubyte) bsr(n); }
+
+unittest
+{
+	static assert(log2RoundedDown(1) == 0);
+	static assert(log2RoundedDown(1023) == 9);
+	static assert(log2RoundedDown(1024) == 10);
+	static assert(log2RoundedDown(1025) == 10);
+}
+
+
+/**
+Returns the base-2 logarithm of largest power of 2 which <= $(D n).
+
+Preconditions:
+$(D n) must be non-zero.
+*/
+ubyte log2RoundedUp(size_t n)
+in { assert(n > 0); }
+body { return cast(ubyte) (bsr(n) + !isPowerOf2(n)); }
+
+unittest
+{
+	static assert(log2RoundedUp(1) == 0);
+	static assert(log2RoundedUp(1023) == 10);
+	static assert(log2RoundedUp(1024) == 10);
+	static assert(log2RoundedUp(1025) == 11);
+}
+
+
 /// Aligns $(D n) up or down. $(D alignment) must be power of 2.
 uint alignDown()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
