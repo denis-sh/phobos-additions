@@ -42,7 +42,7 @@ $(MEMBERSDESC
 )
 $(MEMBERSDESC
 	Function converting everything into a static array,
-	$(FREF multidimensionalarray, asFlatStaticArray),
+	$(FREF array, asFlatStaticArray),
 	$(IDENTITY
 		Included in $(PHOBOSPULL 924) ($(GREEN open)) with static array traits.
 	),
