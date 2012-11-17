@@ -286,12 +286,19 @@ unittest {
 private struct _Arg { size_t n; }
 private struct _ArgsRange { size_t from, to; }
 private struct _ArgsToEnd { size_t from; }
+private struct _ArgDollar
+{
+	int sub = 0;
+	auto opBinary(string op)(int n) const
+		if(op == "+" || op == "-")
+	{ return _ArgDollar(op == "+" ? -n : n); }
+}
 
 struct Args
 {
-	//struct D;
-	//template opDollar(size_t n:1) { enum opDollar = D(); }
+	auto opDollar() const { return _ArgDollar(); }
 	auto opIndex(size_t n)               const { return _Arg(n); }
+	auto opIndex(_ArgDollar d)           const { return d; }
 	auto opSlice(size_t from, size_t to) const { return _ArgsRange(from, to); }
 	auto opSlice()                       const { return _ArgsToEnd(0); }
 }
@@ -307,6 +314,8 @@ Binds template arguments.
 
 $(UL
 	$(LI use $(D args[i]) or $(D arg!i) to refer $(D i)-th argument;)
+	$(LI use $(D args[$ - i]) to refer arguments from the end
+		(also $(D args[$ + i]) can be used for negative $(D i));)
 	$(LI use $(D args[a .. b]) or $(D argsRange!(a, b)) to refer arguments from
 		$(D a)-th up to and excluding $(D b)-th;)
 	$(LI use $(D argsToEnd!n) to refer arguments from $(D n)-th argument up to
@@ -325,6 +334,9 @@ static assert( Inst!(BindTemplate!(isImplicitlyConvertible, int  , arg!0), long)
 alias BindTemplate!(MapTuple, Unqual, allArgs) UnqualAll;
 static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 ----
+
+Bugs:
+Currently there is no support for $(D args[a .. $]) because of compiler limitations.
 */
 template BindTemplate(alias Template, BindArgs...)
 {
@@ -348,6 +360,10 @@ private template TemplateBindArgs(size_t bindedCount, T...)
 		static if(is(typeof(T[0]) == _Arg))
 		{
 			alias GenericTuple!(Args[T[0].n], Rest) TemplateBindArgs;
+		}
+		else static if(is(typeof(T[0]) == _ArgDollar))
+		{
+			alias GenericTuple!(Args[Args.length - T[0].sub], Rest) TemplateBindArgs;
 		}
 		else static if(is(typeof(T[0]) == _ArgsRange))
 		{
@@ -381,13 +397,13 @@ unittest
 	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, args[0]), 3)).equals!(1, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(Alias,
-			1, args[0 .. 1], 2, int, arg!0
+			1, args[0 .. 1], 2, int, args[$ - 1]
 		),
 			3
 		)).equals!(
 			1, 3, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(Alias,
-			1, arg!1, 2, arg!0, int, arg!0, allArgs,
+			1, arg!1, 2, arg!0, int, args[$ + -3], allArgs,
 		),
 			3, char, 5
 		)).equals!(
