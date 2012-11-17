@@ -19,7 +19,7 @@ $(MEMBERSDESC
 	),
 	$(IDENTITY
 		A convenient template to retrieve array element type for template
-		programming purposes. $(I phobos)'s $(PHOBOSREF range, ElementEncodingType)
+		programming purposes. $(I phobos)'s $(STDREF range, ElementEncodingType)
 		should be used only if array is treated as a range, otherwise it reduced
 		templated code readability and looks inconsistent because many templates
 		are from "differen world" and doesn't have to know anything about ranges.
@@ -101,7 +101,7 @@ $(MEMBERSDESC
 	no.,
 	$(IDENTITY
 		Templates for generic tuple creation by analogy with
-		range creation functions from $(PHOBOSMODULEREF range).
+		range creation functions from $(STDMODULE range).
 	)
 )
 $(MEMBERSDESC
@@ -118,7 +118,7 @@ $(MEMBERSDESC
 	no.,
 	$(IDENTITY
 		Templates for various algorithms on generic tuples by analogy with
-		range algorithm functions from $(PHOBOSMODULEREF algorithm).
+		range algorithm functions from $(STDMODULE algorithm).
 	)
 )
 $(MEMBERSDESC

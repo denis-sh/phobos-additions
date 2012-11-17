@@ -20,7 +20,7 @@ import std.typecons: tuple;
 Returns the element type of an array.
 
 For ranges, see also
-$(PHOBOSREF range, ElementEncodingType).
+$(STDREF range, ElementEncodingType).
 
 Example:
 ---

@@ -271,7 +271,7 @@ static assert(is(RetroTuple!(int, bool, long) == TypeTuple!(long, bool, int)));
 static assert(PackedGenericTuple!(RetroTuple!(1, bool, "x")).equals!("x", bool, 1));
 ---
 
-Analog of $(PHOBOSREF range, retro) for generic tuples.
+Analog of $(STDREF range, retro) for generic tuples.
 */
 template RetroTuple(A...)
 {
@@ -302,7 +302,7 @@ static assert(is(StrideTuple!(2, ubyte, byte, uint, int, ulong, long) == TypeTup
 static assert(PackedGenericTuple!(StrideTuple!(3, iota)).equals!(1, 4, 7, 10));
 ---
 
-Analog of $(PHOBOSREF range, stride) for generic tuples
+Analog of $(STDREF range, stride) for generic tuples
 except $(D n) is the first argument.
 */
 template StrideTuple(size_t n, A...)
@@ -336,7 +336,7 @@ alias ChainTuple!(packedExpressionTuple!(1, 2, 3), packedExpressionTuple!(4, 5))
 static assert(packedExpressionTuple!chain.equals!(1, 2, 3, 4, 5));
 ---
 
-Analog of $(PHOBOSREF range, chain) for generic tuples.
+Analog of $(STDREF range, chain) for generic tuples.
 */
 template ChainTuple(packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
@@ -364,7 +364,7 @@ alias RoundRobinTuple!(packedExpressionTuple!(1, 2, 3), packedExpressionTuple!(1
 static assert(packedExpressionTuple!roundRobin.equals!(1, 10, 2, 20, 3, 30, 40));
 ---
 
-Analog of $(PHOBOSREF range, roundRobin) for generic tuples.
+Analog of $(STDREF range, roundRobin) for generic tuples.
 */
 template RoundRobinTuple(packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
@@ -394,7 +394,7 @@ static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3,
 static assert(packedExpressionTuple!(RadialTuple!( 1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
 ---
 
-Analog of $(PHOBOSREF range, radial) for generic tuples
+Analog of $(STDREF range, radial) for generic tuples
 except $(D startingIndex) is the first argument and
 there is no overload without it.
 */
@@ -431,7 +431,7 @@ static assert(is(RepeatTuple!(2, int) == TypeTuple!(int, int)));
 static assert(packedExpressionTuple!(RepeatTuple!(4, 5)).equals!(5, 5, 5, 5));
 ---
 
-Analog of $(PHOBOSREF array, replicate) and $(PHOBOSREF range, repeat) for generic tuples
+Analog of $(STDREF array, replicate) and $(STDREF range, repeat) for generic tuples
 except $(D n) is the first argument and there is no overload
 without it as tuples can't be infinite.
 Also it repeats a generic tuple, not only one value.
@@ -469,7 +469,7 @@ static assert(zip[1].equals!(2, int));
 static assert(zip[2].equals!(3, long))
 ---
 
-Analog of $(PHOBOSREF range, zip) for generic tuples
+Analog of $(STDREF range, zip) for generic tuples
 except $(D empty) value must be explicitly specified
 for $(D StoppingPolicy.longest).
 */
@@ -601,7 +601,7 @@ Tip:
 This is a convenient way to create a CT analog of
 $(HTTP dlang.org/statement.html#ForeachRangeStatement, Foreach Range Statement).
 
-Analog of $(PHOBOSREF range, iota) for generic tuples.
+Analog of $(STDREF range, iota) for generic tuples.
 */
 template iotaTuple(alias begin, alias end, alias step)
 {
@@ -661,7 +661,7 @@ alias IndexedTuple!(PackedTypeTuple!(short, int, long, double),
 static assert(is(indexed == TypeTuple!(int, short, long, long)));
 ---
 
-Analog of $(PHOBOSREF range, indexed) for generic tuples.
+Analog of $(STDREF range, indexed) for generic tuples.
 */
 template IndexedTuple(alias packedSourceTuple, alias packedIndicesTuple)
 	if(isPackedTuple!packedSourceTuple && isPackedTuple!packedIndicesTuple)
@@ -696,7 +696,7 @@ static assert(chunks[1].equals!(5, 6, byte, short));
 static assert(chunks[2].equals!(int, long));
 ---
 
-Analog of $(PHOBOSREF range, chunks) for generic tuples
+Analog of $(STDREF range, chunks) for generic tuples
 except $(D chunkSize) is the first argument.
 */
 template ChunksTuple(size_t chunkSize, A...)
@@ -739,7 +739,7 @@ static assert(cmpTuple!(packedExpressionTuple!"a", packedExpressionTuple!"ab") <
 static assert(cmpTuple!(`T.sizeof < U.sizeof`, PackedTypeTuple!int, PackedTypeTuple!long) < 0);
 ---
 
-Analog of $(PHOBOSREF algorithm, cmp) for generic tuples.
+Analog of $(STDREF algorithm, cmp) for generic tuples.
 */
 template cmpTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
@@ -796,7 +796,7 @@ static assert( equalTuple!(`true`, packedExpressionTuple!1, PackedTypeTuple!int)
 static assert(!equalTuple!(`true`, packedExpressionTuple!1, packedExpressionTuple!()));
 ---
 
-Analog of $(PHOBOSREF algorithm, equal) for generic tuples.
+Analog of $(STDREF algorithm, equal) for generic tuples.
 */
 template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	if(isPackedTuple!packedTuple1 && isPackedTuple!packedTuple2)
@@ -850,7 +850,7 @@ static assert(is(FilterTuple!(`__traits(isUnsigned, T)`, int, size_t, void, usho
               TypeTuple!(size_t, ushort, char)));
 ----
 
-Analog of $(PHOBOSREF algorithm, filter) for generic tuples.
+Analog of $(STDREF algorithm, filter) for generic tuples.
 */
 template FilterTuple(alias pred, A...)
 {
@@ -899,7 +899,7 @@ static assert(group2[1].equals!(1, 1));
 static assert(group2[2].equals!(1, 1));
 ----
 
-Analog of $(PHOBOSREF algorithm, group) for generic tuples
+Analog of $(STDREF algorithm, group) for generic tuples
 except $(D pred) must be explicitly specified.
 */
 template groupTuple(alias pred, A...)
@@ -962,7 +962,7 @@ alias packedExpressionTuple!0 part2;
 static assert(PackedGenericTuple!(JoinTuple!(sep, part1, part2)).equals!(void, int, "+", 0));
 ----
 
-Analog of $(PHOBOSREF array, join) and $(PHOBOSREF algorithm, joiner) for generic tuples.
+Analog of $(STDREF array, join) and $(STDREF algorithm, joiner) for generic tuples.
 */
 template JoinTuple(alias packedSeparatorTuple, packedTuples...)
 	if(allSatisfy!(isPackedTuple, packedSeparatorTuple, packedTuples))
@@ -1000,7 +1000,7 @@ static assert(packedExpressionTuple!squares.equals!(0, 1, 4, 9));
 static assert(is(MapTuple!(`T[]`, int, long) == TypeTuple!(int[], long[])));
 ---
 
-Analog of $(PHOBOSREF algorithm, map) for generic tuples
+Analog of $(STDREF algorithm, map) for generic tuples
 except $(D Func) can return any count of elements.
 */
 template MapTuple(alias Func, A...)
@@ -1035,7 +1035,7 @@ static assert(ReduceTuple!(`a + U.sizeof`, 0, bool, short, int) == 1 + 2 + 4);
 static assert(is(ReduceTuple!(`Select!(T.sizeof > U.sizeof, T, U)`, void, bool, long, int) == long));
 ----
 
-Analog of $(PHOBOSREF algorithm, reduce) for generic tuples
+Analog of $(STDREF algorithm, reduce) for generic tuples
 except there is no overload with multiple functions.
 */
 template ReduceTuple(alias Func, alias init, A...)
@@ -1083,7 +1083,7 @@ static assert(packedExpressionTuple!(UniqTuple!(`a == b`, expr)).equals!(1, 2, 3
 static assert(packedExpressionTuple!(UniqTuple!(`a != b`, expr)).equals!(1, 1, 1));
 ----
 
-Analog of $(PHOBOSREF algorithm, uniq) for generic tuples
+Analog of $(STDREF algorithm, uniq) for generic tuples
 except $(D pred) must be explicitly specified.
 */
 template UniqTuple(alias pred, A...)
