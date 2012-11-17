@@ -283,30 +283,30 @@ unittest {
 }
 
 
-private struct _Arg { size_t n; }
-private struct _ArgsRange { size_t from, to; }
-private struct _ArgsToEnd { size_t from; }
-private struct _ArgDollar
+private struct __BindArgs
 {
-	int sub = 0;
-	auto opBinary(string op)(int n) const
-		if(op == "+" || op == "-")
-	{ return _ArgDollar(op == "+" ? -n : n); }
+	struct Arg { size_t n; }
+	struct ArgsRange { size_t from, to; }
+	struct ArgsToEnd { size_t from; }
+	struct ArgDollar
+	{
+		int sub = 0;
+		auto opBinary(string op)(int n) const
+			if(op == "+" || op == "-")
+		{ return ArgDollar(op == "+" ? -n : n); }
+	}
+
+	auto opDollar() const { return ArgDollar(); }
+	auto opIndex(size_t n)               const { return Arg(n); }
+	auto opIndex(ArgDollar d)            const { return d; }
+	auto opSlice(size_t from, size_t to) const { return ArgsRange(from, to); }
+	auto opSlice()                       const { return ArgsToEnd(0); }
 }
 
-struct Args
-{
-	auto opDollar() const { return _ArgDollar(); }
-	auto opIndex(size_t n)               const { return _Arg(n); }
-	auto opIndex(_ArgDollar d)           const { return d; }
-	auto opSlice(size_t from, size_t to) const { return _ArgsRange(from, to); }
-	auto opSlice()                       const { return _ArgsToEnd(0); }
-}
-
-enum args = Args();
-template arg(size_t n) { enum arg = _Arg(n); }
-template argsRange(size_t from, size_t to) { enum argsRange = _ArgsRange(from, to); }
-template argsToEnd(size_t from) { enum argsToEnd = _ArgsToEnd(from); }
+enum args = __BindArgs();
+template arg(size_t n) { enum arg = __BindArgs.Arg(n); }
+template argsRange(size_t from, size_t to) { enum argsRange = __BindArgs.ArgsRange(from, to); }
+template argsToEnd(size_t from) { enum argsToEnd = __BindArgs.ArgsToEnd(from); }
 enum allArgs = argsToEnd!0;
 
 /**
@@ -357,19 +357,19 @@ private template TemplateBindArgs(size_t bindedCount, T...)
 		alias T[bindedCount .. $] Args;
 		alias TemplateBindArgs!(bindedCount-1, T[1..$]) Rest;
 
-		static if(is(typeof(T[0]) == _Arg))
+		static if(is(typeof(T[0]) == __BindArgs.Arg))
 		{
 			alias GenericTuple!(Args[T[0].n], Rest) TemplateBindArgs;
 		}
-		else static if(is(typeof(T[0]) == _ArgDollar))
+		else static if(is(typeof(T[0]) == __BindArgs.ArgDollar))
 		{
 			alias GenericTuple!(Args[Args.length - T[0].sub], Rest) TemplateBindArgs;
 		}
-		else static if(is(typeof(T[0]) == _ArgsRange))
+		else static if(is(typeof(T[0]) == __BindArgs.ArgsRange))
 		{
 			alias GenericTuple!(Args[T[0].from .. T[0].to], Rest) TemplateBindArgs;
 		}
-		else static if(is(typeof(T[0]) == _ArgsToEnd))
+		else static if(is(typeof(T[0]) == __BindArgs.ArgsToEnd))
 		{
 			alias GenericTuple!(Args[T[0].from .. $], Rest) TemplateBindArgs;
 		}
