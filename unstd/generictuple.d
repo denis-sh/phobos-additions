@@ -481,7 +481,7 @@ private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, pac
 	alias MapTuple!(`A.length`, packedTuples) lengths;
 
 	static if(stoppingPolicy == StoppingPolicy.requireSameLength)
-		static assert(FilterTuple!(TemplateBind!(isSame, lengths[0], arg!0), lengths).length == packedTuples.length,
+		static assert(allSatisfy!(TemplateBind!(isSame, lengths[0], arg!0), lengths),
 			"Inequal-length packed tuples passed to ZipTuple(StoppingPolicy.requireSameLength, ...)");
 
 	template Impl(size_t n, packedTuples...)
@@ -503,10 +503,9 @@ private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, pac
 	}
 	static if(packedTuples.length == 1 || stoppingPolicy == StoppingPolicy.requireSameLength)
 		enum length = lengths[0];
-	else static if(stoppingPolicy == StoppingPolicy.longest)
-		enum length = max(lengths);
 	else
-		enum length = min(lengths);
+		enum length = GenericTuple!(min, max)
+			[stoppingPolicy == StoppingPolicy.longest](lengths);
 
 	alias Impl!(length, packedTuples) ZipTupleImpl;
 }
