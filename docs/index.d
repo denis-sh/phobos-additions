@@ -167,7 +167,7 @@ $(MEMBERSDESC
 )
 $(MEMBERSDESC
 	Bind template arguments,
-	$(FREF templates, TemplateBind)
+	$(FREF templates, BindTemplate)
 	$(FREF templates, Bind)
 	,
 	no.,

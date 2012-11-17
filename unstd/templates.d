@@ -294,11 +294,11 @@ Example:
 ----
 import unstd.traits;
 
-static assert(is(Inst!(TemplateBind!(CommonType, long, allArgs), int) == long));
-static assert(!Inst!(TemplateBind!(isImplicitlyConvertible, arg!0,   int), long));
-static assert( Inst!(TemplateBind!(isImplicitlyConvertible, int  , arg!0), long));
+static assert(is(Inst!(BindTemplate!(CommonType, long, allArgs), int) == long));
+static assert(!Inst!(BindTemplate!(isImplicitlyConvertible, arg!0,   int), long));
+static assert( Inst!(BindTemplate!(isImplicitlyConvertible, int  , arg!0), long));
 
-alias TemplateBind!(MapTuple, Unqual, allArgs) UnqualAll;
+alias BindTemplate!(MapTuple, Unqual, allArgs) UnqualAll;
 static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 ----
 */
@@ -318,11 +318,11 @@ template argsToEnd(size_t from) { enum argsToEnd = _ArgsToEnd(from); } /// ditto
 enum allArgs = argsToEnd!0; /// ditto
 
 /// ditto
-template TemplateBind(alias Template, BindArgs...)
+template BindTemplate(alias Template, BindArgs...)
 {
-	template TemplateBind(Args...)
+	template BindTemplate(Args...)
 	{
-		alias Template!(TemplateBindArgs!(BindArgs.length, BindArgs, Args)) TemplateBind;
+		alias Template!(TemplateBindArgs!(BindArgs.length, BindArgs, Args)) BindTemplate;
 	}
 }
 
@@ -368,17 +368,17 @@ unittest
 {
 	alias PackedGenericTuple Pack;
 	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
-	static assert(Pack!(Inst!(TemplateBind!(Alias, 1, 2, int), 3)).equals!(1, 2, int));
-	static assert(Pack!(Inst!(TemplateBind!(Alias, arg!0), 3)).equals!(3));
-	static assert(Pack!(Inst!(TemplateBind!(Alias, 1, 2, int, arg!0), 3)).equals!(1, 2, int, 3));
-	static assert(Pack!(Inst!(TemplateBind!(Alias, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
-	static assert(Pack!(Inst!(TemplateBind!(Alias,
+	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int), 3)).equals!(1, 2, int));
+	static assert(Pack!(Inst!(BindTemplate!(Alias, arg!0), 3)).equals!(3));
+	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, arg!0), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(BindTemplate!(Alias,
 			1, arg!0, 2, int, arg!0
 		),
 			3
 		)).equals!(
 			1, 3, 2, int, 3));
-	static assert(Pack!(Inst!(TemplateBind!(Alias,
+	static assert(Pack!(Inst!(BindTemplate!(Alias,
 			1, arg!1, 2, arg!0, int, arg!0, allArgs,
 		),
 			3, char, 5
@@ -387,11 +387,11 @@ unittest
 
 	import unstd.traits;
 
-	static assert(is(Inst!(TemplateBind!(CommonType, long, allArgs), int) == long));
-	static assert(!Inst!(TemplateBind!(isImplicitlyConvertible, arg!0,   int), long));
-	static assert( Inst!(TemplateBind!(isImplicitlyConvertible, int  , arg!0), long));
+	static assert(is(Inst!(BindTemplate!(CommonType, long, allArgs), int) == long));
+	static assert(!Inst!(BindTemplate!(isImplicitlyConvertible, arg!0,   int), long));
+	static assert( Inst!(BindTemplate!(isImplicitlyConvertible, int  , arg!0), long));
 
-	alias TemplateBind!(MapTuple, Unqual, allArgs) UnqualAll;
+	alias BindTemplate!(MapTuple, Unqual, allArgs) UnqualAll;
 	static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 }
 
@@ -499,7 +499,7 @@ static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, im
 */
 mixin template Bind(string fmt)
 {
-	mixin("alias TemplateBind!(" ~ fmt.formatBind() ~ ";");
+	mixin("alias BindTemplate!(" ~ fmt.formatBind() ~ ";");
 }
 
 unittest
