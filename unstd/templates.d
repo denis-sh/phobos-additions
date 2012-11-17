@@ -163,15 +163,15 @@ static assert(Inst!(unaryPred!`__traits(isUnsigned, T)`, uint));
 static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
 ----
 */
-template unaryPred(alias Pred)
+template unaryPred(alias pred)
 {
-	alias UnaryTemplate!(Pred, bool) unaryPred;
+	alias UnaryTemplate!(pred, bool) unaryPred;
 }
 
 /// ditto
-template binaryPred(alias Pred)
+template binaryPred(alias pred)
 {
-	alias BinaryTemplate!(Pred, bool) binaryPred;
+	alias BinaryTemplate!(pred, bool) binaryPred;
 }
 
 unittest
