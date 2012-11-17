@@ -2,6 +2,27 @@
 
 A replacement for $(STDMODULE typetuple).
 
+The following symbols from $(D std.typetuple) are publicly imported:
+$(UL
+	$(LI $(STDREF typetuple, staticIndexOf))
+	$(LI $(STDREF typetuple, NoDuplicates))
+	$(LI $(STDREF typetuple, MostDerived))
+	$(LI $(STDREF typetuple, DerivedToFront))
+	$(LI $(STDREF typetuple, allSatisfy))
+	$(LI $(STDREF typetuple, anySatisfy))
+)
+The following symbols from $(D std.typetuple) are superseded:
+$(UL
+	$(LI $(STDREF typetuple, Reverse), use $(MREF RetroTuple) instead)
+	$(LI $(STDREF typetuple, EraseAll), use $(MREF FilterTuple) instead)
+	$(LI $(STDREF typetuple, ReplaceAll), use $(MREF MapTuple) instead)
+	$(LI $(STDREF typetuple, staticMap), use $(MREF MapTuple) instead)
+)
+The following symbols from $(D std.typetuple) are considered useless:
+$(UL
+	$(LI $(STDREF typetuple, Erase))
+	$(LI $(STDREF typetuple, Replace))
+)
 $(BOOKTABLE Generic tuple manipulation functions,
 	$(TR $(TH Category) $(TH Functions))
 	$(TR $(TD Creation)
@@ -50,7 +71,7 @@ module unstd.generictuple;
 
 public import std.typetuple:
 	staticIndexOf,
-	Erase, EraseAll, NoDuplicates, Replace, ReplaceAll, Reverse,
+	NoDuplicates,
 	MostDerived, DerivedToFront,
 	allSatisfy, anySatisfy;
 
