@@ -234,16 +234,30 @@ unittest
 
 
 /**
-TODO docs
+Create predicate template returning $(D true) iff there are no templates or all
+$(D templates) return non-zero.
+
+Example:
+---
+import std.traits: isIntegral, isSigned;
+
+alias andTemplates!(isIntegral, isSigned) isSignedIntegral;
+static assert( allSatisfy!(isSignedIntegral,  int,  short, long));
+static assert(!anySatisfy!(isSignedIntegral, uint, ushort, ulong));
+
+alias andTemplates!(isSignedIntegral, unaryPred!`is(T == short)`) isShort;
+static assert( isShort!short);
+static assert(!anySatisfy!(isShort, int, long, uint, ushort, ulong));
+---
 */
-template andTemplates(Templates...)
+template andTemplates(templates...)
 {
 	template andTemplates(T...)
 	{
-		static if(Templates.length == 0)
+		static if(templates.length == 0)
 			enum andTemplates = true;
-		else static if(Inst!(Templates[0], T))
-			enum andTemplates = Inst!(.andTemplates!(Templates[1 .. $]), T);
+		else static if(Inst!(templates[0], T))
+			enum andTemplates = Inst!(.andTemplates!(templates[1 .. $]), T);
 		else
 			enum andTemplates = false;
 	}
@@ -270,16 +284,31 @@ unittest
 
 
 /**
-TODO docs
+Create predicate template returning $(D true) iff any template of
+$(D templates) return non-zero (i.e. returning $(D false) if there
+are no templates).
+
+Example:
+---
+import std.traits: isIntegral, isFloatingPoint;
+
+alias orTemplates!(isIntegral, isFloatingPoint) isIntegralOrFloating;
+static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
+static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
+
+alias orTemplates!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
+static assert( allSatisfy!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
+static assert(!isIntegralOrFloatingOrChar!bool);
+---
 */
-template orTemplates(Templates...)
+template orTemplates(templates...)
 {
 	template orTemplates(T...)
 	{
-		static if(Templates.length == 0)
+		static if(templates.length == 0)
 			enum orTemplates = false;
-		else static if(!Inst!(Templates[0], T))
-			enum orTemplates = Inst!(.orTemplates!(Templates[1 .. $]), T);
+		else static if(!Inst!(templates[0], T))
+			enum orTemplates = Inst!(.orTemplates!(templates[1 .. $]), T);
 		else
 			enum orTemplates = true;
 	}
@@ -296,11 +325,11 @@ unittest
 	static assert(_isPointer!(int*) && !_isPointer!int);
 
 	alias orTemplates!(isIntegral, isFloatingPoint) isIntegralOrFloating;
-	static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
+	static assert( allSatisfy!(isIntegralOrFloating, int, short, long, float, double));
 	static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
 
 	alias orTemplates!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
-	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int,  short, long, float, double, char));
+	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
 	static assert(!isIntegralOrFloatingOrChar!bool);
 }
 
