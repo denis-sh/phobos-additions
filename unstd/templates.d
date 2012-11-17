@@ -1,4 +1,4 @@
-﻿/** Vriouse stuff for working with _templates.
+﻿/** Various stuff for working with _templates.
 
 Copyright: Denis Shelomovskij 2011-2012
 
