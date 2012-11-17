@@ -260,7 +260,10 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of elemetns of $(D A) in reverse order.
+
+Applying RetroTuple twice to the same generic tuple equals to
+the original generic tuple.
 
 Example:
 ---
@@ -288,7 +291,10 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of elemetns of $(D A) taken with stride $(D n).
+
+Applying StrideTuple twice to the same generic tuple equals to applying
+StrideTuple with a step that is the product of the two applications.
 
 Example:
 ---
@@ -321,7 +327,8 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of all elemetns of packed generic tuples
+$(D packedTuples) in sequence.
 
 Example:
 ---
@@ -335,8 +342,8 @@ template ChainTuple(packedTuples...)
 	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
 {
 	// Can't use UnaryTemplate!`A.Tuple` because of Issue 9017
-	template Pred(alias packedTuple) { alias packedTuple.Tuple Pred; }
-	alias MapTuple!(Pred, packedTuples) ChainTuple;
+	template Func(alias packedTuple) { alias packedTuple.Tuple Func; }
+	alias MapTuple!(Func, packedTuples) ChainTuple;
 }
 
 unittest
@@ -347,7 +354,9 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of all elemetns of packed generic tuples
+$(D packedTuples) in an order by analogy with
+$(HTTP en.wikipedia.org/wiki/Round-robin_scheduling, Round-robin scheduling).
 
 Example:
 ---
@@ -373,7 +382,11 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of all elemetns of $(D A) which are teken
+starting from a given point and progressively extending left and right
+from that point. If $(D RadialTupleMiddle) is used or $(D startingIndex)
+is $(D -1) it is assumed that no initial point is given and iteration
+starts from the middle of $(D A).
 
 Example:
 ---
@@ -391,20 +404,26 @@ template RadialTuple(size_t startingIndex, A...)
 	alias RoundRobinTuple!(PackedGenericTuple!(RetroTuple!(A[0 .. i])), PackedGenericTuple!(A[i .. $])) RadialTuple;
 }
 
+/// ditto
+template RadialTupleMiddle(A...)
+{
+	alias RadialTuple!(-1, A) RadialTupleMiddle;
+}
+
 unittest
 {
-	static assert(packedExpressionTuple!(RadialTuple!(-1, 1)).equals!1);
-	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2)).equals!(1, 2));
-	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3)).equals!(2, 3, 1));
-	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4)).equals!(2, 3, 1, 4));
-	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
-	static assert(packedExpressionTuple!(RadialTuple!(-1, 1, 2, 3, 4, 5, 6)).equals!(3, 4, 2, 5, 1, 6));
+	static assert(packedExpressionTuple!(RadialTupleMiddle!(1)).equals!1);
+	static assert(packedExpressionTuple!(RadialTupleMiddle!(1, 2)).equals!(1, 2));
+	static assert(packedExpressionTuple!(RadialTupleMiddle!(1, 2, 3)).equals!(2, 3, 1));
+	static assert(packedExpressionTuple!(RadialTupleMiddle!(1, 2, 3, 4)).equals!(2, 3, 1, 4));
+	static assert(packedExpressionTuple!(RadialTupleMiddle!(1, 2, 3, 4, 5)).equals!(3, 4, 2, 5, 1));
+	static assert(packedExpressionTuple!(RadialTupleMiddle!(1, 2, 3, 4, 5, 6)).equals!(3, 4, 2, 5, 1, 6));
 	static assert(packedExpressionTuple!(RadialTuple!(1, 1, 2, 3, 4, 5)).equals!(2, 3, 1, 4, 5));
 }
 
 
 /**
-TODO docs
+Repeats $(D A) $(D n) times.
 
 Example:
 ---
@@ -433,7 +452,11 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of packed generic tuples comprised of
+elemetns of packed generic tuples $(D packedTuples) taken in lockstep.
+
+If $(D stoppingPolicy) is $(D StoppingPolicy.longest) and a tuple is finished
+in a lockstep iteration then $(D empty) will be taken.
 
 Example:
 ---
@@ -574,6 +597,10 @@ foreach(i; iotaTuple!5) // same as res += foo!1(); res += foo!3();
 		res += foo!i();
 ---
 
+Tip:
+This is a convenient way to create a CT analog of
+$(HTTP dlang.org/statement.html#ForeachRangeStatement, Foreach Range Statement).
+
 Analog of $(PHOBOSREF range, iota) for generic tuples.
 */
 template iotaTuple(alias begin, alias end, alias step)
@@ -622,7 +649,10 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of elemetns of packed generic tuple
+$(D packedSourceTuple) reordered according to packed expression tuple
+$(D packedIndicesTuple). $(D packedIndicesTuple) may include only a subset
+of the elements of $(D packedSourceTuple) and may also repeat elements.
 
 Example:
 ---
@@ -652,7 +682,11 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of packed generic tuples comprised of
+fixed-sized chunks of size $(D chunkSize) of $(D A).
+
+If $(D A.length) is not evenly divisible by $(D chunkSize), the last
+packed generic tuple will contain fewer than $(D chunkSize) elements.
 
 Example:
 ---
@@ -684,7 +718,19 @@ unittest
 
 
 /**
-TODO docs
+Performs $(HTTP en.wikipedia.org/wiki/Three-way_comparison, three-way
+lexicographical comparison) on two packed generic tuples
+according to predicate $(D pred).
+
+Iterating $(D packedTuple1) and $(D packedTuple2) in lockstep, cmpTuple
+compares each element $(D A1) of $(D packedTuple1) with the corresponding
+element $(D A2) in $(D packedTuple2).
+If $(D Inst!(binaryPred!pred, A1, A2)), $(D cmp) returns a negative value.
+If $(D Inst!(binaryPred!pred, A2, A1)), $(D cmp) returns a positive value.
+If one of the tuples has been finished, $(D cmp) returns a negative value
+if $(D packedTuple1) has fewer elements than $(D packedTuple2), a positive
+value if $(D packedTuple1) has more elements than $(D packedTuple2), and
+$(D 0) if the tuples have the same number of elements.
 
 Example:
 ---
@@ -736,8 +782,10 @@ unittest
 
 
 /**
-Detect whether $(D packedTuple1) and $(D packedTuple2) elements are equal according to $(D pred).
-$(D isSame) is used if not predicacte specified.
+Detect whether two packed generic tuples $(D packedTuple1) and $(D packedTuple2)
+elements are equal according to binary predicate $(D pred).
+
+$(D isSame) is used if no predicacte specified.
 
 Example:
 ---
@@ -788,7 +836,8 @@ unittest
 
 
 /**
-Filters a generic tuple $(D A) using a predicate $(D Pred).
+Creates a generic tuple comprised of elemetns of $(D A) for which a unary
+predicate $(D pred) is $(D true).
 
 Example:
 ----
@@ -803,9 +852,9 @@ static assert(is(FilterTuple!(`__traits(isUnsigned, T)`, int, size_t, void, usho
 
 Analog of $(PHOBOSREF algorithm, filter) for generic tuples.
 */
-template FilterTuple(alias Pred, A...)
+template FilterTuple(alias pred, A...)
 {
-	alias UnaryTemplate!Pred PredTemplate;
+	alias UnaryTemplate!pred PredTemplate;
 
 	template func(A...) if(A.length == 1)
 	{ alias A[0 .. PredTemplate!(A[0])] func; }
@@ -826,7 +875,10 @@ unittest
 
 
 /**
-TODO docs
+Similarly to $(MREF UniqTuple), creates a generic tuple comprised of packed generic tuples comprised of unique
+consecutive elemetns of $(D A) and counts of equivalent elements seen.
+
+Equivalence of elements is assessed by using a binary predicate $(D pred).
 
 Example:
 ----
@@ -898,7 +950,9 @@ unittest
 
 
 /**
-Joins $(D packedTuples) using $(D packedSeparatorTuple) as a separator.
+Creates a generic tuple comprised of packed generic tuples $(D packedTuples)
+generic tuples joined together using packed generic tuple $(D packedSeparatorTuple)
+as a separator.
 
 Example:
 ----
@@ -935,7 +989,8 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of results of applying unary
+template $(D Func) to elemetns of $(D A) consecutively.
 
 Example:
 ---
@@ -970,7 +1025,9 @@ unittest
 
 
 /**
-TODO docs
+The instantiation of $(D ReduceTuple!(Func, init, A)) first lets $(D result)
+be $(D init). Then, for each element $(D x) in $(D A) sequentially, it lets $(D result)
+be $(D Inst!(BinaryTemplate!Func, result, x)). Finally, $(D result) is returned.
 
 Example:
 ----
@@ -979,7 +1036,7 @@ static assert(is(ReduceTuple!(`Select!(T.sizeof > U.sizeof, T, U)`, void, bool, 
 ----
 
 Analog of $(PHOBOSREF algorithm, reduce) for generic tuples
-except $(D Init) value must be explicitly specified.
+except there is no overload with multiple functions.
 */
 template ReduceTuple(alias Func, alias init, A...)
 {
@@ -1015,7 +1072,9 @@ unittest
 
 
 /**
-TODO docs
+Creates a generic tuple comprised of unique consecutive elemetns of $(D A).
+
+Equivalence of elements is assessed by using a binary predicate $(D pred).
 
 Example:
 ----
