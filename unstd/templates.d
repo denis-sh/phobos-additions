@@ -185,35 +185,51 @@ unittest
 
 
 /**
-TODO docs
+Create predicate template returning $(D !template_).
+
+Example:
+---
+import std.traits: isPointer;
+alias notTemplate!isPointer notPointer;
+static assert( notPointer! int );
+static assert(!notPointer!(int*));
+
+alias notTemplate!notTemplate toBoolTemplate;
+static assert(Inst!(toBoolTemplate!isPointer, int*));
+template get5() { enum get5 = 5; }
+static assert(Inst!(toBoolTemplate!get5) == true);
+---
 */
-template notTemplate(alias Template)
+template notTemplate(alias template_)
 {
 	template notTemplate(T...)
 	{
-		static if(__traits(compiles, { enum e = Template!T; }))
-			enum bool notTemplate = !Template!T;
+		static if(__traits(compiles, { enum e = template_!T; }))
+			enum bool notTemplate = !template_!T;
 		else
 			template notTemplate(U...)
 			{
-				enum bool notTemplate = !Inst!(Template!T, U);
+				enum bool notTemplate = !Inst!(template_!T, U);
 			}
 	}
 }
 
 unittest
 {
-	import std.traits;
 	alias notTemplate!isPointer notPointer;
 	static assert( notPointer! int );
 	static assert(!notPointer!(int*));
 	static assert( Inst!(notTemplate!isPointer, int ));
 	static assert(!Inst!(notTemplate!isPointer, int*));
 
-	alias notTemplate!notTemplate staticYes;
-	alias staticYes!isPointer _isPointer;
+	alias notTemplate!notTemplate toBoolTemplate;
+
+	alias toBoolTemplate!isPointer _isPointer;
 	static assert(!_isPointer! int );
 	static assert( _isPointer!(int*));
+
+	alias Template!("5", 0) get5;
+	static assert(Inst!(toBoolTemplate!get5) == true);
 }
 
 
