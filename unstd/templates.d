@@ -504,6 +504,12 @@ unittest
 /**
 Binds template arguments using format string.
 
+$(UL
+	$(LI use $(D %i) to refer $(D i)-th argument;)
+	$(LI use $(D %*) to refer all arguments;)
+	$(LI use $(D %%) for a $(D %) symbol.)
+)
+
 Example:
 ----
 import unstd.traits;
