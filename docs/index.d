@@ -19,10 +19,10 @@ $(MEMBERSDESC
 	),
 	$(IDENTITY
 		A convenient template to retrieve array element type for template
-		programming purposes. $(I phobos)'s $(STDREF range, ElementEncodingType)
-		should be used only if array is treated as a range, otherwise it reduced
+		programming purposes. $(I Phobos)'s $(STDREF range, ElementEncodingType)
+		should be used only if array is treated as a range, otherwise it reduces
 		templated code readability and looks inconsistent because many templates
-		are from "differen world" and doesn't have to know anything about ranges.
+		are from "differen world" and don't have to know anything about ranges.
 	)
 )
 $(MEMBERSDESC
@@ -34,7 +34,6 @@ $(MEMBERSDESC
 	,
 	$(IDENTITY
 		Partially (except $(D multidimensionalStaticArrayLengths)) in $(PHOBOSPULL 924) ($(GREEN open)).
-		This pull also includes $(D asFlatStaticArray) function.
 	),
 	$(IDENTITY
 		These templates are needed for analysing multidimensional static arrays.
@@ -44,10 +43,13 @@ $(MEMBERSDESC
 	Function converting everything into a static array,
 	$(FREF array, asFlatStaticArray),
 	$(IDENTITY
-		Included in $(PHOBOSPULL 924) ($(GREEN open)) with static array traits.
+		$(PHOBOSPULL 952) ($(GREEN open))
 	),
 	$(IDENTITY
-		TODO docs
+		$(D asFlatStaticArray) adds an ability to view any abject as
+		a single-dimensional static array which is very useful for template code as
+		it eliminates error-prone need to create branches and recursion for
+		static-arrays support.
 	)
 )
 $(MEMBERSDESC
@@ -57,7 +59,8 @@ $(MEMBERSDESC
 	,
 	no.,
 	$(IDENTITY
-		TODO docs
+		$(DPMODULE multidimensionalarray) module adds ability to slice
+		multidimensional rectangular arrays and ranges to iterate slices.
 	)
 )
 $(MEMBERSDESC
@@ -70,7 +73,9 @@ $(MEMBERSDESC
 		$(PHOBOSPULL 780) ($(GREEN open)).
 	),
 	$(IDENTITY
-		TODO docs
+		There should be at least both $(D GenericTuple) and $(D TypeTuple) as the latter
+		is a common usecase of generic tuples.
+		E.g. $(D TypeTuple) is used ~70% of generic tuple usage in $(I Phobos).
 	)
 )
 $(MEMBERSDESC
@@ -82,7 +87,7 @@ $(MEMBERSDESC
 	,
 	no.,
 	$(IDENTITY
-		TODO docs
+		Useful when passing more than one generic tuple to a template.
 	)
 )
 $(MEMBERSDESC
@@ -126,11 +131,12 @@ $(MEMBERSDESC
 	$(FREF typecons, flagEnum),
 	no.,
 	$(IDENTITY
-		TODO docs
+		Creates a set of flags for which any non-flag operations ar prohibited.
 	)
 )
 $(MEMBERSDESC
-	Commonly needed in programming mathematical functions,
+	Commonly needed in programming integer mathematical functions related to
+	powers of 2,
 	$(FREF math, isPowerOf2)
 	$(FREF math, roundDownToPowerOf2)
 	$(FREF math, roundUpToPowerOf2)
@@ -141,7 +147,8 @@ $(MEMBERSDESC
 	,
 	no.,
 	$(IDENTITY
-		TODO docs
+		It is just too commonly needed to not include it in a standard library
+		forsing almost everybody to spend time writing such functions.
 	)
 )
 $(MEMBERSDESC
@@ -149,7 +156,8 @@ $(MEMBERSDESC
 	$(FREF templates, Inst),
 	no.,
 	$(IDENTITY
-		TODO docs
+		A convenience util to instantiate templates needed because of $(B D) syntax
+		issues.
 	)
 )
 $(MEMBERSDESC
@@ -162,7 +170,7 @@ $(MEMBERSDESC
 	,
 	no.,
 	$(IDENTITY
-		TODO docs
+		A stuff for creating templates from strings.
 	)
 )
 $(MEMBERSDESC
@@ -172,7 +180,7 @@ $(MEMBERSDESC
 	,
 	no.,
 	$(IDENTITY
-		TODO docs
+		A stuff for binding templates arguments.
 	)
 )
 $(MEMBERSDESC
@@ -183,7 +191,7 @@ $(MEMBERSDESC
 	,
 	no.,
 	$(IDENTITY
-		TODO docs
+		A stuff for combining template predicates.
 	)
 )
 
@@ -191,7 +199,7 @@ Macros:
 H2 = <h2>$0</h2>
 H3 = <h3>$0</h3>
 H4 = <h4>$0</h4>
-MEMBERSDESC = $(H3 $1) $(H4 $(I Members):) $(P $2) $(H4 $(I phobos) pulls:) $(P $3) $(H4 Description:) $(P $4) $(BR) $(BR)
+MEMBERSDESC = $(H3 $1) $(H4 $(I Members):) $(P $2) $(H4 $(I Phobos) pulls:) $(P $3) $(H4 Description:) $(P $4) $(BR) $(BR)
 FREF = $(DPREF $1, $2) $(BR)
 IDENTITY = $0
 PHOBOSPULL = $(HTTPS github.com/D-Programming-Language/phobos/pull/$1, #$1)
