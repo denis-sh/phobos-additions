@@ -269,8 +269,7 @@ static assert(!Inst!(TemplateBind!(isImplicitlyConvertible, arg!0,   int), long)
 static assert( Inst!(TemplateBind!(isImplicitlyConvertible, int  , arg!0), long));
 
 alias TemplateBind!(MapTuple, Unqual, allArgs) UnqualAll;
-static assert(is(UnqualAll!(const(int), immutable(bool[])) T) &&
-              T.length == 2 && is(T[0] == int) && is(T[1] == immutable(bool)[]));
+static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 ----
 */
 struct Args
@@ -363,8 +362,7 @@ unittest
 	static assert( Inst!(TemplateBind!(isImplicitlyConvertible, int  , arg!0), long));
 
 	alias TemplateBind!(MapTuple, Unqual, allArgs) UnqualAll;
-	static assert(is(UnqualAll!(const(int), immutable(bool[])) T) &&
-                  T.length == 2 && is(T[0] == int) && is(T[1] == immutable(bool)[]));
+	static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 }
 
 // allArgs -> %*, arg! -> %
@@ -466,8 +464,7 @@ mixin Bind!q{ isImplicitlyConvertible!(int, %0) isImplicitlyConvertibleFromInt }
 static assert( isImplicitlyConvertibleFromInt!long);
 
 mixin Bind!q{ MapTuple!(Unqual, %*) UnqualAll };
-static assert(is(UnqualAll!(const(int), immutable(bool[])) T) &&
-              T.length == 2 && is(T[0] == int) && is(T[1] == immutable(bool)[]));
+static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 ----
 */
 mixin template Bind(string fmt)
@@ -527,6 +524,5 @@ unittest
 	static assert( isImplicitlyConvertibleFromInt!long);
 
 	mixin Bind!q{ MapTuple!(Unqual, %*) UnqualAll };
-	static assert(is(UnqualAll!(const(int), immutable(bool[])) T) &&
-                  T.length == 2 && is(T[0] == int) && is(T[1] == immutable(bool)[]));
+	static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 }
