@@ -34,7 +34,7 @@ unittest
 	static assert( Inst!(isPointer, int*));
 	static assert(!Inst!(isPointer, int ));
 	static assert(is(Inst!(PointerTarget, int*) == int));
-	static assert(Inst!(Alias, 5)[0] == 5);
+	static assert(Inst!(GenericTuple, 5)[0] == 5);
 }
 
 
@@ -380,29 +380,20 @@ private template TemplateBindArgs(size_t bindedCount, T...)
 	}
 }
 
-version(unittest)
-{
-	template Alias(Args...)
-	{
-		alias Args Alias;
-	}
-}
-
 unittest
 {
 	alias PackedGenericTuple Pack;
-	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
-	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int), 3)).equals!(1, 2, int));
-	static assert(Pack!(Inst!(BindTemplate!(Alias, arg!0), 3)).equals!(3));
-	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, args[0]), 3)).equals!(1, 2, int, 3));
-	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
-	static assert(Pack!(Inst!(BindTemplate!(Alias,
+	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, 1, 2, int), 3)).equals!(1, 2, int));
+	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, arg!0), 3)).equals!(3));
+	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, 1, 2, int, args[0]), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(BindTemplate!(GenericTuple,
 			1, args[0 .. 1], 2, int, args[$ - 1]
 		),
 			3
 		)).equals!(
 			1, 3, 2, int, 3));
-	static assert(Pack!(Inst!(BindTemplate!(Alias,
+	static assert(Pack!(Inst!(BindTemplate!(GenericTuple,
 			1, arg!1, 2, arg!0, int, args[$ + -3], allArgs,
 		),
 			3, char, 5
@@ -542,34 +533,34 @@ unittest
 	}
 
 	alias PackedGenericTuple Pack;
-	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
+	static assert(Pack!(GenericTuple!(1, 2, int)).equals!(1, 2, int));
 	test!(
-		q{ Alias!(1, 2, int) },
+		q{ GenericTuple!(1, 2, int) },
 		1, 3,
 		1, 2, int
 	)();
 	test!(
-		q{ Alias!(%0) },
+		q{ GenericTuple!(%0) },
 		1, 3,
 		3
 	)();
 	test!(
-		q{ Alias!(1, 2, int, %0) },
+		q{ GenericTuple!(1, 2, int, %0) },
 		1, 3,
 		1, 2, int, 3
 	)();
 	test!(
-		q{ Alias!(1, 2, int, %*) },
+		q{ GenericTuple!(1, 2, int, %*) },
 		1, 3,
 		1, 2, int, 3
 	)();
 	test!(
-		q{ Alias!(1, %0, 2, int, %0) },
+		q{ GenericTuple!(1, %0, 2, int, %0) },
 		1, 3,
 		1, 3, 2, int, 3
 	)();
 	test!(
-		q{ Alias!(1, %1, 2, %0, int, %0, %*,) },
+		q{ GenericTuple!(1, %1, 2, %0, int, %0, %*,) },
 		3, 3, char, 5,
 		1, char, 2, 3, int, 3, 3, char, 5
 	)();
