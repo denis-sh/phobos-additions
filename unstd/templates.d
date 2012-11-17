@@ -151,7 +151,11 @@ unittest
 
 
 /**
-TODO docs
+Using $(D unaryPred) or $(D binaryPred) is a convinient way to create a template
+with one or two arguments respectively which is an $(D enum) of type $(D bool).
+
+It is equal to instantiating $(MREF Template) with corresponding
+$(D argumentsCount) and $(D bool) as $(D EnumType).
 
 Example:
 ----
