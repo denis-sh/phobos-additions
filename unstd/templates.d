@@ -283,32 +283,6 @@ unittest {
 }
 
 
-private struct __BindArgs
-{
-	struct Arg { size_t n; }
-	struct ArgsRange { size_t from, to; }
-	struct ArgsToEnd { size_t from; }
-	struct ArgDollar
-	{
-		int sub = 0;
-		auto opBinary(string op)(int n) const
-			if(op == "+" || op == "-")
-		{ return ArgDollar(op == "+" ? -n : n); }
-	}
-
-	auto opDollar() const { return ArgDollar(); }
-	auto opIndex(size_t n)               const { return Arg(n); }
-	auto opIndex(ArgDollar d)            const { return d; }
-	auto opSlice(size_t from, size_t to) const { return ArgsRange(from, to); }
-	auto opSlice()                       const { return ArgsToEnd(0); }
-}
-
-enum args = __BindArgs();
-template arg(size_t n) { enum arg = __BindArgs.Arg(n); }
-template argsRange(size_t from, size_t to) { enum argsRange = __BindArgs.ArgsRange(from, to); }
-template argsToEnd(size_t from) { enum argsToEnd = __BindArgs.ArgsToEnd(from); }
-enum allArgs = argsToEnd!0;
-
 /**
 Binds template arguments.
 
@@ -345,6 +319,32 @@ template BindTemplate(alias Template, BindArgs...)
 		alias Template!(TemplateBindArgs!(BindArgs.length, BindArgs, Args)) BindTemplate;
 	}
 }
+
+private struct __BindArgs
+{
+	struct Arg { size_t n; }
+	struct ArgsRange { size_t from, to; }
+	struct ArgsToEnd { size_t from; }
+	struct ArgDollar
+	{
+		int sub = 0;
+		auto opBinary(string op)(int n) const
+			if(op == "+" || op == "-")
+		{ return ArgDollar(op == "+" ? -n : n); }
+	}
+
+	auto opDollar() const { return ArgDollar(); }
+	auto opIndex(size_t n)               const { return Arg(n); }
+	auto opIndex(ArgDollar d)            const { return d; }
+	auto opSlice(size_t from, size_t to) const { return ArgsRange(from, to); }
+	auto opSlice()                       const { return ArgsToEnd(0); }
+}
+
+enum args = __BindArgs();
+template arg(size_t n) { enum arg = __BindArgs.Arg(n); }
+template argsRange(size_t from, size_t to) { enum argsRange = __BindArgs.ArgsRange(from, to); }
+template argsToEnd(size_t from) { enum argsToEnd = __BindArgs.ArgsToEnd(from); }
+enum allArgs = argsToEnd!0;
 
 private template TemplateBindArgs(size_t bindedCount, T...)
 {
