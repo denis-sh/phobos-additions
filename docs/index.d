@@ -178,8 +178,8 @@ $(MEMBERSDESC
 $(MEMBERSDESC
 	Combine template predicates,
 	$(FREF templates, notTemplate)
-	$(FREF templates, TemplateAnd)
-	$(FREF templates, TemplateOr)
+	$(FREF templates, andTemplates)
+	$(FREF templates, orTemplates)
 	,
 	no.,
 	$(IDENTITY
