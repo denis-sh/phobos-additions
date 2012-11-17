@@ -131,10 +131,10 @@ unittest
 {
 	static assert(Inst!(UnaryTemplate!` __traits(isUnsigned, T)`, uint));
 	static assert(Inst!(UnaryTemplate!`!__traits(isUnsigned, T)`,  int));
-	static assert(Inst!(Inst!(UnaryTemplate!TemplateNot, isPointer), int));
-	static assert(Inst!(Inst!(UnaryTemplate!`TemplateNot!A`, isPointer), int));
-	static assert(Inst!(Inst!(UnaryTemplate!(TemplateNot!TemplateNot), isPointer), int*));
-	static assert(Inst!(Inst!(UnaryTemplate!`Inst!(TemplateNot!TemplateNot, A)`, isPointer), int*));
+	static assert(Inst!(Inst!(UnaryTemplate!notTemplate, isPointer), int));
+	static assert(Inst!(Inst!(UnaryTemplate!`notTemplate!A`, isPointer), int));
+	static assert(Inst!(Inst!(UnaryTemplate!(notTemplate!notTemplate), isPointer), int*));
+	static assert(Inst!(Inst!(UnaryTemplate!`Inst!(notTemplate!notTemplate, A)`, isPointer), int*));
 
 	static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
 
@@ -187,26 +187,26 @@ unittest
 /**
 TODO docs
 */
-template TemplateNot(alias Template) {
-	template TemplateNot(T...) {
+template notTemplate(alias Template) {
+	template notTemplate(T...) {
 		static if(__traits(compiles, { enum e = Template!T; }))
-			enum bool TemplateNot = !Template!T;
+			enum bool notTemplate = !Template!T;
 		else
-			template TemplateNot(U...) {
-				enum bool TemplateNot = !Inst!(Template!T, U);
+			template notTemplate(U...) {
+				enum bool notTemplate = !Inst!(Template!T, U);
 			}
 	}
 }
 
 unittest {
 	import std.traits;
-	alias TemplateNot!isPointer notPointer;
+	alias notTemplate!isPointer notPointer;
 	static assert( notPointer! int );
 	static assert(!notPointer!(int*));
-	static assert( Inst!(TemplateNot!isPointer, int ));
-	static assert(!Inst!(TemplateNot!isPointer, int*));
+	static assert( Inst!(notTemplate!isPointer, int ));
+	static assert(!Inst!(notTemplate!isPointer, int*));
 
-	alias TemplateNot!TemplateNot staticYes;
+	alias notTemplate!notTemplate staticYes;
 	alias staticYes!isPointer _isPointer;
 	static assert(!_isPointer! int );
 	static assert( _isPointer!(int*));

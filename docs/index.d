@@ -177,7 +177,7 @@ $(MEMBERSDESC
 )
 $(MEMBERSDESC
 	Combine template predicates,
-	$(FREF templates, TemplateNot)
+	$(FREF templates, notTemplate)
 	$(FREF templates, TemplateAnd)
 	$(FREF templates, TemplateOr)
 	,

@@ -915,7 +915,7 @@ static assert(group[2].equals!("x", 2));
 static assert(group[3].equals!(int, 1));
 static assert(group[4].equals!(1, 2));
 
-alias groupTuple!(TemplateNot!isSame, tuple) group2;
+alias groupTuple!(notTemplate!isSame, tuple) group2;
 static assert(group2.length == 3);
 static assert(group2[0].equals!(1, 7));
 static assert(group2[1].equals!(1, 1));
@@ -964,7 +964,7 @@ unittest
 	static assert(group[3].equals!(int, 1));
 	static assert(group[4].equals!(1, 2));
 
-	alias groupTuple!(TemplateNot!isSame, tuple) group2;
+	alias groupTuple!(notTemplate!isSame, tuple) group2;
 	static assert(group2.length == 3);
 	static assert(group2[0].equals!(1, 7));
 	static assert(group2[1].equals!(1, 1));
