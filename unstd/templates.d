@@ -187,18 +187,22 @@ unittest
 /**
 TODO docs
 */
-template notTemplate(alias Template) {
-	template notTemplate(T...) {
+template notTemplate(alias Template)
+{
+	template notTemplate(T...)
+	{
 		static if(__traits(compiles, { enum e = Template!T; }))
 			enum bool notTemplate = !Template!T;
 		else
-			template notTemplate(U...) {
+			template notTemplate(U...)
+			{
 				enum bool notTemplate = !Inst!(Template!T, U);
 			}
 	}
 }
 
-unittest {
+unittest
+{
 	import std.traits;
 	alias notTemplate!isPointer notPointer;
 	static assert( notPointer! int );
@@ -229,7 +233,8 @@ template TemplateAnd(Templates...)
 	}
 }
 
-unittest {
+unittest
+{
 	alias TemplateAnd!() _true;
 	static assert(_true!() && _true!int && _true!(int, int*));
 
@@ -264,7 +269,8 @@ template TemplateOr(Templates...)
 	}
 }
 
-unittest {
+unittest
+{
 	alias TemplateOr!() _false;
 	static assert(!_false!() && !_false!int && !_false!(int, int*));
 
