@@ -39,7 +39,28 @@ unittest
 
 
 /**
-TODO docs
+Create template from a string $(D Pred).
+If $(D Pred) isn't a string, alises itself to $(D Pred).
+
+If $(D argumentsCount) is $(D -1) created template will accept any number
+of arguments, otherwise it will expect $(D argumentsCount) arguments.
+
+If $(D EnumType) is $(D void) created template may be an $(D alias) or
+an $(D enum), otherwise it will be an $(D enum) of type $(D EnumType).
+
+Created template can access its aruments as a generic tuple with $(D Args).
+
+If $(D argumentsCount) is $(D 1) or $(D 2) created template can access
+its first argument with $(D a) if it is an value, with $(D T) if it is a type
+and with $(D A) otherwise.
+
+If $(D argumentsCount) is $(D 2) created template can access
+its second argument with $(D b) if it is an value, with $(D U) if it is a type
+and with $(D B) otherwise.
+
+$(D UnaryTemplate) is a convinient way to create a template with one argument ($(D argumentsCount) is $(D 1)).
+
+$(D BinaryTemplate) is a convinient way to create a template with two arguments ($(D argumentsCount) is $(D 2)).
 
 Example:
 ----
@@ -47,6 +68,8 @@ static assert(Inst!(UnaryTemplate!`__traits(isUnsigned, T)`, uint));
 static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
 static assert(Inst!(UnaryTemplate!`a == 5`, 5));
 static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
+static assert(Inst!(BinaryTemplate!`a + U.sizeof`, 1, int) == 5);
+static assert(PackedGenericTuple!(Inst!(Template!(`Args`, -1), "x", int)).equals!("x", int));
 ----
 */
 template Template(alias Pred, int argumentsCount, EnumType = void)
@@ -122,6 +145,7 @@ unittest
 
 	static assert(!__traits(compiles, Inst!(Template!(`T`, bool), int)));
 
+	static assert(Inst!(BinaryTemplate!`a + U.sizeof`, 1, int) == 5);
 	static assert(PackedGenericTuple!(Inst!(Template!(`Args`, -1), 1, int, "x")).equals!(1, int, "x"));
 }
 
