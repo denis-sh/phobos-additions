@@ -54,25 +54,25 @@ template Template(alias Pred, int argumentsCount, EnumType = void)
 {
 	static if(isSomeString!(typeof(Pred)))
 	{
-		template Template(__A...) if(argumentsCount == -1 || __A.length == argumentsCount)
+		template Template(Args...) if(argumentsCount == -1 || Args.length == argumentsCount)
 		{
 			static if(argumentsCount >= 1 && argumentsCount <= 2)
 			{
-				static if(__traits(compiles, { enum e = __A[0]; }))
-					enum a = __A[0];
-				else static if(is(__A[0]))
-					alias __A[0] T;
+				static if(__traits(compiles, { enum e = Args[0]; }))
+					enum a = Args[0];
+				else static if(is(Args[0]))
+					alias Args[0] T;
 				else
-					alias __A[0] A;
+					alias Args[0] A;
 
 				static if(argumentsCount == 2)
 				{
-					static if(__traits(compiles, { enum e = __A[1]; }))
-						enum b = __A[1];
-					else static if(is(__A[1]))
-						alias __A[1] U;
+					static if(__traits(compiles, { enum e = Args[1]; }))
+						enum b = Args[1];
+					else static if(is(Args[1]))
+						alias Args[1] U;
 					else
-						alias __A[1] B;
+						alias Args[1] B;
 				}
 			}
 
@@ -121,6 +121,8 @@ unittest
 	static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
 
 	static assert(!__traits(compiles, Inst!(Template!(`T`, bool), int)));
+
+	static assert(PackedGenericTuple!(Inst!(Template!(`Args`, -1), 1, int, "x")).equals!(1, int, "x"));
 }
 
 
