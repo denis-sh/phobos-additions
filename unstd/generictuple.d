@@ -481,7 +481,7 @@ private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, pac
 	alias MapTuple!(`A.length`, packedTuples) lengths;
 
 	static if(stoppingPolicy == StoppingPolicy.requireSameLength)
-		static assert(FilterTuple!(TemplateBind!(isSame, lengths[0], arg!0).Res, lengths).length == packedTuples.length,
+		static assert(FilterTuple!(TemplateBind!(isSame, lengths[0], arg!0), lengths).length == packedTuples.length,
 			"Inequal-length packed tuples passed to ZipTuple(StoppingPolicy.requireSameLength, ...)");
 
 	template Impl(size_t n, packedTuples...)

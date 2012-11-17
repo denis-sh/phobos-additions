@@ -264,11 +264,11 @@ Example:
 ----
 import unstd.traits;
 
-static assert(is(TemplateBind!(CommonType, long, allArgs).Res!int == long));
-static assert(!TemplateBind!(isImplicitlyConvertible, arg!0,   int).Res!long);
-static assert( TemplateBind!(isImplicitlyConvertible, int  , arg!0).Res!long);
+static assert(is(Inst!(TemplateBind!(CommonType, long, allArgs), int) == long));
+static assert(!Inst!(TemplateBind!(isImplicitlyConvertible, arg!0,   int), long));
+static assert( Inst!(TemplateBind!(isImplicitlyConvertible, int  , arg!0), long));
 
-alias TemplateBind!(MapTuple, Unqual, allArgs).Res UnqualAll;
+alias TemplateBind!(MapTuple, Unqual, allArgs) UnqualAll;
 static assert(is(UnqualAll!(const(int), immutable(bool[])) T) &&
               T.length == 2 && is(T[0] == int) && is(T[1] == immutable(bool)[]));
 ----
@@ -291,9 +291,9 @@ enum allArgs = argsToEnd!0; /// ditto
 /// ditto
 template TemplateBind(alias Template, BindArgs...)
 {
-	template Res(Args...)
+	template TemplateBind(Args...)
 	{
-		alias Template!(TemplateBindArgs!(BindArgs.length, BindArgs, Args)) Res;
+		alias Template!(TemplateBindArgs!(BindArgs.length, BindArgs, Args)) TemplateBind;
 	}
 }
 
@@ -339,30 +339,30 @@ unittest
 {
 	alias PackedGenericTuple Pack;
 	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
-	static assert(Pack!(TemplateBind!(Alias, 1, 2, int).Res!3).equals!(1, 2, int));
-	static assert(Pack!(TemplateBind!(Alias, arg!0).Res!3).equals!(3));
-	static assert(Pack!(TemplateBind!(Alias, 1, 2, int, arg!0).Res!3).equals!(1, 2, int, 3));
-	static assert(Pack!(TemplateBind!(Alias, 1, 2, int, allArgs).Res!3).equals!(1, 2, int, 3));
-	static assert(Pack!(TemplateBind!(Alias,
+	static assert(Pack!(Inst!(TemplateBind!(Alias, 1, 2, int), 3)).equals!(1, 2, int));
+	static assert(Pack!(Inst!(TemplateBind!(Alias, arg!0), 3)).equals!(3));
+	static assert(Pack!(Inst!(TemplateBind!(Alias, 1, 2, int, arg!0), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(TemplateBind!(Alias, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(TemplateBind!(Alias,
 			1, arg!0, 2, int, arg!0
-		).Res!
+		),
 			3
-		).equals!(
+		)).equals!(
 			1, 3, 2, int, 3));
-	static assert(Pack!(TemplateBind!(Alias,
+	static assert(Pack!(Inst!(TemplateBind!(Alias,
 			1, arg!1, 2, arg!0, int, arg!0, allArgs,
-		).Res!(
+		),
 			3, char, 5
 		)).equals!(
 			1, char, 2, 3, int, 3, 3, char, 5));
 
 	import unstd.traits;
 
-	static assert(is(TemplateBind!(CommonType, long, allArgs).Res!int == long));
-	static assert(!TemplateBind!(isImplicitlyConvertible, arg!0,   int).Res!long);
-	static assert( TemplateBind!(isImplicitlyConvertible, int  , arg!0).Res!long);
+	static assert(is(Inst!(TemplateBind!(CommonType, long, allArgs), int) == long));
+	static assert(!Inst!(TemplateBind!(isImplicitlyConvertible, arg!0,   int), long));
+	static assert( Inst!(TemplateBind!(isImplicitlyConvertible, int  , arg!0), long));
 
-	alias TemplateBind!(MapTuple, Unqual, allArgs).Res UnqualAll;
+	alias TemplateBind!(MapTuple, Unqual, allArgs) UnqualAll;
 	static assert(is(UnqualAll!(const(int), immutable(bool[])) T) &&
                   T.length == 2 && is(T[0] == int) && is(T[1] == immutable(bool)[]));
 }
@@ -430,16 +430,16 @@ private string formatBind(string fmt)
 
 
 	res ~= fmt[start .. $];
-	res ~= ").Res ";
+	res ~= ") ";
 	res ~= id;
 	return res;
 }
 
 unittest
 {
-	enum end = ").Res x";
+	enum end = ") x";
 	static assert(formatBind("ab!()x") == "ab," ~ end);
-	static assert(formatBind("ab !() x") == "ab ,).Res  x");
+	static assert(formatBind("ab !() x") == "ab ,)  x");
 	static assert(formatBind("ab ! ()x") == "ab ," ~ end);
 	static assert(formatBind("t!(ab%%c)x") == "t,ab%c" ~ end);
 	static assert(formatBind("t!(ab%%)x") == "t,ab%" ~ end);
