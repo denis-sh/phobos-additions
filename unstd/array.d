@@ -1,4 +1,4 @@
-﻿/** Additions to std.array.
+﻿/** Additions to $(STDMODULE _array).
 
 Copyright: Denis Shelomovskij 2011-2012
 

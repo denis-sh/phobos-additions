@@ -1,4 +1,4 @@
-﻿/** Additions to std.typetuple
+﻿/** Additions to $(STDMODULE _typecons).
 
 Copyright: Denis Shelomovskij 2012
 

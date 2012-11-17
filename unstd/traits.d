@@ -1,4 +1,4 @@
-﻿/** Additions to std.traits
+﻿/** Additions to $(STDMODULE _traits).
 
 Copyright: Denis Shelomovskij 2011-2012
 

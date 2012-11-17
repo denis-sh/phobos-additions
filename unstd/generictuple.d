@@ -1,4 +1,6 @@
-﻿/** Additions to std.typetuple
+﻿/** Various stuff for working with generic tuples.
+
+A replacement for $(STDMODULE typetuple).
 
 $(BOOKTABLE Generic tuple manipulation functions,
 	$(TR $(TH Category) $(TH Functions))

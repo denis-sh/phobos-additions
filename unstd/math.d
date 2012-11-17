@@ -1,4 +1,4 @@
-﻿/** Additions to std.math.
+﻿/** Additions to $(STDMODULE _math).
 
 Copyright: Denis Shelomovskij 2011-2012
 
