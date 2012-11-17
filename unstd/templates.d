@@ -287,21 +287,6 @@ private struct _Arg { size_t n; }
 private struct _ArgsRange { size_t from, to; }
 private struct _ArgsToEnd { size_t from; }
 
-/**
-Binds template arguments.
-
-Example:
-----
-import unstd.traits;
-
-static assert(is(Inst!(BindTemplate!(CommonType, long, allArgs), int) == long));
-static assert(!Inst!(BindTemplate!(isImplicitlyConvertible, arg!0,   int), long));
-static assert( Inst!(BindTemplate!(isImplicitlyConvertible, int  , arg!0), long));
-
-alias BindTemplate!(MapTuple, Unqual, allArgs) UnqualAll;
-static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
-----
-*/
 struct Args
 {
 	//struct D;
@@ -311,13 +296,36 @@ struct Args
 	auto opSlice()                       const { return _ArgsToEnd(0); }
 }
 
-enum args = Args(); /// ditto
-template arg(size_t n) { enum arg = _Arg(n); } /// ditto
-template argsRange(size_t from, size_t to) { enum argsRange = _ArgsRange(from, to); } /// ditto
-template argsToEnd(size_t from) { enum argsToEnd = _ArgsToEnd(from); } /// ditto
-enum allArgs = argsToEnd!0; /// ditto
+enum args = Args();
+template arg(size_t n) { enum arg = _Arg(n); }
+template argsRange(size_t from, size_t to) { enum argsRange = _ArgsRange(from, to); }
+template argsToEnd(size_t from) { enum argsToEnd = _ArgsToEnd(from); }
+enum allArgs = argsToEnd!0;
 
-/// ditto
+/**
+Binds template arguments.
+
+$(UL
+	$(LI use $(D args[i]) or $(D arg!i) to refer $(D i)-th argument;)
+	$(LI use $(D args[a .. b]) or $(D argsRange!(a, b)) to refer arguments from
+		$(D a)-th up to and excluding $(D b)-th;)
+	$(LI use $(D argsToEnd!n) to refer arguments from $(D n)-th argument up to
+		the end;)
+	$(LI use $(D allArgs) to refer all arguments.)
+)
+
+Example:
+----
+import unstd.traits;
+
+static assert(is(Inst!(BindTemplate!(CommonType, long, allArgs), int) == long));
+static assert(!Inst!(BindTemplate!(isImplicitlyConvertible, args[0], int), long));
+static assert( Inst!(BindTemplate!(isImplicitlyConvertible, int  , arg!0), long));
+
+alias BindTemplate!(MapTuple, Unqual, allArgs) UnqualAll;
+static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
+----
+*/
 template BindTemplate(alias Template, BindArgs...)
 {
 	template BindTemplate(Args...)
@@ -370,10 +378,10 @@ unittest
 	static assert(Pack!(Alias!(1, 2, int)).equals!(1, 2, int));
 	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int), 3)).equals!(1, 2, int));
 	static assert(Pack!(Inst!(BindTemplate!(Alias, arg!0), 3)).equals!(3));
-	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, arg!0), 3)).equals!(1, 2, int, 3));
+	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, args[0]), 3)).equals!(1, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(Alias, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(Alias,
-			1, arg!0, 2, int, arg!0
+			1, args[0 .. 1], 2, int, arg!0
 		),
 			3
 		)).equals!(
@@ -388,7 +396,7 @@ unittest
 	import unstd.traits;
 
 	static assert(is(Inst!(BindTemplate!(CommonType, long, allArgs), int) == long));
-	static assert(!Inst!(BindTemplate!(isImplicitlyConvertible, arg!0,   int), long));
+	static assert(!Inst!(BindTemplate!(isImplicitlyConvertible, args[0], int), long));
 	static assert( Inst!(BindTemplate!(isImplicitlyConvertible, int  , arg!0), long));
 
 	alias BindTemplate!(MapTuple, Unqual, allArgs) UnqualAll;
