@@ -286,6 +286,10 @@
    <File path="unstd\array.d" />
    <File path="unstd\multidimensionalarray.d" />
   </Folder>
+  <Folder name="docs">
+   <File tool="None" path="docs\index.d" />
+   <File tool="None" path="docs\modules.ddoc" />
+  </Folder>
   <File path="unittest.d" />
  </Folder>
 </DProject>
