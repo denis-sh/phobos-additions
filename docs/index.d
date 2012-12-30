@@ -194,14 +194,28 @@ $(MEMBERSDESC
 		A stuff for combining template predicates.
 	)
 )
+$(MEMBERSDESC
+	Function finalizing class instance referenced by its argument,
+	$(FREF lifetime, finalizeClassInstance),
+	$(IDENTITY
+		$(DRUNTIMEPULL 344), $(RED closed) by Andrei Alexandrescu
+	),
+	$(IDENTITY
+		$(D finalizeClassInstance) accepts anly a class or an interface
+		as against tricky (IMO needless, error-prone, and inconsistent)
+		$(I Druntime)'s $(D destroy).
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>
 H3 = <h3>$0</h3>
 H4 = <h4>$0</h4>
-MEMBERSDESC = $(H3 $1) $(H4 $(I Members):) $(P $2) $(H4 $(I Phobos) pulls:) $(P $3) $(H4 Description:) $(P $4) $(BR) $(BR)
+MEMBERSDESC = $(H3 $1) $(H4 $(I Members):) $(P $2) $(H4 Pulls:) $(P $3) $(H4 Description:) $(P $4) $(BR) $(BR)
 FREF = $(DPREF $1, $2) $(BR)
 IDENTITY = $0
-PHOBOSPULL = $(HTTPS github.com/D-Programming-Language/phobos/pull/$1, #$1)
+GITHUBPULL = $(HTTPS github.com/$1/pull/$2, pull $2)
+DRUNTIMEPULL = $(I Druntime) $(GITHUBPULL D-Programming-Language/druntime, $1)
+PHOBOSPULL = $(I Phobos) $(GITHUBPULL D-Programming-Language/phobos, $1)
 +/
 module index;
