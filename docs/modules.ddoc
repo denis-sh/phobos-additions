@@ -6,3 +6,4 @@ MODULES =
 	$(MODULE unstd.math)
 	$(MODULE unstd.array)
 	$(MODULE unstd.multidimensionalarray)
+	$(MODULE unstd.lifetime)
