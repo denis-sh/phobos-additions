@@ -208,7 +208,10 @@ $(MEMBERSDESC
 )
 $(MEMBERSDESC
 	$(D TypeInfo) functions analogs,
-	$(FREF lifetime, setToInitialState),
+	$(FREF lifetime, setToInitialState)
+	$(FREF lifetime, callPostblits)
+	$(FREF lifetime, callDestructors)
+	,
 	$(IDENTITY
 		$(PHOBOSPULL 928) ($(GREEN open))
 	),
