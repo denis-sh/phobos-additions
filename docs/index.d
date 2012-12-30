@@ -230,6 +230,15 @@ $(MEMBERSDESC
 		do in a case an object goes out of scope.
 	)
 )
+$(MEMBERSDESC
+	Function for binary memory copying,
+	$(FREF array, rawCopy),
+	no.,
+	$(IDENTITY
+		This function is fast and CTFE-able and is a preffered way over $(I C)'s
+		$(D memcpy) and $(D memmove).
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>

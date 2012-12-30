@@ -9,6 +9,7 @@ Authors: Denis Shelomovskij
 module unstd.array;
 
 
+import core.stdc.string;
 public import std.array;
 
 import unstd.traits;
@@ -88,4 +89,136 @@ unittest
 
 	test!(int[2])([3, 4], [3, 4], [5, 6], [5, 6]);
 	test!(int[2])(3, [3, 3], 1, [1, 1]);
+}
+
+
+/**
+Binary copies $(D src) to $(D dest). $(D src) and $(D dest) can overlap.
+
+This function is a preffered way over $(I C)'s $(D memcpy) and $(D memmove) as
+it's CTFE-able and can work faster than $(I C)'s ones as it knows data type.
+*/
+void rawCopy(T)(const ref T src, ref T dest) nothrow
+{
+	if(__ctfe)
+		rawCopyCTImpl(src, dest);
+	else
+		memmove(&dest, &src, T.sizeof);
+}
+
+/// ditto
+void rawCopy(T)(in T* src, T* dest, size_t count) nothrow
+in { assert(count * T.sizeof / T.sizeof == count); }
+body
+{
+	if(__ctfe)
+		rawCopyCTImpl(src, dest, count);
+	else
+		memmove(dest, src, T.sizeof * count);
+}
+
+private void rawCopyCTImpl(T)(const ref T src, ref T dest) pure nothrow
+{
+	static if(!hasElaborateCopyConstructor!T && isAssignable!T)
+	{
+		dest = cast(T) src;
+	}
+	else static if(hasElaborateCopyConstructor!T && isStaticArray!T)
+	{
+		// We assume static arrays can not overlap in CTFE
+		foreach(i, ref el; src)
+			rawCopyCTImpl(el, dest[i]);
+	}
+	else static if(is(T == struct))
+	{
+		// A struct can be unassignable because of elaborate
+		// copy constructor or const fields.
+		foreach(i, ref field; src.tupleof)
+		{
+			alias typeof(field) F;
+			static if (is(F U == shared const U))
+				alias shared(U) Unqualed;
+			else 
+				alias Unqual!F Unqualed;
+			rawCopyCTImpl(*cast(Unqualed*) &field, *cast(Unqualed*) &dest.tupleof[i]);
+		}
+	}
+	else
+	{
+		static assert(0, T.stringof ~ " isn't assignable");
+	}
+}
+
+private void rawCopyCTImpl(T)(in T* src, T* dest, size_t count) pure nothrow
+{
+	if(count == 1) // As we can't slice non-arrays in CTFE
+		rawCopyCTImpl(*src, *dest);
+	else if(count != 0)
+		foreach(i, ref el; src[0 .. count])
+			rawCopyCTImpl(el, dest[i]);
+}
+
+unittest
+{
+	void test(alias f)()
+	{
+		{
+			int src = 1, dest;
+			f(src, dest);
+			assert(dest == 1);
+		}
+		{
+			static struct S1
+			{
+				int n;
+				int* p;
+				const int cn;
+				shared int sn;
+			}
+			int i;
+			const S1 src = { 1, &i, 2, 3 };
+			S1 dest;
+			f(src, dest);
+			if(__ctfe) // CTFE pointers @@@BUG@@@ workaround
+			{
+				assert(dest.p == null, "CTFE bug fixed. Remove this workaround.");
+				dest.p = &i;
+			}
+			assert(dest == S1(1, &i, 2, 3));
+		}
+		{
+			static struct S3
+			{
+				void opAssign(typeof(this)) { assert(0); }
+				this(this) { assert(0); }
+				// ~this() { } Can not test destructor because of compiler @@@BUG@@@
+				int n;
+			}
+			S3 src = { 1 }, dest;
+			f(src, dest);
+			assert(dest.n == 1);
+
+			dest.n = 0;
+			f(&src, &dest, 0);
+			assert(dest.n == 0);
+
+			f(&src, &dest, 1);
+			assert(dest.n == 1);
+
+			S3[2] srcArr, destArr;
+			srcArr[0].n = srcArr[1].n = 1; // To not call postblit
+			f(srcArr.ptr, destArr.ptr, 2);
+			assert(destArr[0].n == 1);
+			assert(destArr[1].n == 1);
+
+			static struct S4 { S3 s3; }
+			S4 src4, dest4;
+			src4.s3.n = 1; // To not call postblit
+			f(src4, dest4);
+			assert(dest4.s3.n == 1);
+		}
+	}
+	test!rawCopyCTImpl(); // Test CT variant at RT
+	test!rawCopy();
+	static assert((test!rawCopy(), true));
 }
