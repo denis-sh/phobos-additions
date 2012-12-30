@@ -219,6 +219,17 @@ $(MEMBERSDESC
 		Use these functions instead of dealing with tricky $(D typeid(T)).
 	)
 )
+$(MEMBERSDESC
+	Add $(D destruct) function,
+	$(FREF lifetime, destruct),
+	$(IDENTITY
+		$(PHOBOSPULL 929), $(RED closed) by Andrei Alexandrescu
+	),
+	$(IDENTITY
+		A function for object destruction which do exactly the same a compiler
+		do in a case an object goes out of scope.
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>

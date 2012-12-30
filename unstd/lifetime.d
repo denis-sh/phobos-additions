@@ -61,6 +61,19 @@ unittest
 
 
 /**
+Destructs $(D t) exactly the same way a compiler does in a case it goes out of scope.
+Also puts destructed object in its $(D init) state if $(D resetInitialState)
+is $(D true), otherwise object state will be undefined (i.e. possibly invalid).
+*/
+void destruct(T)(ref T t, bool resetInitialState = true)
+{
+	callDestructors(t);
+	if(resetInitialState)
+		setInitialState(t);
+}
+
+
+/**
 Sets the passed object to its `init` state.
 
 Use this function instead of dealing with tricky $(D typeid(T).init()).
