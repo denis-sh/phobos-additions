@@ -206,6 +206,16 @@ $(MEMBERSDESC
 		$(I Druntime)'s $(D destroy).
 	)
 )
+$(MEMBERSDESC
+	$(D TypeInfo) functions analogs,
+	$(FREF lifetime, setToInitialState),
+	$(IDENTITY
+		$(PHOBOSPULL 928) ($(GREEN open))
+	),
+	$(IDENTITY
+		Use these functions instead of dealing with tricky $(D typeid(T)).
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>
