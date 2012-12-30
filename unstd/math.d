@@ -82,7 +82,7 @@ unittest
 
 
 /**
-Returns the base-2 logarithm of smallest power of 2 which >= $(D n).
+Returns the base-2 logarithm of largest power of 2 which <= $(D n).
 
 Preconditions:
 $(D n) must be non-zero.
@@ -101,7 +101,7 @@ unittest
 
 
 /**
-Returns the base-2 logarithm of largest power of 2 which <= $(D n).
+Returns the base-2 logarithm of smallest power of 2 which >= $(D n).
 
 Preconditions:
 $(D n) must be non-zero.
