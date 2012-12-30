@@ -12,6 +12,7 @@ module unstd.array;
 import core.stdc.string;
 public import std.array;
 
+import unstd.generictuple;
 import unstd.traits;
 
 
@@ -101,9 +102,41 @@ it's CTFE-able and can work faster than $(I C)'s ones as it knows data type.
 void rawCopy(T)(const ref T src, ref T dest) nothrow
 {
 	if(__ctfe)
+	{
 		rawCopyCTImpl(src, dest);
+	}
+	else static if(T.sizeof == 16 || T.sizeof == 12 || (T.sizeof < 11 && T.sizeof != 7))
+	{
+		// Optimization for structs <= 16 bytes except for sizes 7, 11, 13-15.
+
+		alias GenericTuple!(byte, short, int, 0, long) Types;
+
+		enum bytes1 = {
+			foreach(bytes1; [8, 4, 2, 1])
+				foreach(bytes2; [0, 1, 2, 4, 8])
+					if(bytes1 + bytes2 == T.sizeof)
+						return bytes1;
+			assert(0);
+		}();
+		enum bytes2 = T.sizeof - bytes1;
+
+		alias Types[bytes1 / 2] U;
+
+		static if(bytes2)
+		{
+			alias Types[bytes2 / 2] V;
+			immutable tmp = *cast(V*) (cast(U*) &src + 1);
+		}
+
+		*cast(U*) &dest = *cast(U*) &src;
+
+		static if(bytes2)
+			*cast(V*) (cast(U*) &dest + 1) = tmp;
+	}
 	else
+	{
 		memmove(&dest, &src, T.sizeof);
+	}
 }
 
 /// ditto
@@ -221,4 +254,22 @@ unittest
 	test!rawCopyCTImpl(); // Test CT variant at RT
 	test!rawCopy();
 	static assert((test!rawCopy(), true));
+}
+
+unittest // Optimization for small structs correctness check
+{
+	static struct S(size_t n)
+	{ byte[n] arr; }
+
+	foreach(n; iotaTuple!17)
+	{
+		S!n src;
+		byte[n + 2] destArr;
+		auto dest = cast(S!n*) (destArr.ptr + 1);
+		foreach(byte i; 0 .. n)
+			src.arr[i] = cast(byte) (i + 1);
+		rawCopy(src, *dest);
+		assert(*dest == src);
+		assert(!destArr[0] && !destArr[$ - 1]);
+	}
 }
