@@ -152,11 +152,11 @@ body
 
 private void rawCopyCTImpl(T)(const ref T src, ref T dest) pure nothrow
 {
-	static if(!hasElaborateCopyConstructor!T && isAssignable!T)
+	static if(!hasElaborateAssign!T && isAssignable!T)
 	{
 		dest = cast(T) src;
 	}
-	else static if(hasElaborateCopyConstructor!T && isStaticArray!T)
+	else static if(hasElaborateAssign!T && isStaticArray!T)
 	{
 		// We assume static arrays can not overlap in CTFE
 		foreach(i, ref el; src)
