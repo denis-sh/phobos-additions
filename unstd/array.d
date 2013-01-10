@@ -156,7 +156,7 @@ private void rawCopyCTImpl(T)(const ref T src, ref T dest) pure nothrow
 	{
 		dest = cast(T) src;
 	}
-	else static if(hasElaborateAssign!T && isStaticArray!T)
+	else static if(isStaticArray!T)
 	{
 		// We assume static arrays can not overlap in CTFE
 		foreach(i, ref el; src)
@@ -218,6 +218,12 @@ unittest
 				dest.p = &i;
 			}
 			assert(dest == S1(1, &i, 2, 3));
+
+			const S1[2] srcArr = src;
+			S1[2] destArr;
+			f(srcArr, destArr);
+			assert(destArr[0] == S1(1, &i, 2, 3));
+			assert(destArr[1] == destArr[0]);
 		}
 		{
 			static struct S3
