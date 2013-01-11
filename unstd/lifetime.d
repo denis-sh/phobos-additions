@@ -69,7 +69,34 @@ void destruct(T)(ref T t, bool resetInitialState = true)
 {
 	callDestructors(t);
 	if(resetInitialState)
-		setInitialState(t);
+		setToInitialState(t);
+}
+
+unittest
+{
+	int i = -1;
+	destruct(i, false);
+	assert(i == -1);
+	destruct(i);
+	assert(i == 0);
+
+	static assert(!__traits(compiles, destruct(5))); // doesn't accept rvalue
+}
+
+unittest
+{
+	static int n = 0;
+	static struct S
+	{
+		int i = -1;
+		~this() { ++n; }
+	}
+
+	auto s = S(1);
+	destruct(s, false);
+	assert(s.i == 1 && n == 1);
+	destruct(s);
+	assert(s.i == -1 && n == 2);
 }
 
 
