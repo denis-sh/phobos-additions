@@ -240,13 +240,17 @@ $(MEMBERSDESC
 	)
 )
 $(MEMBERSDESC
-	Add $(D move) function,
-	$(FREF lifetime, move),
+	Add $(D move) and dependent $(D forward) functions,
+	$(FREF lifetime, move)
+	$(FREF lifetime, forward)
+	,
 	$(IDENTITY
 		$(PHOBOSPULL 923) ($(GREEN open))
 	),
 	$(IDENTITY
-		This is a fixed and improved analog of $(STDREF algorithm, move).
+		Added $(D move) is a fixed and improved analog of $(STDREF algorithm, move).
+		Added $(D forward) is just a copy of $(STDREF algorithm, forward)
+		implementation except it uses fixed $(D move).
 	)
 )
 

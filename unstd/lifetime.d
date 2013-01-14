@@ -10,6 +10,7 @@ module unstd.lifetime;
 
 import unstd.array;
 import unstd.traits;
+import unstd.generictuple;
 import std.exception;
 
 
@@ -236,6 +237,128 @@ unittest// Issue 8057
 	Array!int.Payload x = void;
 	static assert(__traits(compiles, move(x)    ));
 	static assert(__traits(compiles, move(x, x) ));
+}
+
+
+/**
+Forwards function arguments with saving ref-ness.
+
+Example:
+---
+int foo(int n) { return 1; }
+int foo(ref int n) { return 2; }
+int bar()(auto ref int x) { return foo(forward!x); }
+
+assert(bar(1) == 1);
+int i;
+assert(bar(i) == 2);
+---
+
+---
+void foo(int n, ref string s) { s = null; foreach (i; 0..n) s ~= "Hello"; }
+
+// forwards all arguments which are bound to parameter tuple
+void bar(Args...)(auto ref Args args) { return foo(forward!args); }
+
+// forwards all arguments with swapping order
+void baz(Args...)(auto ref Args args) { return foo(forward!args[$/2..$], forward!args[0..$/2]); }
+
+string s;
+bar(1, s);
+assert(s == "Hello");
+baz(s, 2);
+assert(s == "HelloHello");
+---
+
+Note:
+This is just a copy of $(STDREF algorithm, _forward)
+implementation except it uses fixed $(D move).
+*/
+template forward(args...)
+{
+	static if (args.length)
+	{
+		alias args[0] arg;
+		static if (__traits(isRef, arg))
+			alias arg fwd;
+		else
+			@property fwd()() { return move(arg); }
+		alias expressionTuple!(fwd, forward!(args[1 .. $])) forward;
+	}
+	else
+		alias expressionTuple!() forward;
+}
+
+unittest
+{
+	class C
+	{
+		static int foo(int n) { return 1; }
+		static int foo(ref int n) { return 2; }
+	}
+	int bar()(auto ref int x) { return C.foo(forward!x); }
+
+	assert(bar(1) == 1);
+	int i;
+	assert(bar(i) == 2);
+}
+
+unittest
+{
+	void foo(int n, ref string s) { s = null; foreach (i; 0..n) s ~= "Hello"; }
+
+	void bar(Args...)(auto ref Args args) { return foo(forward!args); }
+
+	void baz(Args...)(auto ref Args args) { return foo(forward!args[$/2..$], forward!args[0..$/2]); }
+
+	string s;
+	bar(1, s);
+	assert(s == "Hello");
+	baz(s, 2);
+	assert(s == "HelloHello");
+}
+
+unittest
+{
+	auto foo(TL...)(auto ref TL args)
+	{
+		string result = "";
+		foreach (i, _; args)
+		{
+			//pragma(msg, "[",i,"] ", __traits(isRef, args[i]) ? "L" : "R");
+			result ~= __traits(isRef, args[i]) ? "L" : "R";
+		}
+		return result;
+	}
+
+	string bar(TL...)(auto ref TL args)
+	{
+		return foo(forward!args);
+	}
+	string baz(TL...)(auto ref TL args)
+	{
+		int x;
+		return foo(forward!args[3], forward!args[2], 1, forward!args[1], forward!args[0], x);
+	}
+
+	struct S {}
+	S makeS(){ return S(); }
+	int n;
+	string s;
+	assert(bar(S(), makeS(), n, s) == "RRLL");
+	assert(baz(S(), makeS(), n, s) == "LLRRRL");
+}
+
+unittest
+{
+	ref int foo(ref int a) { return a; }
+	ref int bar(Args)(auto ref Args args)
+	{
+		return foo(forward!args);
+	}
+	static assert(!__traits(compiles, { auto x1 = bar(3); })); // case of NG
+	int value = 3;
+	auto x2 = bar(value); // case of OK
 }
 
 
