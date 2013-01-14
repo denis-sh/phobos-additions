@@ -878,6 +878,127 @@ unittest // static array
 }
 
 
+/**
+Constructs an object of $(D class) type $(D C) at given reference to uninitialized memory
+just like $(D auto c = new C(args);) except given memory is used instead of allocating.
+*/
+void initializeClassInstance(C, Args...)(C chunk, auto ref Args args)
+	if(is(C == class))
+{
+	version(none) // FIXME: isNested isn't implemented for classes yet
+	static assert(!isNested!C, "Can't initialize nested class " ~ C.stringof);
+
+	(cast(byte*) chunk)[0 .. __traits(classInstanceSize, C)] = typeid(Unqual!C).init[];
+
+	static if(hasMember!(C, "__ctor"))
+	{
+		chunk.__ctor(forward!args);
+	}
+	else static if(Args.length)
+	{
+		static assert(0, "No constructor for class " ~ C.stringof);
+	}
+	else
+	{
+		static assert(!anySatisfy!(hasNested, FieldTypeTuple!C),
+			"Can't initialize class " ~ C.stringof
+			~ " without constructor but with nested fields.");
+	}
+}
+
+// Test context pointer check
+
+unittest
+{
+	int i;
+	class C { void f() { ++i; } }
+	C c;
+	version(none) // FIXME: disabled as isNested isn't implemented for classes yet
+	static assert(!__traits(compiles, initializeClassInstance(c)));
+
+	struct S { void f() { ++i; } }
+	static int si = 0;
+	static class C2 { S s; this(int) { s = S.init; ++si; } }
+
+	void[__traits(classInstanceSize, C)] buff = void;
+	auto c2 = cast(C2) buff.ptr;
+	initializeClassInstance(c2, 0);
+	assert(si == 1);
+}
+
+// Test constructor branch
+
+unittest
+{
+	static void* p;
+	static int i = 2, j = 2;
+	static class C
+	{
+		int[2] arr = 1;
+		this(int n1, int n2, ref int _i, out int _j)
+		{
+			assert(cast(void*) this == p && arr == [1, 1]);
+			assert(n1 == 1 && n2 == 2);
+			assert(&_i == &i && &_j == &j);
+			assert(_i++ == 2 && _j++ == 0);
+		}
+
+		this(int n)
+		{ assert(n == 2); }
+
+		this(ref int n)
+		{ assert(n == 3); }
+	}
+
+	void[__traits(classInstanceSize, C)] buff = void;
+	auto c = cast(C) (p = buff.ptr);
+	short sh = 2;
+	initializeClassInstance(c, 1, sh, i, j);
+	assert(i == 3 && j == 1);
+
+	static assert(!__traits(compiles, initializeClassInstance(c, 1, 1, 0, j)));
+	static assert(!__traits(compiles, initializeClassInstance(c, 1, 1, i, 0)));
+	static assert(!__traits(compiles, initializeClassInstance(c, 1, 1, sh, j)));
+	static assert(!__traits(compiles, initializeClassInstance(c, 1, 1, i, sh)));
+
+	initializeClassInstance(c, 2);   // calls this(int n)
+	initializeClassInstance(c, sh);  // calls this(int n)
+	initializeClassInstance(c, i);   // calls this(ref int n)
+}
+
+// Test no-constructor branches
+
+unittest
+{
+	static class C { int i = -1; }
+
+	void[__traits(classInstanceSize, C)] buff = void;
+	auto c = cast(C) buff.ptr;
+	initializeClassInstance(c);
+	assert(c.i == -1);
+
+	static assert(!__traits(compiles, initializeClassInstance(c, 0)));
+}
+
+unittest
+{
+	int i;
+	struct S
+	{ int i = -1; void f() { ++i; } }
+
+	static class C1 { S s; }
+	C1 c1;
+	static assert(!__traits(compiles, initializeClassInstance(c1)));
+
+	static class C2
+	{ S s; this() { s = S.init; } }
+	void[__traits(classInstanceSize, C2)] buff2 = void;
+	auto c2 = cast(C2) buff2.ptr;
+	initializeClassInstance(c2);
+	assert(c2.s.i == -1);
+}
+
+
 private extern (C) void rt_finalize2(void* p, bool det, bool resetMemory);
 
 /**

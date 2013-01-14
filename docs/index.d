@@ -279,6 +279,16 @@ $(MEMBERSDESC
 		if $(D S) is a $(D struct) type.
 	)
 )
+$(MEMBERSDESC
+	Add class instance initialization function,
+	$(FREF lifetime, initializeClassInstance),
+	no.,
+	$(IDENTITY
+		A functions for class instance initialization which do exactly the same a compiler
+		do initializing an object like $(D auto c = new C(args);) if $(D C) is a $(D class)
+		type except given memory is used instead of allocating.
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>
