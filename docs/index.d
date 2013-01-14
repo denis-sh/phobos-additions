@@ -239,6 +239,16 @@ $(MEMBERSDESC
 		$(D memcpy) and $(D memmove).
 	)
 )
+$(MEMBERSDESC
+	Add $(D move) function,
+	$(FREF lifetime, move),
+	$(IDENTITY
+		$(PHOBOSPULL 923) ($(GREEN open))
+	),
+	$(IDENTITY
+		This is a fixed and improved analog of $(STDREF algorithm, move).
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>
