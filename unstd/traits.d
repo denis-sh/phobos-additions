@@ -13,6 +13,7 @@ public import std.traits;
 
 import unstd.generictuple;
 import std.typecons: tuple;
+import std.algorithm: endsWith;
 
 
 // https://github.com/D-Programming-Language/phobos/pull/776
@@ -304,6 +305,72 @@ unittest
 
 	static struct S3 { C c; S1* s1ptr1, s1ptr2; C* cptr; }
 	static assert(is(ExtractTypes!S3 == TypeTuple!(S3, C, real, S1*, S1, int, C*)));
+}
+
+/**
+Determines whether $(D T) has its own context pointer.
+$(D T) must be either $(D struct) or $(D union).
+*/
+template isNested(T)
+	if(is(T == struct) || is(T == union))
+{
+	static if(T.tupleof.length &&
+	          is(Unqual!(PointerTarget!(typeof(T.tupleof[$-1]))) == void)) // @@@BUG9127@@@ workaround
+		enum isNested = T.tupleof[$-1].stringof.endsWith(".this");
+	else
+		enum isNested = false;
+}
+
+/**
+Determines whether $(D T) or any of its representation types
+have a context pointer.
+*/
+template hasNested(T)
+{
+	static if(isStaticArray!T && T.length)
+		enum hasNested = hasNested!(typeof(T[0]));
+	else static if(is(T == struct) || is(T == union))
+		enum hasNested = isNested!T ||
+			anySatisfy!(.hasNested, FieldTypeTuple!T);
+	else
+		enum hasNested = false;
+}
+
+unittest
+{
+	static assert(!__traits(compiles, isNested!int));
+	static assert(!hasNested!int);
+
+	static struct StaticStruct { }
+	static assert(!isNested!StaticStruct);
+	static assert(!hasNested!StaticStruct);
+
+	int i;
+	struct NestedStruct { void f() { ++i; } }
+	static assert( isNested!NestedStruct);
+	static assert( hasNested!NestedStruct);
+	static assert( isNested!(immutable NestedStruct));
+	static assert( hasNested!(immutable NestedStruct));
+
+	static assert(!__traits(compiles, isNested!(NestedStruct[1])));
+	static assert( hasNested!(NestedStruct[1]));
+	static assert(!hasNested!(NestedStruct[0]));
+
+	struct S1 { NestedStruct nested; }
+	static assert(!isNested!S1);
+	static assert( hasNested!S1);
+
+	static struct S2 { NestedStruct nested; }
+	static assert(!isNested!S2);
+	static assert( hasNested!S2);
+
+	static struct S3 { NestedStruct[0] nested; }
+	static assert(!isNested!S3);
+	static assert(!hasNested!S3);
+
+	static union U { NestedStruct nested; }
+	static assert(!isNested!U);
+	static assert( hasNested!U);
 }
 
 
