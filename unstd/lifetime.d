@@ -362,6 +362,522 @@ unittest
 }
 
 
+// Used in `_initializeFromImplicitlyConvertible` and `constructFrom` overload for static arrays.
+private template _implicitlyConvertibleDim(From, To)
+{
+	template impl(To, From, size_t dim)
+	{
+		static if(isImplicitlyConvertible!(From, To))
+			enum impl = dim;
+		else static if(isStaticArray!To)
+			enum impl = impl!(ArrayElementType!To, From, dim + 1);
+		else
+			enum impl = -1;
+	}
+
+	enum _implicitlyConvertibleDim = impl!(To, From, 0);
+}
+
+unittest
+{
+	alias _implicitlyConvertibleDim dim;
+
+	static assert(dim!(int, int) == 0);
+	static assert(dim!(int, int[1][1]) == 2);
+	static assert(dim!(int[1], int[1][1]) == 1);
+	static assert(dim!(int[1], int) == -1);
+	static assert(dim!(int, long) == 0);
+	static assert(dim!(int, long[1][1]) == 2);
+	static assert(dim!(long, int) == -1);
+}
+
+
+// Used in `constructFrom` and `constructFromLiteral`.
+private void _initializeFromImplicitlyConvertible(D, S)(ref D dest, ref S src)
+	if(__traits(compiles, { D d = S.init; }))
+{
+	enum dim = _implicitlyConvertibleDim!(S, Unqual!D);
+	static assert(dim != -1); // should never fail
+	foreach(ref element; asFlatStaticArray!dim(dest))
+	{
+		alias Unqual!(typeof(element)) U;
+
+		static if(is(S == struct))
+		{
+			// Argument is implicitly convertible to `D` or to it's element type.
+			// As we are dealing with structs here, this means both types are
+			// the same type with, possibly, different qualifiers.
+			static assert(is(U == Unqual!S)); // should never fail
+
+			rawCopy!U(*cast(U*) &src, *cast(U*) &element);
+			callPostblits(element);
+		}
+		else static if(isAssignable!D)
+		{
+			element = src;
+		}
+		else
+		{
+			(*cast(U*) &element) = src;
+		}
+	}
+}
+
+unittest
+{
+	alias _initializeFromImplicitlyConvertible init;
+
+	static assert( __traits(compiles, init!(int, int)));
+	static assert( __traits(compiles, init!(long, int)));
+	static assert(!__traits(compiles, init!(int, long)));
+	static assert( __traits(compiles, init!(const int*, int*)));
+	static assert( __traits(compiles, init!(const int*, immutable int*)));
+	static assert(!__traits(compiles, init!(immutable int*, const int*)));
+	static assert( __traits(compiles, init!(shared int*, shared int*)));
+	static assert( __traits(compiles, init!(const shared int*, shared int*)));
+
+	{
+		int src = 1, dest;
+		init(dest, src);
+		assert(dest == 1);
+	}
+	{
+		int src = 1;
+		long dest;
+		init(dest, src);
+		assert(dest == 1);
+	}
+	{
+		int src = 1;
+		long[2][1] dest;
+		init(dest, src);
+		assert(dest == [[1, 1]]);
+	}
+	{
+		int* src = cast(int*) 1;
+		const(int*)[2][1] dest;
+		init(dest, src);
+		assert(dest == [[cast(int*) 1, cast(int*) 1]]);
+	}
+	{
+		static struct S
+		{ int* p; }
+
+		S src = S(cast(int*) 1);
+		const S dest;
+		init(dest, src);
+		assert(cast(int) dest.p == 1);
+	}
+}
+
+
+/**
+Constructs an object of type $(D T) at given address to uninitialized memory
+just like $(D T t = arg;).
+*/
+void constructFrom(T, Arg)(T* chunk, auto ref Arg arg)
+{
+	static if(is(T == struct))
+	{
+		static if(is(Unqual!T == Unqual!Arg))
+		{
+			// Initializing struct with the same type
+
+			static if(isImplicitlyConvertible!(Arg, T))
+			{
+				_initializeFromImplicitlyConvertible(*chunk, arg);
+			}
+			else
+			{
+				static assert(0, "Can't implicitly convert expression of type "
+					~ Arg.stringof ~ " to " ~ T.stringof);
+			}
+		}
+		else
+		{
+			constructFromLiteral(chunk, forward!arg);
+		}
+	}
+	else static if(__traits(compiles, { T t = arg; }))
+	{
+		_initializeFromImplicitlyConvertible(*chunk, arg);
+	}
+	else
+	{
+		static assert(0, "`" ~ T.stringof ~ " t = " ~ Args.stringof
+			~ ";` doesn't compile.");
+	}
+}
+
+// Test copying from same struct branch
+
+unittest
+{
+	static struct S
+	{
+		int i = 1;
+		this(int _i) { i = _i; }
+		this(const S);
+	}
+
+	// Initializing struct with the same type doesn't call constructor.
+	S s = void;
+	constructFrom(&s, S(2));
+	assert(s.i == 2);
+	constructFrom(&s, immutable S(3));
+	assert(s.i == 3);
+}
+
+unittest
+{
+	static struct S
+	{
+		int* p;
+		this(const S);
+	}
+
+	// Initializing struct with the same type requires implicit cast.
+	S s = void;
+	static assert(!__traits(compiles, constructFrom(&s, immutable S())));
+}
+
+// Test redirection to `constructFromLiteral` branch
+
+unittest // constructors
+{
+	static struct S
+	{
+		this(int n) { assert(n == 2); }
+		this(ref int n) { assert(n == 3); }
+	}
+
+	S s;
+	short sh = 2;
+	int i = 3;
+
+	constructFrom(&s, 2);   // calls this(int n)
+	constructFrom(&s, sh);  // calls this(int n)
+	constructFrom(&s, i);   // calls this(ref int n)
+}
+
+// Test non-struct branches
+
+unittest
+{
+	{
+		uint i = void;
+
+		constructFrom(&i, 3);
+		assert(cast(int) i == 3);
+
+		constructFrom(&i, 4U);
+		assert(cast(int) i == 4);
+
+		static assert(!__traits(compiles, constructFrom(&i, 0L)));
+		static assert(!__traits(compiles, constructFrom(&i, 0UL)));
+	}
+
+	{
+		void* p = void;
+
+		constructFrom(&p, cast(void*) 3);
+		assert(cast(int) p == 3);
+
+		static assert(!__traits(compiles, constructFrom(&p, 0)));
+		static assert(!__traits(compiles, constructFrom(&p, 0, 0)));
+		static assert(!__traits(compiles, constructFrom(&p, (const void*).init)));
+		static assert(!__traits(compiles, constructFrom(&p, (shared void*).init)));
+	}
+
+	// shared
+	{
+		shared void* p;
+		constructFrom(&p, cast(shared void*) 3);
+		assert(cast(int) p == 3);
+
+		static assert(!__traits(compiles, constructFrom(&p, (const void*).init)));
+		static assert(!__traits(compiles, constructFrom(&p, (void*).init)));
+	}
+
+	// const
+	{
+		foreach(T; TypeTuple!(immutable void, const void, void))
+		{
+			void* p = void;
+			constructFrom(cast(const void**) &p, cast(T*) 1);
+			assert(cast(int) p == 1);
+		}
+
+		void* p = void;
+		static assert(!__traits(compiles, constructFrom(cast(const void**) &p, (shared void*).init)));
+	}
+}
+
+
+/**
+Constructs an object of $(D struct) type $(D S) at given address to uninitialized memory
+just like $(D auto s = S(args);).
+*/
+void constructFromLiteral(S, Args...)(S* chunk, auto ref Args args)
+	if(is(S == struct))
+{
+	static if(hasMember!(S, "__ctor"))
+	{
+		// `S` defines a constructor.
+
+		static assert(!isNested!S, "Can't initialize nested struct "
+			~ S.stringof ~ " with context pointer using constructor.");
+
+		// Let's initialize `chunk` and call the constructor!
+		setToInitialState(*chunk);
+
+		chunk.__ctor(forward!args);
+	}
+	else static if(hasMember!(S, "opCall"))
+	{
+		static assert(0, "Can't initialize struct " ~ S.stringof ~ " using `opCall`." ~
+			" Use `constructFrom(chunk, " ~ S.stringof ~ "(...))` instead.");
+	}
+	else static if(__traits(compiles, { auto t = S(args); }))
+	{
+		// Struct without constructor that has one matching field for
+		// each argument (i.e. each field is initializable from the
+		// corresponding argument).
+
+		static assert(!anySatisfy!(hasNested, FieldTypeTuple!S[Args.length .. $]),
+			"To initialize struct "  ~ S.stringof ~ " using static initialization" ~
+			" you must explicitly pass arguments for all fields with context pointers.");
+
+		// If struct fields doesn't have copy constructors
+		// and every field has corresponding argument,
+		// we still need to initialize the struct
+		// because of possible padding holes.
+		setToInitialState(*chunk);
+
+		foreach(i, ref field; chunk.tupleof[0 .. Args.length])
+			_initializeFromImplicitlyConvertible(field, args[i]);
+	}
+	else
+	{
+		static assert(0, "`auto t = "~ S.stringof
+			~ "(" ~ Args.stringof ~ ");` doesn't compile.");
+	}
+}
+
+// Test constructor branch
+
+unittest // copying from same struct
+{
+	static struct S
+	{
+		int i = 1;
+		this(int _i) { i = _i; }
+		this(const S s) { i = 10 + s.i; }
+	}
+
+	// Call constructor even if copying from same struct.
+	S s = void;
+	constructFromLiteral(&s, S(2));
+	assert(s.i == 12);
+	constructFromLiteral(&s, immutable S(3));
+	assert(s.i == 13);
+}
+
+unittest // copying from same struct if implicit cast isn't allowed
+{
+	static struct S
+	{
+		int i = 1;
+		void* p = cast(void*) 7;
+		this(const S) { i = 2; }
+	}
+
+	S s = void;
+	constructFromLiteral(&s, immutable S());
+	assert(s.i == 2);
+}
+
+unittest // context pointer
+{
+	int i;
+	struct S { this(int) { ++i; } }
+	S s = void;
+	static assert(!__traits(compiles, constructFromLiteral(&s, 0)));
+
+	static int si = 0;
+	static struct S3 { S s; this(int) { s = S.init; ++si; } }
+	S3 s3 = void;
+	constructFromLiteral(&s3, 0);
+	assert(si == 1);
+}
+
+unittest // constructors
+{
+
+	static void* p;
+	static int i = 2, j = 2;
+	static struct S
+	{
+		int[2] arr = 1;
+		this(int n1, int n2, ref int _i, out int _j)
+		{
+			assert(&this == p && arr == [1, 1]);
+			assert(n1 == 1 && n2 == 2);
+			assert(&_i == &i && &_j == &j);
+			assert(_i++ == 2 && _j++ == 0);
+		}
+
+		this(int n)
+		{ assert(n == 2); }
+
+		this(ref int n)
+		{ assert(n == 3); }
+	}
+	S s; p = &s;
+	short sh = 2;
+	constructFromLiteral(&s, 1, sh, i, j);
+	assert(i == 3 && j == 1);
+
+	static assert(!__traits(compiles, constructFromLiteral(&s, 1, 1, 0, j)));
+	static assert(!__traits(compiles, constructFromLiteral(&s, 1, 1, i, 0)));
+	static assert(!__traits(compiles, constructFromLiteral(&s, 1, 1, sh, j)));
+	static assert(!__traits(compiles, constructFromLiteral(&s, 1, 1, i, sh)));
+
+	constructFromLiteral(&s, 2);   // calls this(int n)
+	constructFromLiteral(&s, sh);  // calls this(int n)
+	constructFromLiteral(&s, i);   // calls this(ref int n)
+}
+
+unittest // templated constructors
+{
+	static void* p;
+	static int i = 0;
+	static struct S
+	{
+		int[2] arr = 1;
+		this(T)(auto ref T t)
+		{
+			assert(&this == p && arr == [1, 1]);
+			assert(i++ == __traits(isRef, t));
+		}
+	}
+	S s; p = &s;
+	constructFromLiteral(&s, 1);  // calls this(int t)
+	assert(i == 1);
+	short sh = 1;
+	constructFromLiteral(&s, sh); // calls this(ref int t)
+	assert(i == 2);
+}
+
+// Test opCall branch
+
+unittest // opCall
+{
+	int i;
+	struct S
+	{
+		int i;
+		static S opCall(int);
+	}
+	S s = void;
+	static assert(!__traits(compiles, constructFromLiteral(&s, 0)));
+}
+
+// Test matching fields branch
+
+unittest
+{
+	struct S { int a, b; this(int) {} }
+	S s;
+	static assert(!__traits(compiles, constructFromLiteral(&s, 0, 0)));
+}
+
+unittest // context pointer
+{
+	int i;
+	struct S { this(int) { ++i; } }
+	S s = void;
+
+	static struct S2 { int i; S s; }
+	S2 s2 = void;
+	static assert(!__traits(compiles, constructFromLiteral(&s2, 0)));
+	constructFromLiteral(&s2, 0, S(0));
+	assert(i == 1);
+}
+
+unittest // qualifiers
+{
+	static struct S
+	{ uint a = 1; void* b = null; }
+
+	{
+		S s;
+
+		constructFromLiteral(&s, 2U);
+		assert(s.a == 2 && !s.b);
+
+		constructFromLiteral(&s, 3);
+		assert(s.a == 3 && !s.b);
+
+		immutable int immutableI = 4;
+		constructFromLiteral(&s, immutableI);
+		assert(s.a == 4 && !s.b);
+
+		constructFromLiteral(&s, 0, cast(void*) 3);
+		assert(!s.a && cast(int) s.b == 3);
+
+		// Note: S(0L) compiles because compiler knows constan value.
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0L)));
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0, 0)));
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0, 0, 0)));
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0, (const void*).init)));
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0, (shared void*).init)));
+	}
+
+	// shared
+	{
+		shared S s;
+		constructFromLiteral(&s, 0, cast(shared void*) 3);
+		assert(!s.a && cast(int) s.b == 3);
+
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0, (const void*).init)));
+		static assert(!__traits(compiles, constructFromLiteral(&s, 0, (void*).init)));
+	}
+
+	// const
+	{
+		foreach(T; TypeTuple!(immutable void, const void, void))
+		{
+			S s = void;
+			constructFromLiteral(cast(const S*) &s, 0, cast(T*) 1);
+			assert(!s.a && cast(int) s.b == 1);
+		}
+
+		S s = void;
+		static assert(!__traits(compiles, constructFromLiteral(cast(const S*) &s, 0, (shared void*).init)));
+	}
+}
+
+unittest // static array
+{
+	static struct S
+	{ int[2][1] sarr; }
+
+	{
+		S s = void;
+		constructFromLiteral(&s, 2);
+		assert(s.sarr[0] == [2, 2]);
+	}
+	{
+		S s = void;
+		static assert(!__traits(compiles, constructFromLiteral(&s, (int[1]).init)));
+		// Note: S([3, 4]) compiles without cast because compiler knows array literal value.
+		constructFromLiteral(&s, cast(int[2]) [3, 4]);
+		assert(s.sarr[0] == [3, 4]);
+	}
+}
+
+
 private extern (C) void rt_finalize2(void* p, bool det, bool resetMemory);
 
 /**

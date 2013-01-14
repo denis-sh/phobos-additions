@@ -265,6 +265,20 @@ $(MEMBERSDESC
 		implementation except it uses fixed $(D move).
 	)
 )
+$(MEMBERSDESC
+	Add object construction functions,
+	$(FREF lifetime, constructFrom)
+	$(FREF lifetime, constructFromLiteral)
+	,
+	$(IDENTITY
+		Ideas of these functions are used in $(STDREF conv, emplace) fix from $(PHOBOSPULL 949) ($(GREEN open)).
+	),
+	$(IDENTITY
+		A functions for object construction which do exactly the same a compiler
+		do initializing an object like $(D T t = arg;) or $(D auto s = S(args);)
+		if $(D S) is a $(D struct) type.
+	)
+)
 
 Macros:
 H2 = <h2>$0</h2>
