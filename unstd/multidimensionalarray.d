@@ -29,7 +29,7 @@ import std.algorithm;
 
 struct AllR { }
 
-struct R
+struct R_
 {
 	size_t from, to;
 
@@ -40,18 +40,20 @@ struct R
 		return AllR();
 	}
 
-	static R opSlice(size_t from, size_t to)
+	static R_ opSlice(size_t from, size_t to)
 	{
-		R r = void;
+		R_ r = void;
 		r.from = from, r.to = to;
 		return r;
 	}
 }
 
+enum R = R_.init;
+
 private template RCount(T...)
 {
 	static if(T.length)
-		enum RCount = (is(Unqual!(T[0]) == R) || is(Unqual!(T[0]) == AllR)) + RCount!(T[1 .. $]);
+		enum RCount = (is(Unqual!(T[0]) == R_) || is(Unqual!(T[0]) == AllR)) + RCount!(T[1 .. $]);
 	else
 		enum RCount = 0u;
 }
@@ -613,7 +615,7 @@ $(TABLE
 				static if(RCount!A != n)
 					res.strides[j] = strides[i];
 			}
-			static if(is(UnqualAi == R))
+			static if(is(UnqualAi == R_))
 			{
 				debug enforce(a.from <= a.to, format("MultidimensionalArray.opIndex: Index #%s = %s..%s is a range with from > to", i+1, a.from, a.to));
 				debug enforce(a.from >= 0, formatOutOfBounds(i, format("%s..%s", a.from, a.to), "from < 0"));
