@@ -328,7 +328,7 @@ have a context pointer.
 template hasNested(T)
 {
 	static if(isStaticArray!T && T.length)
-		enum hasNested = hasNested!(typeof(T[0]));
+		enum hasNested = hasNested!(typeof(T.init[0]));
 	else static if(is(T == struct) || is(T == union))
 		enum hasNested = isNested!T ||
 			anySatisfy!(.hasNested, FieldTypeTuple!T);
