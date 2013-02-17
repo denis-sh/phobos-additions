@@ -1046,6 +1046,88 @@ unittest
 	assert(b.n == -1);
 }
 
+/**
+Determines whether class instance $(D t) is finalized.
+
+Also returns $(D true) if $(D t)'s memory is zero-filled.
+
+$(D T) must be either $(D class) or $(D interface).
+*/
+bool isFinalized(T)(in T t)
+{
+	static if(is(T == class))
+	{
+		alias t obj;
+	}
+	else static if(is(T == interface))
+	{
+		const ppi = *cast(const Interface***) t;
+		if(!ppi)
+			return true;
+		auto obj = cast(Object) (cast(void*) t - (*ppi).offset);
+	}
+	else
+		static assert(0, "Can only check class or interface to be finalized, not " ~ T.stringof);
+
+	return !obj.__vptr;
+}
+
+/// ditto
+@property bool finalized(T)(in T t)
+{ return isFinalized(t); }
+
+unittest
+{
+	interface I { }
+	static class A: I
+	{
+		int n = -1;
+		this() { n = 2; }
+	}
+
+	{
+		// Object reference
+
+		auto a1 = new A, a2 = new A;
+		const ca1 = a1;
+		assert(!a1.finalized && !isFinalized(a2));
+		assert(!ca1.finalized);
+		finalizeClassInstance(a1);
+		finalizeClassInstance(a2, false);
+		assert(a1.finalized && isFinalized(a2));
+		assert(ca1.finalized);
+	}
+
+	{
+		// Interface reference
+
+		I ia1 = new A, ia2 = new A;
+		const cia1 = ia1, cia2 = ia2;
+		assert(!ia1.finalized && !isFinalized(ia2));
+		assert(!cia1.finalized);
+		finalizeClassInstance(ia1);
+		finalizeClassInstance(ia2, !false);
+		assert(ia1.finalized && isFinalized(ia2));
+		assert(cia1.finalized);
+	}
+
+	{
+		// Zero-filled memory
+
+		const size_t buff = 0;
+		assert((cast(const A) &buff).finalized);
+		assert((cast(const I) &buff).finalized);
+	}
+
+	{
+		int i;
+		assert(!__traits(compiles, i.finalized));
+		assert(!__traits(compiles, isFinalized(i)));
+		struct S { }
+		assert(!__traits(compiles, S().finalized));
+	}
+}
+
 
 /**
 Destructs $(D t) exactly the same way a compiler does in a case it goes out of scope.
