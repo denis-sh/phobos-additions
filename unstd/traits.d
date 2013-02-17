@@ -1,6 +1,6 @@
 ﻿/** Additions to $(STDMODULE _traits).
 
-Copyright: Denis Shelomovskij 2011-2012
+Copyright: Denis Shelomovskij 2011-2013
 
 License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
 

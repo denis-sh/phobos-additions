@@ -1,6 +1,6 @@
 ﻿/** Functions for user-defined _lifetime implementation.
 
-Copyright: Denis Shelomovskij 2012
+Copyright: Denis Shelomovskij 2012-2013
 
 License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
 
