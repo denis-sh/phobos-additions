@@ -193,6 +193,14 @@ private void rawCopyCTImpl(T)(in T* src, T* dest, size_t count) pure nothrow
 
 unittest
 {
+	// dmd @@@BUG9525@@@ workaround
+	static struct S3
+	{
+		void opAssign(typeof(this)) { assert(0); }
+		this(this) { assert(0); }
+		int n;
+	}
+
 	void test(alias f)()
 	{
 		{
@@ -226,6 +234,7 @@ unittest
 			assert(destArr[1] == destArr[0]);
 		}
 		{
+			version(none) // dmd @@@BUG9525@@@ workaround
 			static struct S3
 			{
 				void opAssign(typeof(this)) { assert(0); }
