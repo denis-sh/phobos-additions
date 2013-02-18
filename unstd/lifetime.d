@@ -911,19 +911,23 @@ void initializeClassInstance(C, Args...)(C chunk, auto ref Args args)
 unittest
 {
 	int i;
-	class C { void f() { ++i; } }
-	C c;
-	version(none) // FIXME: disabled as isNested isn't implemented for classes yet
-	static assert(!__traits(compiles, initializeClassInstance(c)));
+	{
+		class C { void f() { ++i; } }
+		C c;
+		version(none) // FIXME: disabled as isNested isn't implemented for classes yet
+		static assert(!__traits(compiles, initializeClassInstance(c)));
+	}
 
-	struct S { void f() { ++i; } }
-	static int si = 0;
-	static class C2 { S s; this(int) { s = S.init; ++si; } }
+	{
+		struct S { void f() { ++i; } }
+		static int si = 0;
+		static class C2 { S s; this(int) { s = S.init; ++si; } }
 
-	void[__traits(classInstanceSize, C)] buff = void;
-	auto c2 = cast(C2) buff.ptr;
-	initializeClassInstance(c2, 0);
-	assert(si == 1);
+		void[__traits(classInstanceSize, C2)] buff = void;
+		auto c2 = cast(C2) buff.ptr;
+		initializeClassInstance(c2, 0);
+		assert(si == 1);
+	}
 }
 
 // Test constructor branch
