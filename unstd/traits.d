@@ -309,16 +309,12 @@ unittest
 
 /**
 Determines whether $(D T) has its own context pointer.
-$(D T) must be either $(D struct) or $(D union).
+$(D T) must be either $(D class), $(D struct), or $(D union).
 */
 template isNested(T)
-	if(is(T == struct) || is(T == union))
+	if(is(T == class) || is(T == struct) || is(T == union))
 {
-	static if(T.tupleof.length &&
-	          is(Unqual!(PointerTarget!(typeof(T.tupleof[$-1]))) == void)) // @@@BUG9127@@@ workaround
-		enum isNested = T.tupleof[$-1].stringof.endsWith(".this");
-	else
-		enum isNested = false;
+	enum isNested = __traits(isNested, T);
 }
 
 /**
@@ -329,7 +325,7 @@ template hasNested(T)
 {
 	static if(isStaticArray!T && T.length)
 		enum hasNested = hasNested!(typeof(T.init[0]));
-	else static if(is(T == struct) || is(T == union))
+	else static if(is(T == class) || is(T == struct) || is(T == union))
 		enum hasNested = isNested!T ||
 			anySatisfy!(.hasNested, FieldTypeTuple!T);
 	else
@@ -371,6 +367,20 @@ unittest
 	static union U { NestedStruct nested; }
 	static assert(!isNested!U);
 	static assert( hasNested!U);
+
+	static class StaticClass { }
+	static assert(!isNested!StaticClass);
+	static assert(!hasNested!StaticClass);
+
+	class NestedClass { void f() { ++i; } }
+	static assert( isNested!NestedClass);
+	static assert( hasNested!NestedClass);
+	static assert( isNested!(immutable NestedClass));
+	static assert( hasNested!(immutable NestedClass));
+
+	static assert(!__traits(compiles, isNested!(NestedClass[1])));
+	static assert( hasNested!(NestedClass[1]));
+	static assert(!hasNested!(NestedClass[0]));
 }
 
 
