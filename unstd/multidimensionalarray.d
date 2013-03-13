@@ -384,8 +384,8 @@ struct MultidimensionalArray(T, size_t n) if(n >= 1)
 					assert(i < length, format("Index is out of bounds: trying to call opIndex(%s) on an MultidimensionalArray.byTopDimension with a length = %s", i, length));
 
 					MultidimensionalArray!(T, n-1) res;
-					res.p_lengths = e.p_lengths[1 .. $];
-					res.strides = e.strides[1 .. $];
+					res.p_lengths[] = e.p_lengths[1 .. $];
+					res.strides[] = e.strides[1 .. $];
 					immutable shift = i * e.strides[0];
 					res.data = e.data[shift .. shift + e.strides[0]];
 					return res;

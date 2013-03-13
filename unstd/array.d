@@ -56,7 +56,7 @@ unittest
 {
 	int i;
 	static assert(is(typeof(asFlatStaticArray(i)) == int[1]));
-	asFlatStaticArray(i) = 5;
+	asFlatStaticArray(i)[] = 5;
 	assert(i == 5);
 
 	int[1][2][3] mdimSArr;
@@ -77,7 +77,10 @@ unittest
 		assert(cast(void*) p == &t);
 		static assert((*p).sizeof == T.sizeof);
 		assert(*p == sarrFrom);
-		*p = arrAssign;
+		static if(isArray!V)
+			(*p)[] = arrAssign[];
+		else
+			(*p)[] = arrAssign;
 		assert(t == valNew);
 	}
 
