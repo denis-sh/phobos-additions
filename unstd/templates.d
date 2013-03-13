@@ -462,7 +462,7 @@ unittest
 }
 
 // allArgs -> %*, arg! -> %
-private string formatBind(string fmt)
+string formatBind(string fmt)
 {
 	string res, id;
 
