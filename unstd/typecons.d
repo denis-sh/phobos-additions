@@ -151,7 +151,6 @@ Creates a set of flags.
 
 Example:
 ----
-
 mixin flagEnum!("Access", byte, "read = 2", "write", "execute"); // write == 4, execute == 8
 
 assert(cast(uint) Access.init == 0);
@@ -171,7 +170,9 @@ if(fileAccess)
 else
 	assert(0);
 
-import std.stdio;
+
+import std.stdio: writeln;
+
 writeln(fileAccess & Access.read);   // Writes "Access.read"
 writeln(fileAccess);                 // Writes "Access.{read|execute}"
 writeln(fileAccess & Access.write);  // Writes "Access.{}"

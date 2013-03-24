@@ -24,14 +24,14 @@ template Inst(alias Template, A...)
 ///
 unittest
 {
-	import std.traits;
+	import std.traits: PointerTarget;
 
 	static assert(is(Inst!(PointerTarget, int*) == int));
 }
 
 unittest
 {
-	import std.traits;
+	import std.traits: isPointer;
 	static assert( Inst!(isPointer, int*));
 	static assert(!Inst!(isPointer, int ));
 	static assert(Inst!(GenericTuple, 5)[0] == 5);
@@ -183,6 +183,7 @@ Create predicate template returning $(D !template_).
 Example:
 ---
 import std.traits: isPointer;
+
 alias notTemplate!isPointer notPointer;
 static assert( notPointer! int );
 static assert(!notPointer!(int*));
@@ -308,7 +309,7 @@ unittest
 	alias orTemplates!() _false;
 	static assert(!_false!() && !_false!int && !_false!(int, int*));
 
-	import std.traits;
+	import std.traits: isPointer;
 
 	alias orTemplates!isPointer _isPointer;
 	static assert(_isPointer!(int*) && !_isPointer!int);
