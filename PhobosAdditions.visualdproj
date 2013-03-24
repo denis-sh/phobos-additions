@@ -251,7 +251,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids>unittestBuild</versionids>
+  <versionids />
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -274,7 +274,7 @@
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).lib.exe</exefile>
   <useStdLibPath>1</useStdLibPath>
-  <additionalOptions />
+  <additionalOptions>-main</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
@@ -294,6 +294,5 @@
    <File tool="None" path="docs\index.d" />
    <File tool="None" path="docs\modules.ddoc" />
   </Folder>
-  <File path="unittest.d" />
  </Folder>
 </DProject>
