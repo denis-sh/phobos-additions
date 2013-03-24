@@ -63,58 +63,13 @@ private template isROrSize(T)
 	enum isROrSize = RCount!T || isImplicitlyConvertible!(T, const(size_t));
 }
 
+// Note: unittest can't be used as an example for `MultidimensionalArray` member functions
+// as it will lead to "forward reference to inferred return type of function call mdimArray".
+
 /**
 Implements multidimensional rectangular arrays.
 
 Something like FORTRAN's one.
-
-Example:
-----
-// Let's creates an GC allocated three-dimensional rectangular array from 2 matrices 3x4
-auto matrices = mdimArray!int(2, 3, 4); //matrices has a type MultidimensionalArray!(int, 3)
-
-// Initializing the array
-matrices[] = 5;
-
-// Iterating the array
-foreach(z, y, x, ref el; matrices) // using opApply
-	el = z * 100 + y * 10 + x;
-
-int c = 0;
-foreach(ref el; matrices.byElementForward)
-	el = c++;
-
-c = 0;
-foreach(i; 0 .. matrices.elements)
-	matrices.byElementRandomAccess[i] = c++;
-
-c = 0;
-foreach(matrix; matrices.byTopDimension)       // for each of two matrices
-	foreach(row; matrix.byTopDimension)        // for each row
-		foreach(ref el; row.byTopDimension) // for each element
-			el = c++;
-
-c = 0;
-foreach_reverse(ref el; matrices.byElementRandomAccess)
-	el = c++;
-
-c = 0;
-foreach_reverse(i; 0 .. matrices.elements)
-	matrices.byElementRandomAccess[i] = c++;
-
-// Inexing/slicing
-// * use <integer> to select a position
-// * use R[<integer> .. <integer>] to select a range
-// * use R[]  to select the whole range
-matrices = matrices[R[], R[], R[]];  // the entire array, same as [R[0..2], R[0..3], R[0..4]]
-auto array2d = matrices[0, R[], R[]]; // the first matrix
-auto array1d = matrices[0, 1, R[]];  // the second row of the first matrix
-array1d = matrices[0, R[], 1];       // the second column of the first matrix
-matrices[0, 1, 1] = 9;                // setting an element at a crossing of the row an the column
-
-// first two rows and three columns of the secon matrix
-array2d = matrices[1, R[0 .. 2], R[0 .. 3]];
-----
 */
 struct MultidimensionalArray(T, size_t n) if(n >= 1)
 {
@@ -744,6 +699,55 @@ private:
 	}
 }
 
+///
+unittest
+{
+	// Let's creates an GC allocated three-dimensional rectangular array from 2 matrices 3x4
+	auto matrices = mdimArray!int(2, 3, 4); //matrices has a type MultidimensionalArray!(int, 3)
+
+	// Initializing the array
+	matrices[] = 5;
+
+	// Iterating the array
+	foreach(z, y, x, ref el; matrices) // using opApply
+		el = z * 100 + y * 10 + x;
+
+	int c = 0;
+	foreach(ref el; matrices.byElementForward)
+		el = c++;
+
+	c = 0;
+	foreach(i; 0 .. matrices.elements)
+		matrices.byElementRandomAccess[i] = c++;
+
+	c = 0;
+	foreach(matrix; matrices.byTopDimension)       // for each of two matrices
+		foreach(row; matrix.byTopDimension)        // for each row
+			foreach(ref el; row.byTopDimension) // for each element
+				el = c++;
+
+	c = 0;
+	foreach_reverse(ref el; matrices.byElementRandomAccess)
+		el = c++;
+
+	c = 0;
+	foreach_reverse(i; 0 .. matrices.elements)
+		matrices.byElementRandomAccess[i] = c++;
+
+	// Inexing/slicing
+	// * use <integer> to select a position
+	// * use R[<integer> .. <integer>] to select a range
+	// * use R[]  to select the whole range
+	matrices = matrices[R[], R[], R[]];  // the entire array, same as [R[0..2], R[0..3], R[0..4]]
+	auto array2d = matrices[0, R[], R[]]; // the first matrix
+	auto array1d = matrices[0, 1, R[]];  // the second row of the first matrix
+	array1d = matrices[0, R[], 1];       // the second column of the first matrix
+	matrices[0, 1, 1] = 9;                // setting an element at a crossing of the row an the column
+
+	// first two rows and three columns of the secon matrix
+	array2d = matrices[1, R[0 .. 2], R[0 .. 3]];
+}
+
 /**
 Convenience function that returns an $(D MultidimensionalArray!(T, n)) object.
 
@@ -770,31 +774,6 @@ and should not be explicitly defined.
 See_Also: MultidimensionalArray
 
 Throws: The first overload throws an $(D RangeError) in $(D debug) build if $(D data) length isn't equal to $(D lengths) prouct.
-
-Example:
-----
-// Let's create an GC allocated three-dimensional rectangular array from 2 matrices 3x4
-auto matrix1 = mdimArray!int(2, 3, 4);
-
-// Let's create the same array using an existing storage
-auto darr2 = new int[24]; //At least 24 elements are needed
-auto matrix2 = mdimArray(darr2, 2, 3, 4); //No need for explicit element type declaration
-
-// Let's create the same array using an existing static array as data storage
-int[4][3][2] sarr3; // or in a postfix form: int sarr[2][3][4];
-auto matrix3 = mdimArray(sarr3); // No need for any explicit template declarations
-
-// The head array can be dynamic
-int[4][3][] darr3 = sarr3[];
-auto matrix31 = mdimArray(darr3); // Works like previous one
-
-// Let's create an array of static arrays
-ubyte[4][4][3][2] sarr4; // a postfix form: ubyte[4] sarr[2][3][4];
-auto matrix4 = mdimArray!3(sarr4); // Only 3 major of 4 dimensions are indeces
-
-// The head array can also be dynamic
-auto matrix41 = mdimArray!3(sarr4[]); // Works like previous one
-----
 */
 // #1: allocate new
 auto mdimArray(T, size_t n)(size_t[n] lengths...) if(n > 0)
@@ -842,6 +821,32 @@ auto mdimArray(size_t n, A)(A array) if(isDynamicArray!A && n > 0 && n-1 <= stat
 auto mdimArray(A)(A array) if(isDynamicArray!A)
 {
 	return mdimArray!(1 + staticArrayDimensions!(ElementType!A))(array);
+}
+
+///
+unittest
+{
+	// Let's create an GC allocated three-dimensional rectangular array from 2 matrices 3x4
+	auto matrix1 = mdimArray!int(2, 3, 4);
+
+	// Let's create the same array using an existing storage
+	auto darr2 = new int[24]; //At least 24 elements are needed
+	auto matrix2 = mdimArray(darr2, 2, 3, 4); //No need for explicit element type declaration
+
+	// Let's create the same array using an existing static array as data storage
+	int[4][3][2] sarr3; // or in a postfix form: int sarr[2][3][4];
+	auto matrix3 = mdimArray(sarr3); // No need for any explicit template declarations
+
+	// The head array can be dynamic
+	int[4][3][] darr3 = sarr3[];
+	auto matrix31 = mdimArray(darr3); // Works like previous one
+
+	// Let's create an array of static arrays
+	ubyte[4][4][3][2] sarr4; // a postfix form: ubyte[4] sarr[2][3][4];
+	auto matrix4 = mdimArray!3(sarr4); // Only 3 major of 4 dimensions are indeces
+
+	// The head array can also be dynamic
+	auto matrix41 = mdimArray!3(sarr4[]); // Works like previous one
 }
 
 unittest //mdimArray

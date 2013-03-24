@@ -189,6 +189,8 @@ mixin template flagEnum(string name, Args...)
 	mixin("alias FlagEnumImpl!(name, Args) " ~ name ~ ";");
 }
 
+// Note: unittest can't be used as an example here as there is no way to place it before `Bugs` section.
+
 unittest
 {
 	mixin flagEnum!("AB", "a", "b", "cc");

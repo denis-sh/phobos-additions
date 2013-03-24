@@ -81,6 +81,9 @@ import unstd.traits;
 import unstd.templates;
 
 
+// Note: unittests often can't be used as examples in this module as template definitions aren't allowed
+// inside functions and there is no way to place such examples before "Analog..." comment.
+
 /**
 Creates a generic tuple out of a sequence of zero or more types, expressions, or aliases.
 

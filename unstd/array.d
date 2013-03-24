@@ -23,22 +23,6 @@ Considers $(D T) to be an $(D n)-dimensional static array type.
 See also
 $(DPREF traits, MultidimensionalStaticArrayElementType),
 $(DPREF traits, multidimensionalStaticArrayElementsCount).
-
-Example:
----
-int i;
-static assert(is(typeof(asFlatStaticArray(i)) == int[1]));
-asFlatStaticArray(i) = 5;
-assert(i == 5);
-
-int[1][2][3] mdimSArr;
-static assert(is(typeof(asFlatStaticArray(mdimSArr)) == int[6]));
-asFlatStaticArray(mdimSArr) = [1, 2, 3, 4, 5, 6];
-assert(mdimSArr == [[[1], [2]], [[3], [4]], [[5], [6]]]);
-
-static assert(is(typeof(asFlatStaticArray!2(mdimSArr)) == int[1][6]));
-assert(asFlatStaticArray!2(mdimSArr) == [[1], [2], [3], [4], [5], [6]]);
----
 */
 ref asFlatStaticArray(T, size_t n = staticArrayDimensions!T)(ref T t)
 {
@@ -52,6 +36,7 @@ ref asFlatStaticArray(size_t n, T)(ref T t)
 	return asFlatStaticArray!(T, n)(t);
 }
 
+///
 unittest
 {
 	int i;

@@ -15,17 +15,18 @@ import unstd.traits;
 
 /**
 Instantiate a template $(D Template) using arguments $(D A).
-
-Example:
-----
-import std.traits;
-
-static assert(is(Inst!(PointerTarget, int*) == int));
-----
 */
 template Inst(alias Template, A...)
 {
 	alias Template!A Inst;
+}
+
+///
+unittest
+{
+	import std.traits;
+
+	static assert(is(Inst!(PointerTarget, int*) == int));
 }
 
 unittest
@@ -33,7 +34,6 @@ unittest
 	import std.traits;
 	static assert( Inst!(isPointer, int*));
 	static assert(!Inst!(isPointer, int ));
-	static assert(is(Inst!(PointerTarget, int*) == int));
 	static assert(Inst!(GenericTuple, 5)[0] == 5);
 }
 
@@ -61,16 +61,6 @@ and with $(D B) otherwise.
 $(D UnaryTemplate) is a convinient way to create a template with one argument ($(D argumentsCount) is $(D 1)).
 
 $(D BinaryTemplate) is a convinient way to create a template with two arguments ($(D argumentsCount) is $(D 2)).
-
-Example:
-----
-static assert(Inst!(UnaryTemplate!`__traits(isUnsigned, T)`, uint));
-static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
-static assert(Inst!(UnaryTemplate!`a == 5`, 5));
-static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
-static assert(Inst!(BinaryTemplate!`a + U.sizeof`, 1, int) == 5);
-static assert(PackedGenericTuple!(Inst!(Template!(`Args`, -1), "x", int)).equals!("x", int));
-----
 */
 template Template(alias Pred, int argumentsCount, EnumType = void)
 	if(argumentsCount >= -1)
@@ -127,25 +117,29 @@ template BinaryTemplate(alias Pred, EnumType = void)
 	alias Template!(Pred, 2, EnumType) BinaryTemplate;
 }
 
+///
 unittest
 {
-	static assert(Inst!(UnaryTemplate!` __traits(isUnsigned, T)`, uint));
+	static assert(Inst!(UnaryTemplate!`__traits(isUnsigned, T)`, uint));
+	static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
+	static assert(Inst!(UnaryTemplate!`a == 5`, 5));
+	static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
+	static assert(Inst!(BinaryTemplate!`a + U.sizeof`, 1, int) == 5);
+	static assert(PackedGenericTuple!(Inst!(Template!(`Args`, -1), "x", int)).equals!("x", int));
+}
+
+unittest
+{
 	static assert(Inst!(UnaryTemplate!`!__traits(isUnsigned, T)`,  int));
 	static assert(Inst!(Inst!(UnaryTemplate!notTemplate, isPointer), int));
 	static assert(Inst!(Inst!(UnaryTemplate!`notTemplate!A`, isPointer), int));
 	static assert(Inst!(Inst!(UnaryTemplate!(notTemplate!notTemplate), isPointer), int*));
 	static assert(Inst!(Inst!(UnaryTemplate!`Inst!(notTemplate!notTemplate, A)`, isPointer), int*));
 
-	static assert(is(Inst!(UnaryTemplate!`T[]`, int) == int[]));
-
-	static assert(Inst!(UnaryTemplate!`a == 5`, 5));
 	static assert(Inst!(UnaryTemplate!`a == 7`w, 7));
-
-	static assert(Inst!(BinaryTemplate!`a == 1 && b == 2`, 1, 2));
 
 	static assert(!__traits(compiles, Inst!(Template!(`T`, bool), int)));
 
-	static assert(Inst!(BinaryTemplate!`a + U.sizeof`, 1, int) == 5);
 	static assert(PackedGenericTuple!(Inst!(Template!(`Args`, -1), 1, int, "x")).equals!(1, int, "x"));
 }
 
@@ -156,12 +150,6 @@ with one or two arguments respectively which is an $(D enum) of type $(D bool).
 
 It is equal to instantiating $(MREF Template) with corresponding
 $(D argumentsCount) and $(D bool) as $(D EnumType).
-
-Example:
-----
-static assert(Inst!(unaryPred!`__traits(isUnsigned, T)`, uint));
-static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
-----
 */
 template unaryPred(alias pred)
 {
@@ -174,12 +162,17 @@ template binaryPred(alias pred)
 	alias BinaryTemplate!(pred, bool) binaryPred;
 }
 
+///
 unittest
 {
-	static assert(Inst!(unaryPred!` __traits(isUnsigned, T)`, uint));
+	static assert(Inst!(unaryPred!`__traits(isUnsigned, T)`, uint));
+	static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
+}
+
+unittest
+{
 	static assert(Inst!(unaryPred!`!__traits(isUnsigned, T)`,  int));
 	static assert(Inst!(unaryPred!`a == 5`, 5));
-	static assert(Inst!(binaryPred!`a == U.sizeof`, 4, int));
 	static assert(!__traits(compiles, Inst!(unaryPred!`T`, int)));
 }
 
@@ -214,6 +207,8 @@ template notTemplate(alias template_)
 	}
 }
 
+// Note: unittest can't be used as an example here as template definitions aren't allowed inside functions.
+
 unittest
 {
 	alias notTemplate!isPointer notPointer;
@@ -236,19 +231,6 @@ unittest
 /**
 Create predicate template returning $(D true) iff there are no templates or all
 $(D templates) return non-zero.
-
-Example:
----
-import std.traits: isIntegral, isSigned;
-
-alias andTemplates!(isIntegral, isSigned) isSignedIntegral;
-static assert( allSatisfy!(isSignedIntegral,  int,  short, long));
-static assert(!anySatisfy!(isSignedIntegral, uint, ushort, ulong));
-
-alias andTemplates!(isSignedIntegral, unaryPred!`is(T == short)`) isShort;
-static assert( isShort!short);
-static assert(!anySatisfy!(isShort, int, long, uint, ushort, ulong));
----
 */
 template andTemplates(templates...)
 {
@@ -263,15 +245,10 @@ template andTemplates(templates...)
 	}
 }
 
+///
 unittest
 {
-	alias andTemplates!() _true;
-	static assert(_true!() && _true!int && _true!(int, int*));
-
-	import std.traits;
-
-	alias andTemplates!isPointer _isPointer;
-	static assert(_isPointer!(int*) && !_isPointer!int);
+	import std.traits: isIntegral, isSigned;
 
 	alias andTemplates!(isIntegral, isSigned) isSignedIntegral;
 	static assert( allSatisfy!(isSignedIntegral,  int,  short, long));
@@ -282,24 +259,22 @@ unittest
 	static assert(!anySatisfy!(isShort, int, long, uint, ushort, ulong));
 }
 
+unittest
+{
+	alias andTemplates!() _true;
+	static assert(_true!() && _true!int && _true!(int, int*));
+
+	import std.traits: isPointer;
+
+	alias andTemplates!isPointer _isPointer;
+	static assert(_isPointer!(int*) && !_isPointer!int);
+}
+
 
 /**
 Create predicate template returning $(D true) iff any template of
 $(D templates) return non-zero (i.e. returning $(D false) if there
 are no templates).
-
-Example:
----
-import std.traits: isIntegral, isFloatingPoint;
-
-alias orTemplates!(isIntegral, isFloatingPoint) isIntegralOrFloating;
-static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
-static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
-
-alias orTemplates!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
-static assert( allSatisfy!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
-static assert(!isIntegralOrFloatingOrChar!bool);
----
 */
 template orTemplates(templates...)
 {
@@ -314,6 +289,20 @@ template orTemplates(templates...)
 	}
 }
 
+///
+unittest
+{
+	import std.traits: isIntegral, isFloatingPoint;
+
+	alias orTemplates!(isIntegral, isFloatingPoint) isIntegralOrFloating;
+	static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
+	static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
+
+	alias orTemplates!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
+	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
+	static assert(!isIntegralOrFloatingOrChar!bool);
+}
+
 unittest
 {
 	alias orTemplates!() _false;
@@ -323,14 +312,6 @@ unittest
 
 	alias orTemplates!isPointer _isPointer;
 	static assert(_isPointer!(int*) && !_isPointer!int);
-
-	alias orTemplates!(isIntegral, isFloatingPoint) isIntegralOrFloating;
-	static assert( allSatisfy!(isIntegralOrFloating, int, short, long, float, double));
-	static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
-
-	alias orTemplates!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
-	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
-	static assert(!isIntegralOrFloatingOrChar!bool);
 }
 
 
@@ -370,6 +351,8 @@ template BindTemplate(alias Template, BindArgs...)
 		alias Template!(TemplateBindArgs!(BindArgs.length, BindArgs, Args)) BindTemplate;
 	}
 }
+
+// Note: unittest can't be used as an example here as there is no way to place it before `Bugs` section.
 
 private struct __BindArgs
 {
@@ -551,27 +534,28 @@ $(UL
 	$(LI use $(D %*) to refer all arguments;)
 	$(LI use $(D %%) for a $(D %) symbol.)
 )
-
-Example:
-----
-import unstd.traits;
-
-mixin Bind!q{ CommonType!(long, %*) CommonTypeToLong };
-static assert(is(CommonTypeToLong!int == long));
-
-mixin Bind!q{ isImplicitlyConvertible!(%0, int) isImplicitlyConvertibleToInt };
-static assert(!isImplicitlyConvertibleToInt!long);
-
-mixin Bind!q{ isImplicitlyConvertible!(int, %0) isImplicitlyConvertibleFromInt };
-static assert( isImplicitlyConvertibleFromInt!long);
-
-mixin Bind!q{ MapTuple!(Unqual, %*) UnqualAll };
-static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
-----
 */
 mixin template Bind(string fmt)
 {
 	mixin("alias BindTemplate!(" ~ fmt.formatBind() ~ ";");
+}
+
+///
+unittest
+{
+	import unstd.traits;
+
+	mixin Bind!q{ CommonType!(long, %*) CommonTypeToLong };
+	static assert(is(CommonTypeToLong!int == long));
+
+	mixin Bind!q{ isImplicitlyConvertible!(%0, int) isImplicitlyConvertibleToInt };
+	static assert(!isImplicitlyConvertibleToInt!long);
+
+	mixin Bind!q{ isImplicitlyConvertible!(int, %0) isImplicitlyConvertibleFromInt };
+	static assert( isImplicitlyConvertibleFromInt!long);
+
+	mixin Bind!q{ MapTuple!(Unqual, %*) UnqualAll };
+	static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 }
 
 unittest
@@ -615,16 +599,4 @@ unittest
 		3, 3, char, 5,
 		1, char, 2, 3, int, 3, 3, char, 5
 	)();
-
-	import unstd.traits;
-
-	mixin Bind!q{ CommonType!(long, %*) CommonTypeToLong };
-	static assert(is(CommonTypeToLong!int == long));
-	mixin Bind!q{ isImplicitlyConvertible!(%0, int) isImplicitlyConvertibleToInt };
-	static assert(!isImplicitlyConvertibleToInt!long);
-	mixin Bind!q{ isImplicitlyConvertible!(int, %0) isImplicitlyConvertibleFromInt };
-	static assert( isImplicitlyConvertibleFromInt!long);
-
-	mixin Bind!q{ MapTuple!(Unqual, %*) UnqualAll };
-	static assert(is(UnqualAll!(const(int), immutable(bool[])) == TypeTuple!(int, immutable(bool)[])));
 }

@@ -289,6 +289,8 @@ template forward(args...)
 		alias expressionTuple!() forward;
 }
 
+// Note: unittest can't be used as an example here as there is no way to place it before `Note` section.
+
 unittest
 {
 	class C
