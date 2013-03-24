@@ -40,18 +40,6 @@ $(MEMBERSDESC
 	)
 )
 $(MEMBERSDESC
-	Nested structs traits,
-	$(FREF traits, isNested)
-	$(FREF traits, hasNested)
-	,
-	$(IDENTITY
-		$(PHOBOSPULL 948) ($(GREEN open))
-	),
-	$(IDENTITY
-		Templates for analysing nested structs.
-	)
-)
-$(MEMBERSDESC
 	Function converting everything into a static array,
 	$(FREF array, asFlatStaticArray),
 	$(IDENTITY
