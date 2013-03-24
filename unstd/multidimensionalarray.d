@@ -91,7 +91,7 @@ foreach(i; 0 .. matrices.elements)
 c = 0;
 foreach(matrix; matrices.byTopDimension)       // for each of two matrices
 	foreach(row; matrix.byTopDimension)        // for each row
-		foreach(ref el; matrix.byTopDimension) // for each element
+		foreach(ref el; row.byTopDimension) // for each element
 			el = c++;
 
 c = 0;
@@ -106,14 +106,14 @@ foreach_reverse(i; 0 .. matrices.elements)
 // * use <integer> to select a position
 // * use R[<integer> .. <integer>] to select a range
 // * use R[]  to select the whole range
-matrices = matrices[R[], R[], R[]]);  // the entire array, same as [R[0..2], R[0..3], R[0..4]]
-auto array2d = matrices[0, R[], R[]]); // the first matrix
-auto array1d = matrices[0, 1, R[]]);  // the second row of the first matrix
-array1d = matrices[0, R[], 1]);       // the second column of the first matrix
+matrices = matrices[R[], R[], R[]];  // the entire array, same as [R[0..2], R[0..3], R[0..4]]
+auto array2d = matrices[0, R[], R[]]; // the first matrix
+auto array1d = matrices[0, 1, R[]];  // the second row of the first matrix
+array1d = matrices[0, R[], 1];       // the second column of the first matrix
 matrices[0, 1, 1] = 9;                // setting an element at a crossing of the row an the column
 
 // first two rows and three columns of the secon matrix
-array2d = matrices[1, R[0 .. 2], R[0 .. 3]]);
+array2d = matrices[1, R[0 .. 2], R[0 .. 3]];
 ----
 */
 struct MultidimensionalArray(T, size_t n) if(n >= 1)
