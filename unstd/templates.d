@@ -419,7 +419,7 @@ unittest
 {
 	alias PackedGenericTuple Pack;
 	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, 1, 2, int), 3)).equals!(1, 2, int));
-	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, arg!0), 3)).equals!(3));
+	static assert(Inst!(BindTemplate!(GenericTuple, arg!0), 3) == expressionTuple!3);
 	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, 1, 2, int, args[0]), 3)).equals!(1, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(GenericTuple, 1, 2, int, allArgs), 3)).equals!(1, 2, int, 3));
 	static assert(Pack!(Inst!(BindTemplate!(GenericTuple,

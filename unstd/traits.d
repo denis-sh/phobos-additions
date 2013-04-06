@@ -164,17 +164,16 @@ unittest
 
 unittest
 {
-	alias PackedGenericTuple Pack;
-	static assert(Pack!(multidimensionalStaticArrayLengths!int).equals!());
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[])).equals!());
-	static assert(Pack!(multidimensionalStaticArrayLengths!string).equals!());
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[0])).equals!(0));
+	static assert(multidimensionalStaticArrayLengths!int.length == 0);
+	static assert(multidimensionalStaticArrayLengths!(int[]).length == 0);
+	static assert(multidimensionalStaticArrayLengths!string.length == 0);
+	static assert(multidimensionalStaticArrayLengths!(int[0]) == expressionTuple!(0));
 	static assert(!__traits(compiles, multidimensionalStaticArrayLengths!(int[7][8], 3)));
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[7][8])).equals!(8, 7));
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[7][8], 1)).equals!(8));
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[7][8], 0)).equals!());
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[0][])).equals!());
-	static assert(Pack!(multidimensionalStaticArrayLengths!(int[][0])).equals!(0));
+	static assert(multidimensionalStaticArrayLengths!(int[7][8]) == expressionTuple!(8, 7));
+	static assert(multidimensionalStaticArrayLengths!(int[7][8], 1) == expressionTuple!(8));
+	static assert(multidimensionalStaticArrayLengths!(int[7][8], 0).length == 0);
+	static assert(multidimensionalStaticArrayLengths!(int[0][]).length == 0);
+	static assert(multidimensionalStaticArrayLengths!(int[][0]) == expressionTuple!(0));
 }
 
 
