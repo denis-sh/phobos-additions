@@ -5,11 +5,16 @@ Copyright: Denis Shelomovskij 2013
 License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
 
 Authors: Denis Shelomovskij
+
+Macros:
+COREREF = $(HTTP dlang.org/phobos/core_$1.html#$2, $(D core.$1.$2))
 */
 module unstd.memory.allocation;
 
 
 import core.stdc.stdlib;
+import core.stdc.string;
+import core.exception;
 
 import unstd.math;
 
@@ -50,6 +55,71 @@ unittest
 {
 	static assert(!isUnalignedAllocator!int);
 	static assert( isUnalignedAllocator!_DummyUnalignedAllocator);
+}
+
+
+/**
+Requests an $(D alignment)-byte aligned block of memory of $(D count * elementSize)
+bytes from $(D allocator).
+
+If $(D zeroFill) is true the returned memory will be zero-filled.
+
+If allocation fails rawAllocate will also call $(COREREF exception, onOutOfMemoryError)
+which is expected to throw an $(COREREF exception, OutOfMemoryError).
+
+Preconditions:
+$(D alignment != 0 && elementSize % alignment == 0 && count != 0)
+
+Returns:
+A pointer to the allocated memory or null if allocaton failed.
+*/
+void* rawAllocate(A)(ref A allocator, size_t alignment, size_t elementSize, size_t count, bool zeroFill = true)
+if(isUnalignedAllocator!A)
+{
+	void* ptr = allocator.tryRawAllocate(alignment, elementSize, count, zeroFill);
+	if(!ptr)
+		onOutOfMemoryError();
+	return ptr;
+}
+
+/// ditto
+void* tryRawAllocate(A)(ref A allocator, size_t alignment, size_t elementSize, size_t count, bool zeroFill = true)
+if(isUnalignedAllocator!A)
+in { assert(alignment && elementSize % alignment == 0 && count); }
+body
+{
+	if(auto buffBytes = memoryMult(elementSize, count))
+		if(auto totalBytes = memoryAdd(buffBytes, alignmentMemoryPadding(alignment)))
+			if(void* p = allocator.tryUnalignedAllocate(totalBytes))
+			{
+				p = alignMemory(alignment, p);
+				if(zeroFill)
+					memset(p, 0, buffBytes);
+				return p;
+			}
+	return null;
+}
+
+/**
+Deallocates the memory referenced by $(D ptr) from $(D allocator).
+
+If $(D ptr) is null, no action occurs.
+*/
+void rawFree(A)(ref A allocator, void* ptr)
+if(isUnalignedAllocator!A)
+{
+	if(ptr)
+		allocator.unalignedFree(dealignMemory(ptr));
+}
+
+unittest
+{
+	_DummyUnalignedAllocator a;
+	void* p = a.tryRawAllocate(4, 4, 1);
+	assert(!p);
+	p = a.tryRawAllocate(4, 4, 1, false);
+	assert(!p);
+	a.rawFree(p);
 }
 
 
