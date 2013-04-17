@@ -190,6 +190,53 @@ unittest
 }
 
 
+struct CHeap
+{
+	@disable this();
+	@disable this(this);
+
+static nothrow:
+	// Allocate memory with C's `malloc`.
+	void* tryUnalignedAllocate(size_t count)
+	in { assert(count); }
+	body
+	{ return malloc(count); }
+
+	// Free memory with C's `free`.
+	void unalignedFree(void* ptr)
+	in { assert(ptr); }
+	body
+	{ core.stdc.stdlib.free(ptr); }
+}
+
+__gshared CHeap _cHeap = void;
+
+/// An unaligned allocator which uses C's $(D malloc)/$(D free).
+@property ref CHeap cHeap() nothrow
+{ return _cHeap; }
+
+///
+unittest
+{
+	static assert(isUnalignedAllocator!(typeof(cHeap)));
+
+	auto longs = cHeap.allocate!long(3, false);
+	assert(longs.length == 3);
+	cHeap.free(longs);
+	assert(!longs);
+
+	assert(!cHeap.tryAllocate!ubyte(size_t.max));
+}
+
+///
+unittest
+{
+	auto chars = cHeap.allocate!char(2);
+	scope(exit) cHeap.free(chars);
+	assert(chars == [char.init, char.init]);
+}
+
+
 private:
 
 // Helper functions for memory alignment.
