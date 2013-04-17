@@ -1260,6 +1260,91 @@ unittest // const
 }
 
 
+/**
+Sets all elements of the passed dynamic array to its `init` state.
+
+Use this function for better performance instead of calling
+$(MREF setToInitialState) on each element.
+*/
+void setElementsToInitialState(T)(T[] arr)
+{
+	alias Unqual!T U;
+
+	// This is just a copy of `setToInitialState` implementation.
+
+	static if(hasElaborateAssign!T || (!isAssignable!T && !isAssignable!U))
+	{
+		import core.stdc.string;
+
+		if(auto p = typeid(MultidimensionalStaticArrayElementType!U).init().ptr)
+			foreach(ref t; arr)
+				foreach(ref el; asFlatStaticArray((*cast(U*) &t)))
+					memcpy(&el, p, typeof(el).sizeof);
+		else
+			memset(cast(void*) arr.ptr, 0, T.sizeof * arr.length);
+	}
+	else static if(!isAssignable!T)
+	{
+		(cast(U[]) arr)[] = U.init;
+	}
+	else
+	{
+		arr[] = T.init;
+	}
+}
+
+unittest
+{
+	int[] i = new int[3];
+	i[] = -1;
+	setElementsToInitialState(i);
+	assert(i == [0, 0, 0]);
+
+	static bool exited = false;
+
+	static struct S(int def)
+	{
+		int i = def;
+		@disable this();
+		this(this)  { assert(0); }
+		~this()     { assert(exited); }
+	}
+
+	auto s0 = new S!0[2]; s0[0].i = s0[1].i = -1;
+	setElementsToInitialState(s0);
+	assert(s0[0].i == 0 && s0[1].i == 0);
+
+	auto s1 = new S!1[2]; s1[0].i = s1[1].i = -1;
+	setElementsToInitialState(s1);
+	assert(s1[0].i == 1 && s1[1].i == 1);
+
+	auto sArr = new S!1[2][1][1];
+	foreach(ref el; sArr[0][0])
+		el.i = -1;
+	setElementsToInitialState(sArr);
+	assert(sArr[0] == (S!1[2][1]).init);
+
+	exited = true;
+}
+
+unittest // const
+{
+	static struct Int1
+	{ int i = 1; }
+
+	static struct S
+	{ const Int1 i; }
+
+	int i = 0;
+	static assert(S.sizeof == i.sizeof);
+	setElementsToInitialState((cast(S*) &i)[0 .. 1]);
+	assert(i == 1); i = 0;
+
+	setElementsToInitialState((cast(const S*) &i)[0 .. 1]);
+	assert(i == 1); i = 0;
+}
+
+
 /** Calls the postblit of the given object, if any.
 
 Faster and convenient replacement for $(D typeid(T).postblit(&t)).

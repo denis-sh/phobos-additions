@@ -209,6 +209,7 @@ $(MEMBERSDESC
 $(MEMBERSDESC
 	$(D TypeInfo) functions analogs,
 	$(FREF lifetime, setToInitialState)
+	$(FREF lifetime, setElementsToInitialState)
 	$(FREF lifetime, callPostblits)
 	$(FREF lifetime, callDestructors)
 	,
