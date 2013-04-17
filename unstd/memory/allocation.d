@@ -17,6 +17,7 @@ import core.stdc.string;
 import core.exception;
 
 import unstd.math;
+import unstd.lifetime;
 
 
 /**
@@ -55,6 +56,72 @@ unittest
 {
 	static assert(!isUnalignedAllocator!int);
 	static assert( isUnalignedAllocator!_DummyUnalignedAllocator);
+}
+
+
+/**
+Requests a properly aligned block of memory of $(D count * T.sizeof)
+bytes from $(D allocator).
+
+If $(D initialize) is true the returned memory will be set to $(D T.init).
+
+If allocation fails allocate will also call $(COREREF exception, onOutOfMemoryError)
+which is expected to throw an $(COREREF exception, OutOfMemoryError).
+
+Preconditions:
+$(D count != 0)
+
+Returns:
+Allocated array or null if allocaton failed.
+*/
+T[] allocate(T, A)(ref A allocator, size_t count, bool initialize = true)
+if(isUnalignedAllocator!A)
+{
+	T[] arr = allocator.tryAllocate!T(count, initialize);
+	if(!arr)
+		onOutOfMemoryError();
+	return arr;
+}
+
+/// ditto
+T[] tryAllocate(T, A)(ref A allocator, size_t count, bool initialize = true)
+if(isUnalignedAllocator!A)
+in { assert(count); }
+body
+{
+	void* ptr = allocator.tryRawAllocate(T.alignof, T.sizeof, count, false);
+	if(!ptr)
+		return null;
+	T[] arr = (cast(T*) ptr)[0 .. count];
+	if(initialize)
+		setElementsToInitialState(arr);
+	return arr;
+}
+
+/**
+Deallocates the memory referenced by $(D arr.ptr) from $(D allocator)
+and sets $(D arr) to null.
+
+If $(D arr.ptr) is null, no action occurs.
+*/
+void free(T, A)(ref A allocator, ref T[] arr)
+if(isUnalignedAllocator!A)
+{
+	if(arr.ptr)
+	{
+		allocator.rawFree(arr.ptr);
+		arr = null;
+	}
+}
+
+unittest
+{
+	_DummyUnalignedAllocator a;
+	int[] arr = a.tryAllocate!int(1);
+	assert(!arr);
+	arr = a.tryAllocate!int(1, false);
+	assert(!arr);
+	a.free(arr);
 }
 
 
