@@ -1,5 +1,13 @@
 ﻿/** Manual memory management routines.
 
+Warning:
+$(RED Never use functions like $(D malloc) directly) unless you know
+what you are doing as unaligned memory which it returns may lead
+to random crashed, incorrect behaviour and/or performance reduction.
+
+Also $(RED manual) $(I count) * $(I element size) $(RED multiplication often
+leads to buffer overflow vulnerability) as one forgets the check.
+
 Copyright: Denis Shelomovskij 2013
 
 License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
