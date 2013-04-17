@@ -285,6 +285,7 @@
  <Folder name="PhobosAdditions">
   <Folder name="unstd">
    <Folder name="memory">
+    <File path="unstd\memory\allocation.d" />
     <File path="unstd\memory\weakref.d" />
    </Folder>
    <File path="unstd\traits.d" />
