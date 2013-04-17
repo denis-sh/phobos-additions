@@ -144,6 +144,318 @@ unittest
 	}
 }
 
+/**
+Implementats weak reference array.
+
+It gives better performance when working with
+multiple weak references at once.
+*/
+final @trusted class WeakReferenceArray(T)
+if(is(T == class) || is(T == interface) || is(T == delegate))
+{
+	/**
+	Create weak reference array with initial capacity $(D initialCapacity).
+
+	Preconditions:
+	$(D initialCapacity != 0)
+	*/
+	this(size_t initialCapacity)
+	in { assert(initialCapacity); }
+	body
+	{
+		// FIXME: Assume `malloc` returns properly aligned memory.
+		// FIXME: Assume no integer overflow occurs.
+		auto buff = malloc(T.sizeof * initialCapacity);
+		if(!buff)
+			onOutOfMemoryError();
+		_data = cast(shared(void*)*) buff;
+		_capacity = initialCapacity;
+	}
+
+	/// Total count of (possibly dead) weak references.
+	@property size_t count() const @safe
+	{ return _count; }
+
+	/// Total count of alive weak references.
+	@property size_t aliveCount() const @safe
+	{ return _aliveCount; }
+
+	/// Returns the capacity of the array.
+	@property size_t capacity() const @safe
+	{ return _capacity; }
+
+	/**
+	Determines whether array behaves as a hard reference.
+	$(D false) by default.
+	*/
+	@property bool hard() const
+	{ return _hard; }
+
+	/**
+	Return array internal buffer which can be safely used while
+	the array behaves as a hard reference.
+	
+	Note:
+	Retrieved buffer may become invalid after addition of an object
+	into the array if $(D capacity == 0) or after $(D reserve) or
+	$(D removeDead) call.
+
+	Preconditions:
+	$(D hard)
+	*/
+	@property inout(T)[] buff() inout
+	in { assert(hard); }
+	body
+	{ return (cast(inout T*) _data)[0 .. _count]; }
+
+	/**
+	Appends new weak reference to $(D target) to the array.
+
+	Preconditions:
+	There is no
+	*/
+	void opOpAssign(string op : "~")(T target)
+	{
+		if(_count == _capacity)
+		{
+			// FIXME: Assume no integer overflow occurs.
+			reserve(_capacity * 2);
+		}
+		(cast(T*) _data)[_count++] = target;
+		atomicOp!`+=`(_aliveCount, 1);
+		rt_attachDisposeEvent(_targetToObj(target), &onTargetDisposed);
+	}
+
+	/**
+	Returns $(D i)-th referenced object if it isn't finalized
+	thus creating a strong reference to it.
+	Returns null otherwise.
+	*/
+	inout(T) opIndex(size_t i) inout
+	{
+		version(D_NoBoundsChecks) { }
+		else if(i >= _count)
+			onRangeError();
+
+		if(_hard)
+			return (cast(inout(T)*) _data)[i];
+
+		const data = cast(const T*) _data + i;
+		if(!data)
+			return null;
+		auto object = cast(void*) _targetToObj(*data);
+		GC.addRoot(object);
+		scope(exit) GC.removeRoot(object);
+		auto dataRes = cast(inout(T)*) _data + i;
+		return dataRes ? *dataRes : null;
+	}
+
+	/// Changes $(D i)-th referenced object.
+	void opIndexAssign(T target, size_t i)
+	{
+		version(D_NoBoundsChecks) { }
+		else if(i >= _count)
+			onRangeError();
+
+		const wasHard = hard;
+		if(!wasHard) makeHard();
+
+		auto ptr = cast(T*) _data;
+		auto prevObject = ptr[i] ? _targetToObj(ptr[i]) : null;
+		auto object = target ? _targetToObj(target) : null;
+		ptr[i] = target;
+		if(prevObject is object)
+			return;
+
+		if(!prevObject || !object)
+			_aliveCount += object ? 1 : -1;
+
+		bool foundPrev = !prevObject;
+		foreach(j, t; buff) if(j != i)
+		{
+			foundPrev |= _targetToObj(t) is prevObject;
+			if(foundPrev)
+				break;
+		}
+		if(!foundPrev)
+			rt_detachDisposeEvent(prevObject, &onTargetDisposed);
+		if(object)
+			rt_attachDisposeEvent(object, &onTargetDisposed);
+
+		if(!wasHard) makeWeak();
+	}
+
+	/// Reserve at least $(D newCapacity) elements for appending.
+	void reserve(size_t newCapacity)
+	{
+		const wasHard = hard;
+		if(!wasHard) makeHard();
+
+		// FIXME: Assume `realloc` returns properly aligned memory.
+		// FIXME: Assume no integer overflow occurs.
+		_capacity = newCapacity;
+		_data = cast(shared(void*)*) realloc(cast(void*) _data, T.sizeof * _capacity);
+		if(!_data)
+			onOutOfMemoryError();
+
+		if(!wasHard) makeWeak();
+	}
+
+	/// Remove dead weak references from the array. This may decrease $(D count).
+	void removeDead()
+	{
+		const wasHard = hard;
+		if(!wasHard) makeHard();
+
+		auto x = buff;
+		auto ptr = cast(T*) _data;
+		for(size_t i = 0; i < count; )
+		{
+			if(!ptr[i])
+				memmove(ptr + i, ptr + i + 1, T.sizeof * (--_count - i));
+			else
+				++i;
+		}
+
+		if(!wasHard) makeWeak();
+	}
+
+	/// Force the array to behave as a weak reference.
+	void makeWeak()
+	{
+		if(!_hard)
+			return;
+		_hard = false;
+		GC.removeRange(cast(void*) _data);
+	}
+
+	/// Force the array to behave as a hard reference.
+	void makeHard()
+	{
+		if(_hard)
+			return;
+		_hard = true;
+		GC.addRange(cast(void*) _data, T.sizeof * _count);
+	}
+
+	~this()
+	{
+		makeHard();
+
+		foreach(t; buff) if(t)
+			rt_detachDisposeEvent(_targetToObj(t), &onTargetDisposed);
+
+		free(cast(void*) _data);
+	}
+
+private:
+	size_t _capacity, _count = 0;
+	bool _hard = false;
+	shared size_t _aliveCount = 0;
+	shared(void*)* _data;
+
+	void onTargetDisposed(Object obj)
+	{
+		auto buff = (cast(T*) _data)[0 .. _count];
+		version(assert) size_t count = 0;
+		foreach(ref t; buff) if(_targetToObj(t) is obj)
+		{
+			atomicOp!`-=`(_aliveCount, 1);
+			t = null;
+			version(assert) ++count;
+		}
+		assert(count);
+	}
+}
+
+
+/**
+Convenience function that returns a $(D WeakReferenceArray!T)
+with initial capacity $(D initialCapacity).
+*/
+@safe WeakReferenceArray!T weakReferenceArray(T)(size_t initialCapacity = 64)
+if(is(T == class) || is(T == interface) || is(T == delegate))
+{
+	return new WeakReferenceArray!T(initialCapacity);
+}
+
+unittest
+{
+	{
+		auto o = new Object();
+		auto w = weakReferenceArray!Object(1);
+		w ~= o;
+		assert(w.aliveCount == 1 && w[0] is o);
+		destroy(o);
+		assert(!w.aliveCount && !w[0]);
+
+		auto o1 = new Object(), o2 = new Object(), o3 = new Object();
+		w ~= o1;
+		w ~= o2;
+		w ~= o3;
+		assert(!w.hard && w.aliveCount == 3 && w[1] is o1 && w[2] is o2 && w[3] is o3);
+		w.makeHard();
+		assert(w.hard && w.aliveCount == 3 && w.buff == [null, o1, o2, o3]);
+		destroy(o2);
+		assert(w.aliveCount == 2 && w.buff == [null, o1, null, o3]);
+		w.removeDead();
+		assert(w.aliveCount == 2 && w.buff == [o1, o3]);
+		w.makeWeak();
+		assert(!w.hard);
+		destroy(o1);
+		destroy(o3);
+		assert(!w.aliveCount);
+		assert(w.count == 2);
+		w.removeDead();
+		assert(!w.count);
+	}
+
+	{
+		auto o = new Object(), o1 = new Object(), o2 = new Object();
+		auto w = weakReferenceArray!Object(1);
+		w ~= o;
+		w ~= o1;
+		w[0] = o2;
+		assert(w.aliveCount == 2 && w[0] is o2 && w[1] is o1);
+		destroy(o);
+		assert(w.aliveCount == 2 && w[0] is o2 && w[1] is o1);
+		destroy(o2);
+		assert(w.aliveCount == 1 && !w[0] && w[1] is o1);
+		w[0] = o1;
+		assert(w.aliveCount == 2 && w[0] is o1 && w[1] is o1);
+		destroy(o1);
+		assert(w.aliveCount == 0 && !w[0] && !w[1]);
+	}
+
+	interface I { }
+	class C: I { void f() {} void f1() {} }
+	{
+		I i = new C(), i1 = new C();
+		auto w = weakReferenceArray!I(1);
+		w ~= i;
+		w ~= i;
+		w ~= i;
+		w ~= i1;
+		assert(w.aliveCount == 4 && w[0] is i && w[1] is i && w[2] is i && w[3] is i1);
+		destroy(i);
+		assert(w.aliveCount == 1 && !w[0] && !w[1] && !w[2] && w[3] is i1);
+		destroy(i1);
+		assert(!w.aliveCount && !w[0] && !w[1] && !w[2] && !w[3]);
+	}
+	{
+		auto c = new C(), c1 = new C();
+		auto w = weakReferenceArray!(void delegate())(1);
+		w ~= &c.f;
+		w ~= &c1.f;
+		w ~= &c.f1;
+		assert(w.aliveCount == 3 && w[0] is &c.f && w[1] is &c1.f && w[2] is &c.f1);
+		destroy(c1);
+		assert(w.aliveCount == 2 && w[0] is &c.f && !w[1] && w[2] is &c.f1);
+		destroy(c);
+		assert(!w.aliveCount && !w[0] && !w[1] && !w[2]);
+	}
+}
+
 
 private:
 
