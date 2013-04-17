@@ -14,6 +14,45 @@ import core.stdc.stdlib;
 import unstd.math;
 
 
+/**
+Returns $(D true) if $(D A) is an unaligned allocator.
+
+The following code should compile for any unaligned allocator.
+
+----
+A a = void;
+auto p = a.tryUnalignedAllocate(cast(size_t) 1);
+a.unalignedFree(p);
+static assert(is(typeof(p) == void*));
+----
+*/
+template isUnalignedAllocator(A)
+{
+	enum bool isUnalignedAllocator = __traits(compiles,
+	{
+		A a = void;
+		auto p = a.tryUnalignedAllocate(cast(size_t) 1);
+		a.unalignedFree(p);
+		static assert(is(typeof(p) == void*));
+	});
+}
+
+version(unittest) private struct _DummyUnalignedAllocator
+{
+	void* tryUnalignedAllocate(size_t count)
+	{ return null; }
+
+	void unalignedFree(void* ptr)
+	{ }
+}
+
+unittest
+{
+	static assert(!isUnalignedAllocator!int);
+	static assert( isUnalignedAllocator!_DummyUnalignedAllocator);
+}
+
+
 private:
 
 // Helper functions for memory alignment.
