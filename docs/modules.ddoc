@@ -7,3 +7,4 @@ MODULES =
 	$(MODULE unstd.array)
 	$(MODULE unstd.multidimensionalarray)
 	$(MODULE unstd.lifetime)
+	$(MODULE unstd.memory.weakref)
