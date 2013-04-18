@@ -12,6 +12,7 @@ module unstd.c.string;
 import std.traits;
 import unstd.utf;
 version(unittest) import unstd.generictuple;
+import unstd.memory.allocation;
 
 
 /// Returns $(I C string) length. If $(D cstr) is null returns 0.
@@ -103,4 +104,87 @@ unittest
 	assert(cstr);
 	cstr[0 .. 4] = "abc\0";
 	assert(cstr.moveToString!free() == "abc");
+}
+
+
+/**
+Creates temporary $(I C string) with copy of passed text.
+
+Returned object is implicitly convertible to $(D const To*) and
+has two properties: $(D ptr) to access $(I C string) as $(D const To*)
+and $(D buffPtr) to access it as $(D To*).
+
+The temporary $(I C string) is valid unless returned object is destroyed.
+Thus if returned object is assigned to a variable the temporary is
+valid unless the variable goes out of scope. If returned object isn't
+assigned to a variable it will be destroyed at the end of creating
+primary expression.
+
+Note:
+This function is intended to be used in function call expression (like
+$(D strlen(str.tempCString()))). Incorrect usage of this function may
+lead to memory corruption.
+See $(RED WARNING) in $(B Examples) section.
+*/
+auto tempCString(To = char, From)(in From[] str)
+if(isSomeChar!To && isSomeChar!From)
+{
+	static struct Res
+	{
+		@disable this();
+		@disable this(this);
+		alias ptr this;
+
+		@property inout(To)* buffPtr() inout
+		{ return _ptr; }
+
+		@property const(To)* ptr() const
+		{ return _ptr; }
+
+		~this()
+		{ cHeap.rawFree(_ptr); }
+
+	private:
+		To* _ptr;
+
+		this(To* ptr)
+		{ _ptr = ptr; }
+	}
+
+	if(!str)
+		return Res(null);
+
+	To[] arr = cHeap.allocate!To(maxLength!To(str) + 1)[0 .. $ - 1];
+	copyEncoded(str, arr);
+	*(arr.ptr + arr.length) = '\0';
+	return Res(arr.ptr);
+}
+
+///
+unittest
+{
+	import core.stdc.string;
+
+	string str = "abc";
+
+	// Intended usage
+	assert(strlen(str.tempCString()) == 3);
+
+	// Correct usage
+	auto tmp = str.tempCString();
+	assert(strlen(tmp) == 3); // or `tmp.ptr`, or `tmp.buffPtr`
+
+	// $(RED WARNING): $(RED Incorrect usage)
+	auto pInvalid1 = str.tempCString().ptr;
+	const char* pInvalid2 = str.tempCString();
+	// Both pointers refer to invalid memory here as
+	// returned values aren't assigned to a variable and
+	// both primary expressions are ended.
+}
+
+unittest
+{
+	assert("abc".tempCString().asArray() == "abc");
+	assert("abc"d.tempCString().ptr.asArray() == "abc");
+	assert("abc".tempCString!wchar().buffPtr.asArray() == "abc"w);
 }
