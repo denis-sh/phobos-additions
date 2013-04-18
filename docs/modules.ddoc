@@ -10,3 +10,4 @@ MODULES =
 	$(MODULE unstd.utf)
 	$(MODULE unstd.memory.allocation)
 	$(MODULE unstd.memory.weakref)
+	$(MODULE unstd.c.string)

@@ -284,6 +284,9 @@
  </Config>
  <Folder name="PhobosAdditions">
   <Folder name="unstd">
+   <Folder name="c">
+    <File path="unstd\c\string.d" />
+   </Folder>
    <Folder name="memory">
     <File path="unstd\memory\allocation.d" />
     <File path="unstd\memory\weakref.d" />
