@@ -1,5 +1,36 @@
 ﻿/** Helper functions for working with $(I C strings).
 
+This module is intended to provide fast, safe and garbage free
+way to work with $(I C strings).
+
+Examples:
+---
+version(Posix):
+
+import core.stdc.stdlib: free;
+import core.sys.posix.unistd: getcwd;
+import core.sys.posix.stdlib: getenv, setenv;
+import std.exception: enforce;
+
+@property string cwd()
+{ return enforce(getcwd(null, 0).moveToString!free()); }
+
+string getEnvironment(in char[] name)
+{ return enforce(getenv(name.tempCString()).toString()); }
+
+void setEnvironment(in char[] name, in char[] value)
+{ enforce(setenv(name.tempCString(), value.tempCString(), 1) != -1); }
+---
+---
+version(Windows):
+
+import core.sys.windows.windows: SetEnvironmentVariableW;
+import std.exception: enforce;
+
+void setEnvironment(in char[] name, in char[] value)
+{ enforce(SetEnvironmentVariableW(name.tempCString!wchar(), value.tempCString!wchar())); }
+---
+
 Copyright: Denis Shelomovskij 2013
 
 License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
