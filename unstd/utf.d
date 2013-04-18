@@ -9,6 +9,9 @@ Authors: Denis Shelomovskij
 module unstd.utf;
 
 
+version(D_NoBoundsChecks) { }
+else import core.exception;
+
 import std.traits;
 public import std.utf;
 
@@ -100,4 +103,82 @@ unittest
 	const dlen = walkLength(str);
 	assert(wlen >= minLength!wchar(str) && wlen <= maxLength!wchar(str));
 	assert(dlen >= minLength!dchar(str) && dlen <= maxLength!dchar(str));
+}
+
+
+/**
+Copies text from $(D source) to $(D destinition) performing conversion
+to different unicode transformation format if needed.
+
+$(D destinition) must be large enough to hold the result.
+
+Preconditions:
+$(D destinition.length >= minLength!To(source))
+*/
+void copyEncoded(To, From)(in From[] source, ref To[] destinition)
+if(isSomeChar!To && isSomeChar!From)
+in { assert(destinition.length >= minLength!To(source)); }
+body
+{
+	static if(is(To == From))
+	{
+		destinition[0 .. source.length] = source[];
+	}
+	else
+	{
+		To* ptr = destinition.ptr;
+		const To* last = ptr + destinition.length;
+		foreach(dchar dc; source)
+		{
+			version(D_NoBoundsChecks) { }
+			else if(ptr + codeLength!To(dc) > last)
+				onRangeError();
+
+			static if(is(To == dchar))
+				*ptr++ = dc;
+			else
+				// Warning: assume `encode` uses only needed bytes.
+				ptr += encode(*(cast(To[4 / To.sizeof]*) ptr), dc);
+		}
+		destinition = destinition[0 .. ptr - destinition.ptr];
+	}
+}
+
+///
+unittest
+{
+	const str = "abc-ЭЮЯ";
+	wchar[100] wsbuff;
+	auto wstr = wsbuff[];
+	copyEncoded(str, wstr);
+	assert(wstr == "abc-ЭЮЯ"w);
+}
+
+unittest
+{
+	import std.range;
+
+	const str = "abc-ЭЮЯ";
+	char[100] sbuff;
+
+	{
+		wchar[100] wsbuff;
+		auto wstr = wsbuff[0 .. toUTF16(str).length];
+		copyEncoded(str, wstr);
+		assert(wstr == toUTF16(str));
+
+		auto str2 = sbuff[0 .. str.length];
+		copyEncoded(wstr, str2);
+		assert(str2 == str);
+	}
+	{
+		dchar[100] dsbuff;
+		auto dstr = dsbuff[0 .. walkLength(str)];
+		copyEncoded(str, dstr);
+		assert(dstr == toUTF32(str));
+
+		auto str2 = sbuff[0 .. str.length];
+		copyEncoded(dstr, str2);
+		assert(str2 == str);
+	}
 }
