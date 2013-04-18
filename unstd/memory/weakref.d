@@ -9,11 +9,12 @@ Authors: Denis Shelomovskij
 module unstd.memory.weakref;
 
 
-import core.stdc.stdlib;
 import core.stdc.string;
 import core.exception;
 import core.memory;
 import core.atomic;
+
+import unstd.memory.allocation;
 
 
 /**
@@ -33,10 +34,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 	in { assert(target); }
 	body
 	{
-		// FIXME: Assume `malloc` returns properly aligned memory.
-		_data = cast(shared) malloc(T.sizeof);
-		if(!_data)
-			onOutOfMemoryError();
+		_data = cast(shared void*) cHeap.allocate!T(1, false).ptr;
 		*cast(T*) _data = target;
         rt_attachDisposeEvent(_targetToObj(target), &onTargetDisposed);
 	}
@@ -67,7 +65,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 		if(T t = target())
 		{
 			rt_detachDisposeEvent(_targetToObj(t), &onTargetDisposed);
-			free(cast(void*) _data);
+			cHeap.rawFree(cast(void*) _data);
 		}
 	}
 
@@ -78,7 +76,7 @@ private:
 	{
 		auto data = cast(void*) _data;
 		atomicStore(_data, cast(shared void*) null);
-		free(data);
+		cHeap.rawFree(data);
 	}
 }
 
@@ -163,12 +161,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 	in { assert(initialCapacity); }
 	body
 	{
-		// FIXME: Assume `malloc` returns properly aligned memory.
-		// FIXME: Assume no integer overflow occurs.
-		auto buff = malloc(T.sizeof * initialCapacity);
-		if(!buff)
-			onOutOfMemoryError();
-		_data = cast(shared(void*)*) buff;
+		_data = cast(shared(void*)*) cHeap.allocate!T(initialCapacity, false).ptr;
 		_capacity = initialCapacity;
 	}
 
@@ -218,7 +211,8 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 	{
 		if(_count == _capacity)
 		{
-			// FIXME: Assume no integer overflow occurs.
+			if(_capacity * 2 < _capacity)
+				onOutOfMemoryError();
 			reserve(_capacity * 2);
 		}
 		(cast(T*) _data)[_count++] = target;
@@ -291,12 +285,10 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 		const wasHard = hard;
 		if(!wasHard) makeHard();
 
-		// FIXME: Assume `realloc` returns properly aligned memory.
-		// FIXME: Assume no integer overflow occurs.
 		_capacity = newCapacity;
-		_data = cast(shared(void*)*) realloc(cast(void*) _data, T.sizeof * _capacity);
-		if(!_data)
-			onOutOfMemoryError();
+		T[] arr = buff;
+		cHeap.reallocate(arr, _capacity, false);
+		_data = cast(shared(void*)*) arr.ptr;
 
 		if(!wasHard) makeWeak();
 	}
@@ -345,7 +337,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 		foreach(t; buff) if(t)
 			rt_detachDisposeEvent(_targetToObj(t), &onTargetDisposed);
 
-		free(cast(void*) _data);
+		cHeap.rawFree(cast(void*) _data);
 	}
 
 private:
