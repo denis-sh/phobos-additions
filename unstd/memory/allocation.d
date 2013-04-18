@@ -36,8 +36,9 @@ The following code should compile for any unaligned allocator.
 ----
 A a = void;
 auto p = a.tryUnalignedAllocate(cast(size_t) 1);
+auto q = a.tryUnalignedReallocate(p, cast(size_t) 1, cast(size_t) 1);
 a.unalignedFree(p);
-static assert(is(typeof(p) == void*));
+static assert(is(typeof(p) == void*) && is(typeof(q) == void*));
 ----
 */
 template isUnalignedAllocator(A)
@@ -46,14 +47,18 @@ template isUnalignedAllocator(A)
 	{
 		A a = void;
 		auto p = a.tryUnalignedAllocate(cast(size_t) 1);
+		auto q = a.tryUnalignedReallocate(p, cast(size_t) 1, cast(size_t) 1);
 		a.unalignedFree(p);
-		static assert(is(typeof(p) == void*));
+		static assert(is(typeof(p) == void*) && is(typeof(q) == void*));
 	});
 }
 
 version(unittest) private struct _DummyUnalignedAllocator
 {
 	void* tryUnalignedAllocate(size_t count)
+	{ return null; }
+
+	void* tryUnalignedReallocate(void* ptr, size_t preserveCount, size_t count)
 	{ return null; }
 
 	void unalignedFree(void* ptr)
@@ -107,10 +112,51 @@ body
 }
 
 /**
-Deallocates the memory referenced by $(D arr.ptr) from $(D allocator)
-and sets $(D arr) to null.
+Requests resize of a properly aligned block of memory allocated from
+$(D allocator) or if $(D ptr) is null requests memory allocation like
+$(MREF allocate)/$(MREF tryAllocate). Memory may be moved, but
+$(D array) elements content will stay the same.
 
-If $(D arr.ptr) is null, no action occurs.
+If $(D initialize) is true and $(D array.length < newCount) the memory of
+"rest" elements will be set to $(D T.init).
+
+If reallocation fails $(D array) isn't changed.
+$(D tryReallocate) returns whether reallocation succeeded.
+
+If reallocation fails reallocate will also call $(COREREF exception, onOutOfMemoryError)
+which is expected to throw an $(COREREF exception, OutOfMemoryError).
+
+Preconditions:
+$(D newCount)
+*/
+void reallocate(T, A)(ref A allocator, ref T[] array, size_t newCount, bool initialize = true)
+if(isUnalignedAllocator!A)
+{
+	if(!allocator.tryReallocate!T(array, newCount, initialize))
+		onOutOfMemoryError();
+}
+
+/// ditto
+bool tryReallocate(T, A)(ref A allocator, ref T[] array, size_t newCount, bool initialize = true)
+if(isUnalignedAllocator!A)
+in { assert(newCount); }
+body
+{
+	void* ptr = array.ptr;
+	const preserveCount = array.length;
+	if(!allocator.tryRawReallocate(T.alignof, T.sizeof, ptr, preserveCount, newCount, false))
+		return false;
+	array = (cast(T*) ptr)[0 .. newCount];
+	if(preserveCount < newCount && initialize)
+		setElementsToInitialState(array[preserveCount .. newCount]);
+	return true;
+}
+
+/**
+Deallocates the memory referenced by $(D array.ptr) from $(D allocator)
+and sets $(D array) to null.
+
+If $(D array.ptr) is null, no action occurs.
 */
 void free(T, A)(ref A allocator, ref T[] arr)
 if(isUnalignedAllocator!A)
@@ -129,6 +175,7 @@ unittest
 	assert(!arr);
 	arr = a.tryAllocate!int(1, false);
 	assert(!arr);
+	assert(!a.tryReallocate!int(arr, 1, false));
 	a.free(arr);
 }
 
@@ -176,6 +223,57 @@ body
 }
 
 /**
+Requests resize of an $(D alignment)-byte aligned block of memory allocated
+from $(D allocator) or if $(D ptr) is null requests memory allocation like
+$(MREF rawAllocate)/$(MREF tryRawAllocate). Memory may be moved, but $(D preserveCount) elements
+content will stay the same.
+
+If $(D zeroFill) is true and $(D preserveCount < newCount) the memory of
+"unpreserved" elements will be zero-filled.
+
+If reallocation fails $(D ptr) isn't changed.
+$(D tryRawReallocate) returns whether reallocation succeeded.
+
+If reallocation fails rawReallocate will also call $(COREREF exception, onOutOfMemoryError)
+which is expected to throw an $(COREREF exception, OutOfMemoryError).
+
+Preconditions:
+$(D alignment && elementSize % alignment == 0 && (ptr || !preserveCount) && newCount)
+*/
+void rawReallocate(A)(ref A allocator, size_t alignment, size_t elementSize, ref void* ptr, size_t preserveCount, size_t newCount, bool zeroFill = true)
+if(isUnalignedAllocator!A)
+{
+	if(!allocator.tryRawReallocate(alignment, elementSize, ptr, preserveCount, newCount, zeroFill))
+		onOutOfMemoryError();
+}
+
+/// ditto
+bool tryRawReallocate(A)(ref A allocator, size_t alignment, size_t elementSize, ref void* ptr, size_t preserveCount, size_t newCount, bool zeroFill = true)
+if(isUnalignedAllocator!A)
+in { assert(alignment && elementSize % alignment == 0 && (ptr || !preserveCount) && newCount); }
+body
+{
+	if(!ptr)
+	{
+		ptr = allocator.tryRawAllocate(alignment, elementSize, newCount, zeroFill);
+		return !!ptr;
+	}
+	const padding = alignmentMemoryPadding(alignment);
+	if(auto buffBytes = memoryMult(elementSize, newCount))
+		if(auto totalBytes = memoryAdd(buffBytes, padding))
+			if(auto preserveBuffBytes = memoryMult(elementSize, preserveCount))
+				if(auto preserveTotalBytes = memoryAdd(preserveBuffBytes, padding))
+					if(void* p = allocator.tryUnalignedReallocate(dealignMemory(ptr), preserveTotalBytes, totalBytes))
+					{
+						ptr = alignMemory(alignment, p);
+						if(preserveCount < newCount && zeroFill)
+							memset(ptr + preserveCount, 0, (newCount - preserveCount) * elementSize);
+						return true;
+					}
+	return false;
+}
+
+/**
 Deallocates the memory referenced by $(D ptr) from $(D allocator).
 
 If $(D ptr) is null, no action occurs.
@@ -194,6 +292,7 @@ unittest
 	assert(!p);
 	p = a.tryRawAllocate(4, 4, 1, false);
 	assert(!p);
+	assert(!a.tryRawReallocate(4, 4, p, 0, 1, false));
 	a.rawFree(p);
 }
 
@@ -209,6 +308,11 @@ static nothrow:
 	in { assert(count); }
 	body
 	{ return malloc(count); }
+
+	void* tryUnalignedReallocate(void* ptr, size_t preserveCount, size_t count)
+	in { assert(ptr && count); }
+	body
+	{ return realloc(ptr, count); }
 
 	// Free memory with C's `free`.
 	void unalignedFree(void* ptr)
@@ -242,6 +346,12 @@ unittest
 	auto chars = cHeap.allocate!char(2);
 	scope(exit) cHeap.free(chars);
 	assert(chars == [char.init, char.init]);
+	chars[] = "ab";
+	cHeap.reallocate(chars, 3);
+	assert(chars == ['a', 'b', char.init]);
+	chars = chars[0 .. 1];
+	cHeap.reallocate(chars, 2);
+	assert(chars == ['a', char.init]);
 }
 
 
