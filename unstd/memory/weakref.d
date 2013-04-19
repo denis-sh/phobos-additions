@@ -9,11 +9,11 @@ Authors: Denis Shelomovskij
 module unstd.memory.weakref;
 
 
-import core.stdc.string;
 import core.exception;
 import core.memory;
 import core.atomic;
 
+import unstd.array;
 import unstd.memory.allocation;
 
 
@@ -304,7 +304,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 		for(size_t i = 0; i < count; )
 		{
 			if(!ptr[i])
-				memmove(ptr + i, ptr + i + 1, T.sizeof * (--_count - i));
+				rawCopy!T(ptr + i + 1, ptr + i, --_count - i);
 			else
 				++i;
 		}
