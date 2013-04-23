@@ -297,6 +297,28 @@ unittest
 }
 
 
+version(unittest)
+void testAllocator(A)(ref A a)
+{
+	auto longs = a.allocate!long(3, false);
+	assert(longs.length == 3);
+	a.free(longs);
+	assert(!longs);
+
+	assert(!a.tryAllocate!ubyte(size_t.max));
+
+	auto chars = a.allocate!char(2);
+	scope(exit) a.free(chars);
+	assert(chars == [char.init, char.init]);
+	chars[] = "ab";
+	a.reallocate(chars, 3);
+	assert(chars == ['a', 'b', char.init]);
+	chars = chars[0 .. 1];
+	a.reallocate(chars, 2);
+	assert(chars == ['a', char.init]);
+}
+
+
 struct CHeap
 {
 	@disable this();
@@ -327,31 +349,9 @@ __gshared CHeap _cHeap = void;
 @property ref CHeap cHeap() nothrow
 { return _cHeap; }
 
-///
 unittest
 {
-	static assert(isUnalignedAllocator!(typeof(cHeap)));
-
-	auto longs = cHeap.allocate!long(3, false);
-	assert(longs.length == 3);
-	cHeap.free(longs);
-	assert(!longs);
-
-	assert(!cHeap.tryAllocate!ubyte(size_t.max));
-}
-
-///
-unittest
-{
-	auto chars = cHeap.allocate!char(2);
-	scope(exit) cHeap.free(chars);
-	assert(chars == [char.init, char.init]);
-	chars[] = "ab";
-	cHeap.reallocate(chars, 3);
-	assert(chars == ['a', 'b', char.init]);
-	chars = chars[0 .. 1];
-	cHeap.reallocate(chars, 2);
-	assert(chars == ['a', char.init]);
+	testAllocator(cHeap);
 }
 
 
