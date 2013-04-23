@@ -291,6 +291,9 @@
     <File path="unstd\memory\allocation.d" />
     <File path="unstd\memory\weakref.d" />
    </Folder>
+   <Folder name="windows">
+    <File path="unstd\windows\exception.d" />
+   </Folder>
    <File path="unstd\traits.d" />
    <File path="unstd\generictuple.d" />
    <File path="unstd\templates.d" />
