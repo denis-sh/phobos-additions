@@ -179,20 +179,6 @@ unittest
 
 /**
 Create predicate template returning $(D !template_).
-
-Example:
----
-import std.traits: isPointer;
-
-alias notTemplate!isPointer notPointer;
-static assert( notPointer! int );
-static assert(!notPointer!(int*));
-
-alias notTemplate!notTemplate toBoolTemplate;
-static assert(Inst!(toBoolTemplate!isPointer, int*));
-template get5() { enum get5 = 5; }
-static assert(Inst!(toBoolTemplate!get5) == true);
----
 */
 template notTemplate(alias template_)
 {
@@ -208,7 +194,20 @@ template notTemplate(alias template_)
 	}
 }
 
-// Note: unittest can't be used as an example here as template definitions aren't allowed inside functions.
+///
+unittest
+{
+	import std.traits: isPointer;
+
+	alias notTemplate!isPointer notPointer;
+	static assert( notPointer! int );
+	static assert(!notPointer!(int*));
+
+	alias notTemplate!notTemplate toBoolTemplate;
+	static assert(Inst!(toBoolTemplate!isPointer, int*));
+	template get5() { enum get5 = 5; }
+	static assert(Inst!(toBoolTemplate!get5) == true);
+}
 
 unittest
 {

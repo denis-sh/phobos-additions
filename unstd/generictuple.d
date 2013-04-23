@@ -81,47 +81,35 @@ import unstd.traits;
 import unstd.templates;
 
 
-// Note: unittests often can't be used as examples in this module as template definitions aren't allowed
-// inside functions and there is no way to place such examples before "Analog..." comment.
+// Note: unittests often can't be used as examples in this module as
+// there is no way to place such examples before "Analog..." comment.
 
 /**
 Creates a generic tuple out of a sequence of zero or more types, expressions, or aliases.
-
-Example:
----
-template MyTemplate(T) { alias T[] MyTemplate; }
-
-alias GenericTuple!(int, 5, "a string", MyTemplate) MyTuple;
-
-MyTuple[0] myVar = MyTuple[1]; // same as `int myVar = 5;`
-auto str = MyTuple[2]; // same as `auto str = "a string";`
-
-alias MyTuple[3] Template;
-static assert(is(Template!int == int[]));
----
 */
 template GenericTuple(Args...)
 {
 	alias Args GenericTuple;
 }
 
+///
+unittest
+{
+	template MyTemplate(T) { alias T[] MyTemplate; }
+
+	alias GenericTuple!(int, 5, "a string", MyTemplate) MyTuple;
+
+	MyTuple[0] myVar = MyTuple[1]; // same as `int myVar = 5;`
+	auto str = MyTuple[2]; // same as `auto str = "a string";`
+
+	alias MyTuple[3] Template;
+	static assert(is(Template!int == int[]));
+}
+
 /**
 Creates a packed generic tuple out of a sequence of zero or more types, expressions, or aliases.
 
 Packed version doesn't alias itself to its content, i.e. it doesn't auto-unpack.
-
-Example:
----
-alias PackedGenericTuple!(long, 3) MyPackedTuple;
-
-MyPackedTuple.Tuple[0] myVar = MyPackedTuple.Tuple[1]; // same as `long myVar = 3;`
-
-template MyTemplate(alias packed)
-{ alias packed.Tuple[0][] MyTemplate; }
-
-// It is passed as a single template alias parameter:
-static assert(is(MyTemplate!MyPackedTuple == long[]));
----
 */
 template PackedGenericTuple(Args...)
 {
@@ -165,6 +153,20 @@ template PackedGenericTuple(Args...)
 	{ enum cmp = cmpTuple!(PackedGenericTuple!Args, PackedGenericTuple!A); }
 }
 
+///
+unittest
+{
+	alias PackedGenericTuple!(long, 3) MyPackedTuple;
+
+	MyPackedTuple.Tuple[0] myVar = MyPackedTuple.Tuple[1]; // same as `long myVar = 3;`
+
+	template MyTemplate(alias packed)
+	{ alias packed.Tuple[0][] MyTemplate; }
+
+	// It is passed as a single template alias parameter:
+	static assert(is(MyTemplate!MyPackedTuple == long[]));
+}
+
 unittest
 {
 	static assert(isPackedTuple!(PackedGenericTuple!()));
@@ -177,27 +179,29 @@ unittest
 /**
 Creates a typetuple out of a sequence of zero or more types.
 Same as $(D GenericTuple), except it contains only types.
-
-Example:
----
-alias TypeTuple!(int, double) IntDouble;
-
-int foo(IntDouble args)  // same as `int foo(int, double)`
-{
-   return args[0] + cast(int) args[1];
-}
-
-alias TypeTuple!(int, double, char) IntDoubleChar;
-static assert(is(TypeTuple!(IntDouble, char) == IntDoubleChar));
-static assert(is(IntDoubleChar[0 .. 2] == IntDouble));
-
-
-alias TypeTuple!(int, 5) BadTypeTuple; // error: not a type tuple
----
 */
 template TypeTuple(Types...) if(isTypeTuple!Types)
 {
 	alias Types TypeTuple;
+}
+
+///
+unittest
+{
+	alias TypeTuple!(int, double) IntDouble;
+
+	int foo(IntDouble args)  // same as `int foo(int, double)`
+	{
+		return args[0] + cast(int) args[1];
+	}
+
+	alias TypeTuple!(int, double, char) IntDoubleChar;
+	static assert(is(TypeTuple!(IntDouble, char) == IntDoubleChar));
+	static assert(is(IntDoubleChar[0 .. 2] == IntDouble));
+
+
+	version(none)
+	alias TypeTuple!(int, 5) BadTypeTuple; // error: not a type tuple
 }
 
 unittest
@@ -230,34 +234,36 @@ unittest
 /**
 Creates an expression tuple out of a sequence of zero or more expressions.
 Same as $(D GenericTuple), except it contains only expressions.
-
-Example:
----
-alias expressionTuple!(5, 'c', "str") expressions;
-
-typeof(expressions[0]) myVar = expressions[1]; // same as `int myVar = 5;`
-auto str = expressions[2]; // same as `auto str = "a string";`
-
-void foo(out typeof(expressions[0 .. 2]) args)  // same as `int foo(out int, out char)`
-{
-	args[0] = expressions[0] * 2; // same as `5 * 2`
-	args[1] = expressions[1] + 1; // same as `'c' + 1`
-}
-
-void main()
-{
-	int i;
-	char c;
-	foo(i, c);
-	assert(i == 10 && c == 'd');
-}
-
-alias expressionTuple!(int, 5) badExpressionTuple; // error: not an expression tuple
----
 */
 template expressionTuple(expressions...) if(isExpressionTuple!expressions)
 {
 	alias expressions expressionTuple;
+}
+
+///
+unittest
+{
+	alias expressionTuple!(5, 'c', "str") expressions;
+
+	typeof(expressions[0]) myVar = expressions[1]; // same as `int myVar = 5;`
+	auto str = expressions[2]; // same as `auto str = "a string";`
+
+	void foo(out typeof(expressions[0 .. 2]) args)  // same as `int foo(out int, out char)`
+	{
+		args[0] = expressions[0] * 2; // same as `5 * 2`
+		args[1] = expressions[1] + 1; // same as `'c' + 1`
+	}
+
+	void main()
+	{
+		int i;
+		char c;
+		foo(i, c);
+		assert(i == 10 && c == 'd');
+	}
+
+	version(none)
+	alias expressionTuple!(int, 5) badExpressionTuple; // error: not an expression tuple
 }
 
 unittest
