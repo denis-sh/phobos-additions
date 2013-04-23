@@ -518,7 +518,7 @@ unittest
 	static struct S
 	{
 		int i = 1;
-		this(int _i) { i = _i; }
+		this(int _i) inout { i = _i; }
 		this(const S);
 	}
 
@@ -673,7 +673,7 @@ unittest // copying from same struct
 	static struct S
 	{
 		int i = 1;
-		this(int _i) { i = _i; }
+		this(int _i) inout { i = _i; }
 		this(const S s) { i = 10 + s.i; }
 	}
 
