@@ -47,7 +47,7 @@ import unstd.memory.allocation;
 
 
 /// Returns $(I C string) length. If $(D cstr) is null returns 0.
-size_t getLength(C)(in C* cstr) pure nothrow
+@property size_t length(C)(in C* cstr) pure nothrow
 if(isSomeChar!C)
 {
 	if(!cstr)
@@ -60,10 +60,10 @@ if(isSomeChar!C)
 
 unittest
 {
-	assert(!(cast(char*) null).getLength());
-	assert(!"".ptr.getLength());
+	assert(!(cast(char*) null).length);
+	assert(!"".ptr.length);
 	foreach(s; expressionTuple!("abc", "abc"w, "abc"d))
-		assert(s.ptr.getLength() == 3);
+		assert(s.ptr.length == 3);
 }
 
 
@@ -71,13 +71,13 @@ unittest
 Returns array representing $(I C string) where $(D '\0') character is placed
 after the end of the array. If $(D cstr) is null returns null.
 */
-inout(C)[] asArray(C)(inout C* cstr) pure nothrow
+@property inout(C)[] asArray(C)(inout C* cstr) pure nothrow
 if(isSomeChar!C)
 {
 	if(!cstr)
 		return null;
 
-	return cstr[0 .. cstr.getLength()];
+	return cstr[0 .. cstr.length];
 }
 
 unittest
@@ -85,7 +85,7 @@ unittest
 	foreach(s; expressionTuple!(cast(char[]) null, "", "abc", "abc"w, "abc"d))
 	{
 		auto var = s; // Have to assign to variable first.
-		assert(var.ptr.asArray() is var);
+		assert(var.ptr.asArray is var);
 	}
 }
 
@@ -102,7 +102,7 @@ if(isSomeChar!C)
 		return null;
 	if(!*cstr)
 		return "";
-	const arr = cstr.asArray();
+	const arr = cstr.asArray;
 	static if(is(C == char))
 		return arr.idup;
 	else
@@ -215,7 +215,7 @@ unittest
 
 unittest
 {
-	assert("abc".tempCString().asArray() == "abc");
-	assert("abc"d.tempCString().ptr.asArray() == "abc");
-	assert("abc".tempCString!wchar().buffPtr.asArray() == "abc"w);
+	assert("abc".tempCString().asArray == "abc");
+	assert("abc"d.tempCString().ptr.asArray == "abc");
+	assert("abc".tempCString!wchar().buffPtr.asArray == "abc"w);
 }
