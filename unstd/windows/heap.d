@@ -233,7 +233,7 @@ Can be constructed using the same arguments as $(D Heap).
 
 Underlying $(D Heap) can be accessed via $(D heap) property.
 
-See $(DPREF2 memory, allocation, isUnalignedAllocator).
+See also $(DPREF2 memory, allocation, isUnalignedAllocator).
 */
 struct HeapAllocator
 {

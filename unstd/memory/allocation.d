@@ -27,6 +27,8 @@ import core.exception;
 import unstd.math;
 import unstd.lifetime;
 
+version(Windows) import WinHeap = unstd.windows.heap;
+
 
 /**
 Returns $(D true) if $(D A) is an unaligned allocator.
@@ -316,6 +318,66 @@ void testAllocator(A)(ref A a)
 	chars = chars[0 .. 1];
 	a.reallocate(chars, 2);
 	assert(chars == ['a', char.init]);
+}
+
+
+/**
+An unaligned shared allocator which can be safely used from multiple threads.
+*/
+@property ref heap()
+{
+	version(Windows)
+	{
+		static _heap = WinHeap.HeapAllocator.init;
+		if(!_heap.heap.associated)
+			_heap = WinHeap.HeapAllocator(WinHeap.processHeap.handle, false);
+		return _heap;
+	}
+	else
+	{
+		// FIXME: Assume C heap is thread safe.
+		return cHeap;
+	}
+}
+
+unittest
+{
+	testAllocator(heap);
+}
+
+
+/**
+An unaligned thread local allocator.
+
+It can be faster than $(MREF heap) as it doesn't require a synchronization.
+
+Note:
+Class destructors are called asynchronously from $(I GC) thread on
+collection so $(D threadHeap) in a destructor may reflect different
+thread than the one the class instance was created and used in.
+
+Bugs:
+On non-$(I Windows) systems it behaves just like $(MREF heap)
+i.e. it may lock shared mutex.
+*/
+@property ref threadHeap()
+{
+	version(Windows)
+	{
+		static _threadHeap = WinHeap.HeapAllocator.init;
+		if(!_threadHeap.heap.associated)
+			_threadHeap = WinHeap.HeapAllocator(WinHeap.Heap.CreateOptions.noSerialize);
+		return _threadHeap;
+	}
+	else
+	{
+		return heap;
+	}
+}
+
+unittest
+{
+	testAllocator(threadHeap);
 }
 
 
