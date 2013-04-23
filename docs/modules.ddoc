@@ -12,3 +12,4 @@ MODULES =
 	$(MODULE unstd.memory.weakref)
 	$(MODULE unstd.c.string)
 	$(MODULE unstd.windows.exception)
+	$(MODULE unstd.windows.heap)

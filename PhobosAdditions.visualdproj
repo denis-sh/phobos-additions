@@ -293,6 +293,7 @@
    </Folder>
    <Folder name="windows">
     <File path="unstd\windows\exception.d" />
+    <File path="unstd\windows\heap.d" />
    </Folder>
    <File path="unstd\traits.d" />
    <File path="unstd\generictuple.d" />
