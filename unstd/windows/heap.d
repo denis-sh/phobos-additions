@@ -226,6 +226,42 @@ unittest
 }
 
 
+/**
+An unaligned thread local allocator interface implementation for $(MREF Heap).
+
+Can be constructed using the same arguments as $(D Heap).
+
+Underlying $(D Heap) can be accessed via $(D heap) property.
+
+See $(DPREF2 memory, allocation, isUnalignedAllocator).
+*/
+struct HeapAllocator
+{
+	private Heap _heap;
+
+	@disable this();
+	@disable this(this);
+
+	this(Heap.CreateOptions options, size_t initialSize = 0, size_t maximumSize = 0)
+	{ _heap = Heap(options, initialSize, maximumSize); }
+
+	this(HANDLE heapHandle, bool own = true)
+	{ _heap = Heap(heapHandle, own); }
+
+	@property ref inout(Heap) heap() inout
+	{ return _heap; }
+
+	void* tryUnalignedAllocate(size_t count) nothrow
+	{ return _heap.alloc(count); }
+
+	void* tryUnalignedReallocate(void* ptr, size_t preserveCount, size_t count) nothrow
+	{ return _heap.reAlloc(ptr, count); }
+
+	void unalignedFree(void* ptr)
+	{ _heap.free(ptr); }
+}
+
+
 // WinAPI functions/manifest constants.
 // ----------------------------------------------------------------------------------------------------
 
