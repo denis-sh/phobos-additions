@@ -887,7 +887,6 @@ just like $(D auto c = new C(args);) except given memory is used instead of allo
 void initializeClassInstance(C, Args...)(C chunk, auto ref Args args)
 	if(is(C == class))
 {
-	version(none) // FIXME: isNested isn't implemented for classes yet
 	static assert(!isNested!C, "Can't initialize nested class " ~ C.stringof);
 
 	(cast(byte*) chunk)[0 .. __traits(classInstanceSize, C)] = typeid(Unqual!C).init[];
@@ -916,7 +915,6 @@ unittest
 	{
 		class C { void f() { ++i; } }
 		C c;
-		version(none) // FIXME: disabled as isNested isn't implemented for classes yet
 		static assert(!__traits(compiles, initializeClassInstance(c)));
 	}
 
