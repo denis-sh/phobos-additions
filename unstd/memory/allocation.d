@@ -458,7 +458,7 @@ unittest
 // Helper functions for memory amound manipulation.
 // ----------------------------------------------------------------------------------------------------
 
-size_t memoryAdd(size_t bytes1, size_t bytes2)
+public size_t memoryAdd(size_t bytes1, size_t bytes2)
 in { assert(bytes1 || bytes2); }
 body
 {
@@ -468,7 +468,7 @@ body
 	return bytes;
 }
 
-size_t memoryMult(size_t elementSize, size_t count)
+public size_t memoryMult(size_t elementSize, size_t count)
 in { assert(elementSize && count); }
 body
 {

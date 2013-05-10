@@ -36,9 +36,14 @@ Copyright: Denis Shelomovskij 2013
 License: $(HTTP boost.org/LICENSE_1_0.txt, Boost License 1.0).
 
 Authors: Denis Shelomovskij
+
+Macros:
+COREREF = $(HTTP dlang.org/phobos/core_$1.html#$2, $(D core.$1.$2))
 */
 module unstd.c.string;
 
+
+import core.exception;
 
 import std.traits;
 import unstd.utf;
@@ -113,6 +118,58 @@ unittest
 {
 	foreach(s; expressionTuple!(cast(char[]) null, "", "abc", "abc"w, "abc"d))
 		assert(s.ptr.toString() == s.toUTF8());
+}
+
+
+/**
+Creates $(I C string) allocated using $(D tryAllocate) with copy of $(D str).
+If $(D str) is null returns null.
+
+$(D tryAllocate) is assumed to return properly aligned for $(D To) memory or
+null if allocation fails.
+
+If allocation fails toCString will call $(COREREF exception, onOutOfMemoryError)
+which is expected to throw an $(COREREF exception, OutOfMemoryError).
+*/
+To* toCString(alias tryAllocate, To = char, From)(in From[] str)
+if(isSomeChar!To && isSomeChar!From)
+{
+	if(!str)
+		return null;
+
+	const maxLen = maxLength!To(str);
+	To* cstr = null;
+	if(const totalCount = memoryAdd(maxLen, 1))
+		if(const totalBytes = memoryMult(To.sizeof, totalCount))
+			cstr = cast(To*) tryAllocate(totalBytes);
+	if(!cstr)
+		onOutOfMemoryError();
+	To[] carr = cstr[0 .. maxLen];
+	copyEncoded(str, carr);
+	*(cstr + carr.length) = '\0';
+	return cstr;
+}
+
+///
+unittest
+{
+	import core.stdc.stdlib;
+	import core.stdc.string;
+
+	string str = "abc";
+
+	char* cstr = str.toCString!malloc();
+	scope(exit) free(cstr);
+	assert(strlen(cstr) == 3);
+}
+
+unittest
+{
+	import core.stdc.stdlib;
+
+	assert("abc".toCString!malloc().moveToString!free() == "abc");
+	assert("abc"d.toCString!malloc().moveToString!free() == "abc");
+	assert("abc".toCString!(malloc, wchar)().moveToString!free() == "abc");
 }
 
 
