@@ -242,7 +242,10 @@ if(isSomeChar!To && isSomeChar!From)
 	if(!str)
 		return Res(null);
 
-	To[] arr = cHeap.allocate!To(maxLength!To(str) + 1)[0 .. $ - 1];
+	const totalCount = memoryAdd(maxLength!To(str), 1);
+	if(!totalCount)
+		onOutOfMemoryError();
+	To[] arr = cHeap.allocate!To(totalCount)[0 .. $ - 1];
 	copyEncoded(str, arr);
 	*(arr.ptr + arr.length) = '\0';
 	return Res(arr.ptr);
