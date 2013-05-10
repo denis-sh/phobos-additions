@@ -11,7 +11,7 @@ module unstd.typecons;
 
 public import std.typecons;
 
-import std.string: strip, xformat;
+import std.string: strip, format;
 import std.array: appender;
 import std.traits: isIntegral, IntegralTypeOf;
 import unstd.generictuple: MapTuple;
@@ -77,14 +77,14 @@ struct FlagEnumImpl(string name, Args...)
 
 	FlagEnumImpl opOpAssign(string op)(in FlagEnumImpl y) if (op == "&" || op == "|")
 	{
-		mixin(xformat("val %s= y.val;", op));
+		mixin(format("val %s= y.val;", op));
 		return this;
 	}
 
 	FlagEnumImpl opBinary(string op)(in FlagEnumImpl y) const if (op == "&" || op == "|")
 	{
 		FlagEnumImpl t = this;
-		return mixin(xformat("t %s= y", op));
+		return mixin(format("t %s= y", op));
 	}
 
 	string toString() const
@@ -126,7 +126,7 @@ struct FlagEnumImpl(string name, Args...)
 			}
 			else
 			{
-				assert(!(used & val), "Next bit value already used: " ~ xformat("%s = %s", m.name, val));
+				assert(!(used & val), "Next bit value already used: " ~ format("%s = %s", m.name, val));
 				assert(val, "Can't set next bit, integer overflow: " ~ m.name);
 			}
 
@@ -136,9 +136,9 @@ struct FlagEnumImpl(string name, Args...)
 
 			// With enum: `enum FlagEnumImpl %s = FlagEnumImpl(%s);`
 			// Can't use enum because it is an lvalue, see Issue @@@8915@@@
-			s ~= xformat("static @property FlagEnumImpl %s() { return FlagEnumImpl(%s); }", m.name, val);
+			s ~= format("static @property FlagEnumImpl %s() { return FlagEnumImpl(%s); }", m.name, val);
 		}
-		s ~= xformat("private enum Base m_unused = %s;", ~used);
+		s ~= format("private enum Base m_unused = %s;", ~used);
 		return s;
 	};
 
