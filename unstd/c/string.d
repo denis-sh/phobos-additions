@@ -121,6 +121,38 @@ unittest
 
 
 /**
+Returns whether two $(I C strings) are equal.
+
+Preconditions:
+$(D cstr1 != null && cstr2 != null)
+*/
+@property bool equalCStrings(C)(in C* cstr1, in C* cstr2) pure nothrow
+if(isSomeChar!C)
+in { assert(cstr1 && cstr2); }
+body
+{
+	if(cstr1 == cstr2)
+		return true;
+	for(size_t i = 0; ; ++i)
+	{
+		const c1 = cstr1[i];
+		if(c1 != cstr2[i])
+			return false;
+		if(!c1)
+			return true;
+	}
+}
+
+///
+unittest
+{
+	assert( equalCStrings("ab".ptr, "ab".ptr));
+	assert(!equalCStrings("ab".ptr, "abc".ptr));
+	assert( equalCStrings("ab".ptr, "ab\0cd".ptr));
+}
+
+
+/**
 Returns array representing $(I C string) where $(D '\0') character is placed
 after the end of the array. If $(D cstr) is null returns null.
 */
