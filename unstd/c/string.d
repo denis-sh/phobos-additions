@@ -73,6 +73,54 @@ unittest
 
 
 /**
+Compare $(I C strings) lexicographically.
+
+Preconditions:
+$(D cstr1 != null && cstr2 != null)
+*/
+@property int cmpCStrings(C)(in C* cstr1, in C* cstr2) pure nothrow
+if(isSomeChar!C)
+in { assert(cstr1 && cstr2); }
+body
+{
+	if(cstr1 == cstr2)
+		return 0;
+	for(size_t i = 0; ; ++i)
+	{
+		const c1 = cstr1[i], c2 = cstr2[i];
+		if(!c1 && !c2)
+			return 0;
+		if(c1 != c2)
+			return c1 > c2 ? 1 : -1;
+	}
+}
+
+///
+unittest
+{
+	assert(cmpCStrings("ab".ptr, "ab".ptr) == 0);
+	assert(cmpCStrings("ab".ptr, "abc".ptr) < 0);
+	assert(cmpCStrings("abc".ptr, "ab".ptr) > 0);
+}
+
+unittest
+{
+	string prev = null;
+	foreach(s; ["", "a", "abc", "abcd", "я"])
+	{
+		assert(cmpCStrings(s.ptr, s.ptr) == 0);
+		assert(cmpCStrings(s.ptr, (s ~ '\0').dup.ptr) == 0);
+		if(prev)
+		{
+			assert(cmpCStrings(prev.ptr, s.ptr) == -1);
+			assert(cmpCStrings(s.ptr, prev.ptr) == 1);
+		}
+		prev = s;
+	}
+}
+
+
+/**
 Returns array representing $(I C string) where $(D '\0') character is placed
 after the end of the array. If $(D cstr) is null returns null.
 */
