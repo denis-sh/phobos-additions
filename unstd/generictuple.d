@@ -1151,27 +1151,27 @@ unittest
 //  internal templates from std.typetuple:
 
 private template isSame(ab...)
-    if (ab.length == 2)
+	if (ab.length == 2)
 {
-    static if (__traits(compiles, expectType!(ab[0]),
-                                  expectType!(ab[1])))
-    {
-        enum isSame = is(ab[0] == ab[1]);
-    }
-    else static if (!__traits(compiles, expectType!(ab[0])) &&
-                    !__traits(compiles, expectType!(ab[1])) &&
-                     __traits(compiles, expectBool!(ab[0] == ab[1])))
-    {
-        static if (!__traits(compiles, &ab[0]) ||
-                   !__traits(compiles, &ab[1]))
-            enum isSame = (ab[0] == ab[1]);
-        else
-            enum isSame = __traits(isSame, ab[0], ab[1]);
-    }
-    else
-    {
-        enum isSame = __traits(isSame, ab[0], ab[1]);
-    }
+	static if (__traits(compiles, expectType!(ab[0]),
+	                              expectType!(ab[1])))
+	{
+		enum isSame = is(ab[0] == ab[1]);
+	}
+	else static if (!__traits(compiles, expectType!(ab[0])) &&
+	                !__traits(compiles, expectType!(ab[1])) &&
+	                 __traits(compiles, expectBool!(ab[0] == ab[1])))
+	{
+		static if (!__traits(compiles, &ab[0]) ||
+		           !__traits(compiles, &ab[1]))
+			enum isSame = (ab[0] == ab[1]);
+		else
+			enum isSame = __traits(isSame, ab[0], ab[1]);
+	}
+	else
+	{
+		enum isSame = __traits(isSame, ab[0], ab[1]);
+	}
 }
 private template expectType(T) {}
 private template expectBool(bool b) {}

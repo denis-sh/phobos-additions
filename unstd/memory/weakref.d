@@ -36,7 +36,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 	{
 		_data = cast(shared void*) heap.allocate!T(1, false).ptr;
 		*cast(T*) _data = target;
-        rt_attachDisposeEvent(_targetToObj(target), &onTargetDisposed);
+		rt_attachDisposeEvent(_targetToObj(target), &onTargetDisposed);
 	}
 
 	/// Determines whether referenced object is finalized.
