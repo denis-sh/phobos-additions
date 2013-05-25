@@ -1308,15 +1308,15 @@ unittest
 		~this()     { assert(exited); }
 	}
 
-	auto s0 = new S!0[2]; s0[0].i = s0[1].i = -1;
+	auto s0 = [S!0.init, S!0.init]; s0[0].i = s0[1].i = -1;
 	setElementsToInitialState(s0);
 	assert(s0[0].i == 0 && s0[1].i == 0);
 
-	auto s1 = new S!1[2]; s1[0].i = s1[1].i = -1;
+	auto s1 = [S!1.init, S!1.init]; s1[0].i = s1[1].i = -1;
 	setElementsToInitialState(s1);
 	assert(s1[0].i == 1 && s1[1].i == 1);
 
-	auto sArr = new S!1[2][1][1];
+	auto sArr = [(S!1[2][1]).init];
 	foreach(ref el; sArr[0][0])
 		el.i = -1;
 	setElementsToInitialState(sArr);
