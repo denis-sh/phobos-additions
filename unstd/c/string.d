@@ -288,6 +288,11 @@ valid unless the variable goes out of scope. If returned object isn't
 assigned to a variable it will be destroyed at the end of creating
 primary expression.
 
+Implementation_note:
+For small strings tempCString will use stack allocated buffer,
+for large strings (approximately 1000 characters and more) it will
+allocate temporary one from $(DPREF2 memory, allocation, threadHeap).
+
 Note:
 This function is intended to be used in function call expression (like
 $(D strlen(str.tempCString()))). Incorrect usage of this function may
@@ -310,25 +315,32 @@ if(isSomeChar!To && isSomeChar!From)
 		{ return _ptr; }
 
 		~this()
-		{ threadHeap.rawFree(_ptr); }
+		{ if(_ptr != _buff.ptr) threadHeap.rawFree(_ptr); }
 
 	private:
 		To* _ptr;
-
-		this(To* ptr)
-		{ _ptr = ptr; }
+		To[1024] _buff;
 	}
 
+	// TODO: Don't stack allocate uninitialized array to
+	// not confuse unprecise GC.
+
+	Res res = void;
 	if(!str)
-		return Res(null);
+	{
+		res._ptr = null;
+		return res;
+	}
 
 	const totalCount = memoryAdd(maxLength!To(str), 1);
 	if(!totalCount)
 		onOutOfMemoryError();
-	To[] arr = threadHeap.allocate!To(totalCount)[0 .. $ - 1];
+	To[] arr = totalCount > res._buff.length ?
+		threadHeap.allocate!To(totalCount)[0 .. $ - 1] : res._buff[0 .. totalCount - 1];
 	copyEncoded(str, arr);
 	*(arr.ptr + arr.length) = '\0';
-	return Res(arr.ptr);
+	res._ptr = arr.ptr;
+	return res;
 }
 
 ///
