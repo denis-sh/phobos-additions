@@ -304,6 +304,7 @@
    <File path="unstd\multidimensionalarray.d" />
    <File path="unstd\lifetime.d" />
    <File path="unstd\utf.d" />
+   <File path="unstd\casts.d" />
   </Folder>
   <Folder name="docs">
    <File tool="None" path="docs\index.d" />
