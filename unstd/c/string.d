@@ -310,7 +310,7 @@ if(isSomeChar!To && isSomeChar!From)
 		{ return _ptr; }
 
 		~this()
-		{ cHeap.rawFree(_ptr); }
+		{ threadHeap.rawFree(_ptr); }
 
 	private:
 		To* _ptr;
@@ -325,7 +325,7 @@ if(isSomeChar!To && isSomeChar!From)
 	const totalCount = memoryAdd(maxLength!To(str), 1);
 	if(!totalCount)
 		onOutOfMemoryError();
-	To[] arr = cHeap.allocate!To(totalCount)[0 .. $ - 1];
+	To[] arr = threadHeap.allocate!To(totalCount)[0 .. $ - 1];
 	copyEncoded(str, arr);
 	*(arr.ptr + arr.length) = '\0';
 	return Res(arr.ptr);

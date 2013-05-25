@@ -34,7 +34,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 	in { assert(target); }
 	body
 	{
-		_data = cast(shared void*) cHeap.allocate!T(1, false).ptr;
+		_data = cast(shared void*) heap.allocate!T(1, false).ptr;
 		*cast(T*) _data = target;
         rt_attachDisposeEvent(_targetToObj(target), &onTargetDisposed);
 	}
@@ -65,7 +65,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 		if(T t = target())
 		{
 			rt_detachDisposeEvent(_targetToObj(t), &onTargetDisposed);
-			cHeap.rawFree(cast(void*) _data);
+			heap.rawFree(cast(void*) _data);
 		}
 	}
 
@@ -76,7 +76,7 @@ private:
 	{
 		auto data = cast(void*) _data;
 		atomicStore(_data, cast(shared void*) null);
-		cHeap.rawFree(data);
+		heap.rawFree(data);
 	}
 }
 
@@ -161,7 +161,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 	in { assert(initialCapacity); }
 	body
 	{
-		_data = cast(shared(void*)*) cHeap.allocate!T(initialCapacity, false).ptr;
+		_data = cast(shared(void*)*) heap.allocate!T(initialCapacity, false).ptr;
 		_capacity = initialCapacity;
 	}
 
@@ -287,7 +287,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 
 		_capacity = newCapacity;
 		T[] arr = buff;
-		cHeap.reallocate(arr, _capacity, false);
+		heap.reallocate(arr, _capacity, false);
 		_data = cast(shared(void*)*) arr.ptr;
 
 		if(!wasHard) makeWeak();
@@ -337,7 +337,7 @@ if(is(T == class) || is(T == interface) || is(T == delegate))
 		foreach(t; buff) if(t)
 			rt_detachDisposeEvent(_targetToObj(t), &onTargetDisposed);
 
-		cHeap.rawFree(cast(void*) _data);
+		heap.rawFree(cast(void*) _data);
 	}
 
 private:
