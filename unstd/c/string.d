@@ -302,6 +302,8 @@ See $(RED WARNING) in $(B Examples) section.
 auto tempCString(To = char, From)(in From[] str)
 if(isSomeChar!To && isSomeChar!From)
 {
+	enum useStack = cast(To*) -1;
+
 	static struct Res
 	{
 		@disable this();
@@ -309,13 +311,13 @@ if(isSomeChar!To && isSomeChar!From)
 		alias ptr this;
 
 		@property inout(To)* buffPtr() inout
-		{ return _ptr; }
+		{ return _ptr == useStack ? _buff.ptr : _ptr; }
 
 		@property const(To)* ptr() const
-		{ return _ptr; }
+		{ return buffPtr; }
 
 		~this()
-		{ if(_ptr != _buff.ptr) threadHeap.rawFree(_ptr); }
+		{ if(_ptr != useStack) threadHeap.rawFree(_ptr); }
 
 	private:
 		To* _ptr;
@@ -332,14 +334,17 @@ if(isSomeChar!To && isSomeChar!From)
 		return res;
 	}
 
+	// Note: res._ptr can't point to res._buff as structs are movable.
+
 	const totalCount = memoryAdd(maxLength!To(str), 1);
 	if(!totalCount)
 		onOutOfMemoryError();
-	To[] arr = totalCount > res._buff.length ?
+	const needAllocate = totalCount > res._buff.length;
+	To[] arr = needAllocate ?
 		threadHeap.allocate!To(totalCount)[0 .. $ - 1] : res._buff[0 .. totalCount - 1];
 	copyEncoded(str, arr);
 	*(arr.ptr + arr.length) = '\0';
-	res._ptr = arr.ptr;
+	res._ptr = needAllocate ? arr.ptr : useStack;
 	return res;
 }
 
