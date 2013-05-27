@@ -122,7 +122,7 @@ body
 {
 	static if(is(To == From))
 	{
-		destinition[0 .. source.length] = source[];
+		destinition = destinition[0 .. source.length] = source[];
 	}
 	else
 	{
@@ -151,6 +151,14 @@ unittest
 	wchar[100] wsbuff;
 	auto wstr = wsbuff[];
 	copyEncoded(str, wstr);
+	assert(wstr == "abc-ЭЮЯ"w);
+}
+
+unittest
+{
+	wchar[100] wsbuff;
+	auto wstr = wsbuff[];
+	copyEncoded("abc-ЭЮЯ"w, wstr);
 	assert(wstr == "abc-ЭЮЯ"w);
 }
 
