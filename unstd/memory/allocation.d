@@ -417,6 +417,101 @@ unittest
 }
 
 
+/**
+Creates temporary buffer.
+
+Returned object has two properties: $(D ptr) to access the buffer as $(D T*)
+and $(D arr) to access it as $(D T[]).
+
+The temporary buffer is valid unless returned object is destroyed.
+Thus if returned object is assigned to a variable the temporary is
+valid unless the variable goes out of scope. If returned object isn't
+assigned to a variable it will be destroyed at the end of creating
+primary expression.
+
+If $(D count <= stackCount) or $(D stackCount) isn't specified and
+no more than 1 KiB is requested tempAlloc will use stack allocated
+buffer, for larger requests it will allocate temporary buffer
+from $(MREF threadHeap).
+
+Preconditions:
+$(D count != 0)
+
+Note:
+This function can be used in function call expression (like
+$(D needBuffFunc(tempAlloc(n).ptr))). Incorrect usage of this function may
+lead to memory corruption.
+See $(RED WARNING) in $(D tempCString) $(B Examples) section
+($(D tempCString) is an analog of tempAlloc for $(I C strings)).
+
+See_Also:
+$(DPREF2 c, string, tempCString)
+*/
+auto tempAlloc(T)(size_t count, bool initialize = true)
+{ return tempAlloc!(T, 1024 / T.sizeof)(count, initialize); }
+
+/// ditto
+auto tempAlloc(T, size_t stackCount)(size_t count, bool initialize = true)
+in { assert(count); }
+body
+{
+	static struct Res
+	{
+		@disable this();
+		@disable this(this);
+
+		@property inout(T)* ptr() inout
+		{ return _allocPtr ? _allocPtr : _buff.ptr; }
+
+		@property inout(T)[] arr() inout
+		{ return ptr[0 .. _length]; }
+
+		~this()
+		{ if(_allocPtr) threadHeap.rawFree(_allocPtr); }
+
+	private:
+		T* _allocPtr;
+		size_t _length;
+		T[stackCount] _buff;
+	}
+
+	// TODO: Don't stack allocate uninitialized array to
+	// not confuse unprecise GC.
+
+	// Note: res can't contain a pointer to its _buff as structs are movable.
+
+	Res res = void;
+	const needAllocate = count > res._buff.length;
+	T[] arr = needAllocate ?
+		threadHeap.allocate!T(count, false) : res._buff[0 .. count];
+	if(initialize)
+		setElementsToInitialState(arr);
+	res._allocPtr = needAllocate ? arr.ptr : null;
+	res._length = count;
+	return res;
+}
+
+unittest
+{
+	{
+		auto tmp = tempAlloc!int(2);
+		assert(tmp.ptr == tmp._buff.ptr && tmp.arr == [0, 0]);
+	}
+	{
+		auto tmp = tempAlloc!(int, 0)(2);
+		assert(tmp.ptr != tmp._buff.ptr && tmp.arr == [0, 0]);
+	}
+	assert(tempAlloc!char(2).arr == [0xFF, 0xFF]);
+
+	static struct S
+	{
+		@disable this();
+		@disable this(this);
+	}
+	assert(tempAlloc!S(1).arr == [S.init]);
+}
+
+
 private:
 
 // Helper functions for memory alignment.

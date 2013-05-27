@@ -298,6 +298,9 @@ This function is intended to be used in function call expression (like
 $(D strlen(str.tempCString()))). Incorrect usage of this function may
 lead to memory corruption.
 See $(RED WARNING) in $(B Examples) section.
+
+See_Also:
+$(DPREF2 memory, allocation, tempAlloc)
 */
 auto tempCString(To = char, From)(in From[] str)
 if(isSomeChar!To && isSomeChar!From)
