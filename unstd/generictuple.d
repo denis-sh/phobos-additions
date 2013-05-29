@@ -8,8 +8,6 @@ $(UL
 	$(LI $(STDREF typetuple, NoDuplicates))
 	$(LI $(STDREF typetuple, MostDerived))
 	$(LI $(STDREF typetuple, DerivedToFront))
-	$(LI $(STDREF typetuple, allSatisfy))
-	$(LI $(STDREF typetuple, anySatisfy))
 )
 The following symbols from $(D std.typetuple) are superseded:
 $(UL
@@ -17,6 +15,8 @@ $(UL
 	$(LI $(STDREF typetuple, EraseAll), use $(MREF FilterTuple) instead)
 	$(LI $(STDREF typetuple, ReplaceAll), use $(MREF MapTuple) instead)
 	$(LI $(STDREF typetuple, staticMap), use $(MREF MapTuple) instead)
+	$(LI $(STDREF typetuple, anySatisfy), use $(MREF anyTuple) instead)
+	$(LI $(STDREF typetuple, allSatisfy), use $(MREF allTuple) instead)
 )
 The following symbols from $(D std.typetuple) are considered useless:
 $(UL
@@ -25,6 +25,12 @@ $(UL
 )
 $(BOOKTABLE Generic tuple manipulation functions,
 	$(TR $(TH Category) $(TH Functions))
+	$(TR $(TD Searching)
+		$(TD
+			$(BTREF anyTuple)
+			$(BTREF allTuple)
+		)
+	)
 	$(TR $(TD Creation)
 		$(TD
 			$(BTREF RetroTuple)
@@ -72,8 +78,7 @@ module unstd.generictuple;
 public import std.typetuple:
 	staticIndexOf,
 	NoDuplicates,
-	MostDerived, DerivedToFront,
-	allSatisfy, anySatisfy;
+	MostDerived, DerivedToFront;
 
 import std.ascii: isDigit;
 import std.algorithm: min, max, StoppingPolicy;
@@ -371,7 +376,7 @@ static assert(chain == expressionTuple!(1, 2, 3, 4, 5));
 Analog of $(STDREF range, chain) for generic tuples.
 */
 template ChainTuple(packedTuples...)
-	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
+	if(packedTuples.length && allTuple!(isPackedTuple, packedTuples))
 {
 	// Can't use UnaryTemplate!`A.Tuple` because of Issue 9017
 	template Func(alias packedTuple) { alias packedTuple.Tuple Func; }
@@ -399,7 +404,7 @@ static assert(roundRobin == expressionTuple!(1, 10, 2, 20, 3, 30, 40));
 Analog of $(STDREF range, roundRobin) for generic tuples.
 */
 template RoundRobinTuple(packedTuples...)
-	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples))
+	if(packedTuples.length && allTuple!(isPackedTuple, packedTuples))
 {
 	struct _Empty;
 	template pred(alias A) { enum pred = !is(A == _Empty); }
@@ -525,18 +530,18 @@ template ZipTuple(StoppingPolicy stoppingPolicy, packedTuples...)
 
 /// ditto
 template ZipTuple(packedTuples...)
-	if(packedTuples.length && allSatisfy!(isPackedTuple, packedTuples)) // probably a compiler @@@BUG@@@ workaround
+	if(packedTuples.length && allTuple!(isPackedTuple, packedTuples)) // probably a compiler @@@BUG@@@ workaround
 {
 	alias ZipTuple!(StoppingPolicy.shortest, packedTuples) ZipTuple;
 }
 
 private template ZipTupleImpl(StoppingPolicy stoppingPolicy, alias default_, packedTuples...)
-	if(packedTuples.length && allSatisfy!(isPackedTuple, default_, packedTuples) && default_.length == 1)
+	if(packedTuples.length && allTuple!(isPackedTuple, default_, packedTuples) && default_.length == 1)
 {
 	alias MapTuple!(`A.length`, packedTuples) lengths;
 
 	static if(stoppingPolicy == StoppingPolicy.requireSameLength)
-		static assert(allSatisfy!(BindTemplate!(isSame, lengths[0], arg!0), lengths),
+		static assert(allTuple!(BindTemplate!(isSame, lengths[0], arg!0), lengths),
 			"Inequal-length packed tuples passed to ZipTuple(StoppingPolicy.requireSameLength, ...)");
 
 	template Impl(size_t n, packedTuples...)
@@ -842,7 +847,7 @@ template equalTuple(alias pred, alias packedTuple1, alias packedTuple2)
 	}
 
 	static if(packedTuple1.length == packedTuple2.length)
-		enum equalTuple = allSatisfy!(instForPackedTuple, ZipTuple!(packedTuple1, packedTuple2));
+		enum equalTuple = allTuple!(instForPackedTuple, ZipTuple!(packedTuple1, packedTuple2));
 	else
 		enum equalTuple = false;
 }
@@ -997,7 +1002,7 @@ static assert(PackedGenericTuple!(JoinTuple!(sep, part1, part2)).equals!(void, i
 Analog of $(STDREF array, join) and $(STDREF algorithm, joiner) for generic tuples.
 */
 template JoinTuple(alias packedSeparatorTuple, packedTuples...)
-	if(allSatisfy!(isPackedTuple, packedSeparatorTuple, packedTuples))
+	if(allTuple!(isPackedTuple, packedSeparatorTuple, packedTuples))
 {
 	template Prefix(alias packedTuple)
 	{ alias ChainTuple!(packedSeparatorTuple, packedTuple) Prefix; }
@@ -1146,6 +1151,81 @@ unittest
 	alias expressionTuple!(1, 2, 2, 2, 3, 3, 4, 1, 1) expr;
 	static assert(UniqTuple!(`a == b`, expr) == expressionTuple!(1, 2, 3, 4, 1));
 	static assert(UniqTuple!(`a != b`, expr) == expressionTuple!(1, 1, 1));
+}
+
+
+/**
+Detect whether a generic tuple $(D A) contains an element
+satisfying the predicate $(D pred).
+
+Example:
+----
+static assert(!anyTuple!(`true`));
+static assert( anyTuple!(`isIntegral!T`, float, int));
+static assert(!anyTuple!(`a < 2`, 2, 3));
+----
+
+Analog of $(STDREF algorithm, any) for generic tuples
+except $(D pred) must be explicitly specified.
+*/
+template anyTuple(alias pred, A...)
+{
+	alias unaryPred!pred predTemplate;
+
+	static if(A.length == 0)
+		enum anyTuple = false;
+	else static if(!predTemplate!(A[0]))
+		enum anyTuple = anyTuple!(pred, A[1 .. $]);
+	else
+		enum anyTuple = true;
+}
+
+unittest
+{
+	static assert(!anyTuple!(`true`));
+	static assert( anyTuple!(`isIntegral!T`, float, int));
+	static assert( anyTuple!(`a < 2`, 1, 2));
+	static assert(!anyTuple!(`a < 2`, 2, 3));
+}
+
+
+/**
+Detect whether all elements of a generic tuple $(D A)
+satisfy the predicate $(D pred).
+
+Returns true for an empty tuple.
+
+Example:
+----
+static assert( allTuple!(`false`));
+static assert( allTuple!(`isIntegral!T`, byte, int));
+static assert(!allTuple!("a & 1", 1, 2, 3));
+----
+
+Analog of $(STDREF algorithm, all) for generic tuples
+except $(D pred) must be explicitly specified.
+*/
+template allTuple(alias pred, A...)
+{
+	alias unaryPred!pred predTemplate;
+
+	static if(A.length == 0)
+		enum allTuple = true;
+	else static if(predTemplate!(A[0]))
+		enum allTuple = allTuple!(pred, A[1 .. $]);
+	else
+		enum allTuple = false;
+}
+
+unittest
+{
+	static assert( allTuple!(`false`));
+	static assert(!allTuple!(`false`, 1));
+	static assert( allTuple!(`isIntegral!T`, byte, int));
+	static assert( allTuple!(`a < 2`, -1, 1));
+	static assert(!allTuple!(`a < 2`, -1, 2));
+    static assert( allTuple!("a & 1", 1, 3, 5, 7, 9));
+    static assert(!allTuple!("a & 1", 1, 2, 3, 5, 7, 9));
 }
 
 //  internal templates from std.typetuple:

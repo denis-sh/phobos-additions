@@ -19,7 +19,7 @@ import core.exception;
 import std.exception;
 import std.array;
 import unstd.traits;
-import unstd.generictuple; //for RepeatType
+import unstd.generictuple; // for RepeatType, allTuple
 import std.typecons;
 import std.conv;
 import std.string;
@@ -546,7 +546,7 @@ $(TABLE
 	}
 
 	/// ditto
-	auto opIndex(A...)(A args) if(args.length == n && allSatisfy!(isROrSize, A) && RCount!A)
+	auto opIndex(A...)(A args) if(args.length == n && allTuple!(isROrSize, A) && RCount!A)
 	{
 		alias MultidimensionalArray!(T, RCount!A) ResultType;
 
@@ -596,7 +596,7 @@ $(TABLE
 	}
 
 	/// ditto
-	auto opIndexAssign(U, A...)(U value, A args) if(args.length == n && allSatisfy!(isROrSize, A))
+	auto opIndexAssign(U, A...)(U value, A args) if(args.length == n && allTuple!(isROrSize, A))
 	{
 		static if(RCount!A)
 			return this[args][] = value;

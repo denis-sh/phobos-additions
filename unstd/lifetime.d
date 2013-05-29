@@ -646,7 +646,7 @@ void constructFromLiteral(S, Args...)(S* chunk, auto ref Args args)
 		// each argument (i.e. each field is initializable from the
 		// corresponding argument).
 
-		static assert(!anySatisfy!(hasNested, FieldTypeTuple!S[Args.length .. $]),
+		static assert(!anyTuple!(hasNested, FieldTypeTuple!S[Args.length .. $]),
 			"To initialize struct "  ~ S.stringof ~ " using static initialization" ~
 			" you must explicitly pass arguments for all fields with context pointers.");
 
@@ -901,7 +901,7 @@ void initializeClassInstance(C, Args...)(C chunk, auto ref Args args)
 	}
 	else
 	{
-		static assert(!anySatisfy!(hasNested, FieldTypeTuple!C),
+		static assert(!anyTuple!(hasNested, FieldTypeTuple!C),
 			"Can't initialize class " ~ C.stringof
 			~ " without constructor but with nested fields.");
 	}

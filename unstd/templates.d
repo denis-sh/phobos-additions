@@ -251,12 +251,12 @@ unittest
 	import std.traits: isIntegral, isSigned;
 
 	alias andTemplates!(isIntegral, isSigned) isSignedIntegral;
-	static assert( allSatisfy!(isSignedIntegral,  int,  short, long));
-	static assert(!anySatisfy!(isSignedIntegral, uint, ushort, ulong));
+	static assert( allTuple!(isSignedIntegral,  int,  short, long));
+	static assert(!anyTuple!(isSignedIntegral, uint, ushort, ulong));
 
 	alias andTemplates!(isSignedIntegral, unaryPred!`is(T == short)`) isShort;
 	static assert( isShort!short);
-	static assert(!anySatisfy!(isShort, int, long, uint, ushort, ulong));
+	static assert(!anyTuple!(isShort, int, long, uint, ushort, ulong));
 }
 
 unittest
@@ -295,11 +295,11 @@ unittest
 	import std.traits: isIntegral, isFloatingPoint;
 
 	alias orTemplates!(isIntegral, isFloatingPoint) isIntegralOrFloating;
-	static assert( allSatisfy!(isIntegralOrFloating, int,  short, long, float, double));
-	static assert(!anySatisfy!(isIntegralOrFloating, bool, char));
+	static assert( allTuple!(isIntegralOrFloating, int,  short, long, float, double));
+	static assert(!anyTuple!(isIntegralOrFloating, bool, char));
 
 	alias orTemplates!(isIntegralOrFloating, unaryPred!`is(T == char)`) isIntegralOrFloatingOrChar;
-	static assert( allSatisfy!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
+	static assert( allTuple!(isIntegralOrFloatingOrChar, int, short, long, float, double, char));
 	static assert(!isIntegralOrFloatingOrChar!bool);
 }
 
