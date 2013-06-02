@@ -172,11 +172,18 @@ private void rawCopyCTImpl(T)(const ref T src, ref T dest) pure nothrow
 
 private void rawCopyCTImpl(T)(in T* src, T* dest, size_t count) pure nothrow
 {
-	if(count == 1) // As we can't slice non-arrays in CTFE
-		rawCopyCTImpl(*src, *dest);
-	else if(count != 0)
-		foreach(i, ref el; src[0 .. count])
-			rawCopyCTImpl(el, dest[i]);
+	static if(is(T == void))
+	{
+		rawCopyCTImpl(cast(ubyte*) src, cast(ubyte*) dest, count);
+	}
+	else
+	{
+		if(count == 1) // As we can't slice non-arrays in CTFE
+			rawCopyCTImpl(*src, *dest);
+		else if(count != 0)
+			foreach(i, ref el; src[0 .. count])
+				rawCopyCTImpl(el, dest[i]);
+	}
 }
 
 unittest
@@ -243,6 +250,12 @@ unittest
 			src4.s3.n = 1; // To not call postblit
 			f(src4, dest4);
 			assert(dest4.s3.n == 1);
+		}
+		{
+			ubyte[2] srcArr = [1, 2], destArr;
+			f!void(srcArr.ptr, destArr.ptr, 2);
+			// `destArr` is not changed in CT because of dmd @@@BUG10243@@@
+			if(!__ctfe) assert(destArr == [1, 2]);
 		}
 	}
 	test!rawCopyCTImpl(); // Test CT variant at RT
