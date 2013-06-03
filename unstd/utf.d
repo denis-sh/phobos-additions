@@ -354,3 +354,77 @@ unittest
 		assert(copyEncoded(strD, sbuff[0 .. str.length]) == str);
 	}
 }
+
+
+/**
+Copies as much text from the beginning of $(D source) to $(D buff) as latter can hold
+performing conversion to different unicode transformation format if needed.
+
+$(D source) will be set to its uncopied slice.
+
+Returns:
+Slice of the provided buffer $(D buff) with a (parital) copy of $(D source).
+
+Examples:
+---
+import std.array: empty;
+
+const(char)[] buff = ...;
+wchar[n] wbuff = void;
+while(!buff.empty)
+	f(buff.copySomeEncoded(wbuff)); // `f` accepts at most `n` wide characters
+---
+*/
+To[] copySomeEncoded(To, From)(ref inout(From)[] source, To[] buff) @trusted pure
+if(isSomeChar!To && isSomeChar!From)
+{
+	static if(is(Unqual!To == Unqual!From))
+	{
+		const length = source.length <= buff.length ? source.length : source.adjustBack(buff.length);
+		auto res = buff[0 .. length] = source[0 .. length];
+		source = source[length .. $];
+		return res;
+	}
+	else
+	{
+		To* ptr = buff.ptr;
+		const To* last = ptr + buff.length;
+		size_t end = -1;
+		foreach(i, dchar dc; source)
+		{
+			if(ptr + codeLength!To(dc) > last)
+			{
+				end = i;
+				break;
+			}
+
+			static if(is(Unqual!To == dchar))
+				*ptr++ = dc;
+			else
+				// Warning: assume `encode` uses only needed bytes.
+				ptr += encode(*(cast(To[4 / To.sizeof]*) ptr), dc);
+		}
+		source = source[end == -1 ? $ : end .. $];
+		return buff[0 .. ptr - buff.ptr];
+	}
+}
+
+unittest
+{
+	import std.array: empty;
+	import unstd.generictuple;
+
+	foreach(str; expressionTuple!("abcdef", "zэюяzzэюяzzэюя", "z\U00010143z"))
+		foreach(f; GenericTuple!(s => s, toUTF16, toUTF32))
+		{
+			foreach(n; expressionTuple!(2, 3, 4, 10))
+			{
+				auto buff = f(str);
+				wchar[] allWchars;
+				wchar[n] wbuff = void;
+				while(!buff.empty)
+					allWchars ~= buff.copySomeEncoded(wbuff[]);
+				assert(allWchars == str.toUTF16());
+			}
+		}
+}
