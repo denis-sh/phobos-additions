@@ -283,33 +283,33 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="PhobosAdditions">
+  <Folder name="docs">
+   <File tool="None" path="docs\index.d" />
+   <File tool="None" path="docs\modules.ddoc" />
+  </Folder>
   <Folder name="unstd">
    <Folder name="c">
     <File path="unstd\c\string.d" />
    </Folder>
    <Folder name="memory">
-    <File path="unstd\memory\misc.d" />
     <File path="unstd\memory\allocation.d" />
+    <File path="unstd\memory\misc.d" />
     <File path="unstd\memory\weakref.d" />
    </Folder>
    <Folder name="windows">
     <File path="unstd\windows\exception.d" />
     <File path="unstd\windows\heap.d" />
    </Folder>
-   <File path="unstd\traits.d" />
-   <File path="unstd\generictuple.d" />
-   <File path="unstd\templates.d" />
-   <File path="unstd\typecons.d" />
-   <File path="unstd\math.d" />
    <File path="unstd\array.d" />
-   <File path="unstd\multidimensionalarray.d" />
-   <File path="unstd\lifetime.d" />
-   <File path="unstd\utf.d" />
    <File path="unstd\casts.d" />
-  </Folder>
-  <Folder name="docs">
-   <File tool="None" path="docs\index.d" />
-   <File tool="None" path="docs\modules.ddoc" />
+   <File path="unstd\generictuple.d" />
+   <File path="unstd\lifetime.d" />
+   <File path="unstd\math.d" />
+   <File path="unstd\multidimensionalarray.d" />
+   <File path="unstd\templates.d" />
+   <File path="unstd\traits.d" />
+   <File path="unstd\typecons.d" />
+   <File path="unstd\utf.d" />
   </Folder>
  </Folder>
 </DProject>
