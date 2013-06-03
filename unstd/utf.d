@@ -16,6 +16,133 @@ import std.traits;
 public import std.utf;
 
 
+/// Detect whether $(D c) is the first code unit in a sequence.
+bool isSequenceStart(C)(in C c)
+if(isSomeChar!C)
+{
+	static if(is(C : char))
+		return (c & 0xC0) != 0x80; // Not a UTF-8 continuation byte
+	else static if(is(C : wchar))
+		return !(c >= 0xDC00 && c < 0xE000); // Not a UTF-16 trail surrogate
+	else static if(is(C : dchar))
+		return true; // Always true
+	else
+		static assert(0);
+}
+
+unittest
+{
+	import unstd.generictuple;
+
+	foreach(str; expressionTuple!("a", "a"w, "a"d, "д", "д"w, "д"d, "\U00010143"w, "\U00010143"d))
+		assert(isSequenceStart(str[0]));
+
+	assert(!isSequenceStart("д"[1]));
+	assert(!isSequenceStart("\U00010143"w[1]));
+}
+
+
+/**
+Adjust $(D idx) to point at the start of a UTF sequence or
+at the end of $(D str).
+*/
+size_t adjustBack(C)(in C[] str, size_t idx)
+if(isSomeChar!C)
+in { assert(idx <= str.length); }
+body
+{
+	static if(is(C : char))
+	{
+		if(idx != str.length)
+		{
+			foreach(_; 0 .. 4 - 1) // Don't expect 5 and 6 byte combinations
+			{
+				if(isSequenceStart(str[idx]))
+					return idx;
+				assert(idx, "String starts from UTF-8 continuation byte.");
+				--idx;
+			}
+			assert(isSequenceStart(str[idx]), "UTF-8 sequence length exceeds 4 bytes.");
+		}
+	}
+	else static if(is(C : wchar))
+	{
+		if(idx != str.length && !isSequenceStart(str[idx]))
+		{
+			assert(idx, "String starts from UTF-16 trail surrogate.");
+			--idx;
+			assert(isSequenceStart(str[idx]), "UTF-16 lead surrogate expected before trail surrogate.");
+		}
+	}
+	else
+	{
+		static assert(is(C : dchar));
+	}
+
+	return idx;
+}
+
+unittest
+{
+	assert("a".adjustBack(0) == 0);
+	assert("a".adjustBack(1) == 1);
+	assert("ab".adjustBack(1) == 1);
+	assert("д".adjustBack(1) == 0);
+	assert("дb".adjustBack(2) == 2);
+	foreach(i; 0 .. 4)
+		assert("\U00010143".adjustBack(i) == 0);
+	assert("\U00010143".adjustBack(4) == 4);
+	assert("\U00010143"w.adjustBack(1) == 0);
+}
+
+/// ditto
+size_t adjustForward(C)(in C[] str, size_t idx)
+in { assert(idx <= str.length); }
+body
+{
+	static if(is(C : char))
+	{
+		if(idx != str.length)
+		{
+			foreach(_; 0 .. 4 - 1) // Don't expect 5 and 6 byte combinations
+			{
+				if(idx == str.length || isSequenceStart(str[idx]))
+					return idx;
+				++idx;
+			}
+			assert(idx == str.length || isSequenceStart(str[idx]), "UTF-8 sequence length exceeds 4 bytes.");
+		}
+	}
+	else static if(is(C : wchar))
+	{
+		if(idx != str.length && !isSequenceStart(str[idx]))
+		{
+			++idx;
+			assert(idx == str.length || isSequenceStart(str[idx]), "UTF-16 lead surrogate expected after trail surrogate.");
+		}
+	}
+	else
+	{
+		static assert(is(C : dchar));
+	}
+
+	return idx;
+}
+
+unittest
+{
+	assert("a".adjustForward(0) == 0);
+	assert("a".adjustForward(1) == 1);
+	assert("ab".adjustForward(1) == 1);
+	assert("д".adjustForward(1) == 2);
+	assert("дb".adjustForward(2) == 2);
+	assert("\U00010143".adjustForward(0) == 0);
+	foreach(i; 1 .. 5)
+		assert("\U00010143".adjustForward(i) == 4);
+	assert("\U00010143"w.adjustForward(1) == 2);
+}
+
+
 /**
 Returns minimum/maximum possible length of string conversion
 to another Unicode Transformation Format result.
