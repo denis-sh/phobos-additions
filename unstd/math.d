@@ -167,25 +167,25 @@ bool isAligned(uint alignment)(uint n) if(isPowerOf2(alignment))
 
 unittest
 {
-	static assert(!__traits(compiles, alignDown!0(1)));
-	static assert(!__traits(compiles, alignUp!  0(1)));
-	static assert(!__traits(compiles, isAligned!0(1)));
-	static assert(!__traits(compiles, { enum e = alignDown(0, 1); }));
-	static assert(!__traits(compiles, { enum e = alignUp  (0, 1); }));
-	static assert(!__traits(compiles, { enum e = isAligned(0, 1); }));
+	import unstd.generictuple;
 
-	import unstd.generictuple: iotaTuple;
+	foreach(f; GenericTuple!(alignDown, alignUp, isAligned))
+	{
+		static assert(!__traits(compiles, f!0(1)));
+		static assert(!__traits(compiles, { enum e = f(0, 1); }));
+	}
+
 	foreach(n; iotaTuple!5)
 	{
-		static assert(alignDown!1(n) == n);
-		static assert(alignUp!1(n) == n);
-		static assert(alignDown(1, n) == n);
-		static assert(alignUp(1, n) == n);
+		foreach(f; GenericTuple!(alignDown, alignUp))
+		{
+			static assert(f!1(n) == n);
+			static assert(f(1, n) == n);
+		}
 		static assert(isAligned!1(n));
 		static assert(isAligned(1, n));
 	}
 
-	import unstd.generictuple: expressionTuple;
 	foreach(alignment; expressionTuple!(2, 4, 8, 16))
 	{
 		static assert(!__traits(compiles, alignDown!(alignment + 1)(1)));
