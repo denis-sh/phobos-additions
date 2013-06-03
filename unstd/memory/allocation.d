@@ -26,6 +26,7 @@ import core.exception;
 
 import unstd.math;
 import unstd.lifetime;
+import unstd.memory.misc;
 
 version(Windows) import WinHeap = unstd.windows.heap;
 
@@ -455,15 +456,17 @@ auto tempAlloc(T, size_t stackCount)(size_t count, bool initialize = true)
 in { assert(count); }
 body
 {
+	static assert(memoryMult(T.sizeof, stackCount));
+
 	static struct Res
 	{
 		@disable this();
 		@disable this(this);
 
-		@property inout(T)* ptr() inout
-		{ return _allocPtr ? _allocPtr : _buff.ptr; }
+		@property T* ptr()
+		{ return _allocPtr ? _allocPtr : cast(T*) _buff.ptr; }
 
-		@property inout(T)[] arr() inout
+		@property T[] arr()
 		{ return ptr[0 .. _length]; }
 
 		~this()
@@ -472,7 +475,12 @@ body
 	private:
 		T* _allocPtr;
 		size_t _length;
-		T[stackCount] _buff;
+		// Note: can't use T[stackCount] for types with alignment requirements as there is
+		// no guarantee alignment of stack-allocated variables. See dmd @@@BUG2278@@@.
+		static if(T.alignof != 1) 
+			RawAutoalignedBuff!(T.alignof, T.sizeof * stackCount) _buff;
+		else
+			T[stackCount] _buff;
 	}
 
 	// TODO: Don't stack allocate uninitialized array to
@@ -481,12 +489,21 @@ body
 	// Note: res can't contain a pointer to its _buff as structs are movable.
 
 	Res res = void;
-	const needAllocate = count > res._buff.length;
-	T[] arr = needAllocate ?
-		threadHeap.allocate!T(count, false) : res._buff[0 .. count];
-	if(initialize)
-		setElementsToInitialState(arr);
-	res._allocPtr = needAllocate ? arr.ptr : null;
+	const needAllocate = count > stackCount;
+	static if(T.alignof != 1) if(!needAllocate)
+		res._buff.initialize(T.sizeof * count, false);
+	if(needAllocate || initialize)
+	{
+		T[] arr = needAllocate ?
+			threadHeap.allocate!T(count, false) : (cast(T*) res._buff.ptr)[0 .. count];
+		if(initialize)
+			setElementsToInitialState(arr);
+		res._allocPtr = needAllocate ? arr.ptr : null;
+	}
+	else
+	{
+		res._allocPtr = null;
+	}
 	res._length = count;
 	return res;
 }
