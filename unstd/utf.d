@@ -18,14 +18,58 @@ public import std.utf;
 
 @safe:
 
+/// Detect whether $(D c) is a UTF-8 continuation byte.
+bool isContinuationByte(in char c) pure nothrow
+{
+	return (c & 0xC0) == 0x80;
+}
+
+/// Detect whether $(D c) is a UTF-16 lead/trail surrogate or not a surrogate.
+bool isLeadSurrogate(in wchar c) pure nothrow
+{
+	return c >= 0xD800 && c < 0xDC00;
+}
+
+/// ditto
+bool isTrailSurrogate(in wchar c) pure nothrow
+{
+	return c >= 0xDC00 && c < 0xE000;
+}
+
+/// ditto
+bool isValidBMPCharacter(in wchar c) pure nothrow
+{
+	return c < 0xD800 || c >= 0xE000;
+}
+
+unittest
+{
+	import unstd.generictuple;
+
+	foreach(c; "zд"w)
+	{
+		assert(!isLeadSurrogate(c));
+		assert(!isTrailSurrogate(c));
+		assert( isValidBMPCharacter(c));
+	}
+
+	foreach(i, c; "\U00010143"w)
+	{
+		assert(isLeadSurrogate(c) == !i);
+		assert(isTrailSurrogate(c) == i);
+		assert(!isValidBMPCharacter(c));
+	}
+}
+
+
 /// Detect whether $(D c) is the first code unit in a sequence.
 bool isSequenceStart(C)(in C c) pure nothrow
 if(isSomeChar!C)
 {
 	static if(is(C : char))
-		return (c & 0xC0) != 0x80; // Not a UTF-8 continuation byte
+		return !isContinuationByte(c);
 	else static if(is(C : wchar))
-		return !(c >= 0xDC00 && c < 0xE000); // Not a UTF-16 trail surrogate
+		return !isTrailSurrogate(c);
 	else static if(is(C : dchar))
 		return true; // Always true
 	else
@@ -59,21 +103,21 @@ body
 		{
 			foreach(_; 0 .. 4 - 1) // Don't expect 5 and 6 byte combinations
 			{
-				if(isSequenceStart(str[idx]))
+				if(!isContinuationByte(str[idx]))
 					return idx;
 				assert(idx, "String starts from UTF-8 continuation byte.");
 				--idx;
 			}
-			assert(isSequenceStart(str[idx]), "UTF-8 sequence length exceeds 4 bytes.");
+			assert(!isContinuationByte(str[idx]), "UTF-8 sequence length exceeds 4 bytes.");
 		}
 	}
 	else static if(is(C : wchar))
 	{
-		if(idx != str.length && !isSequenceStart(str[idx]))
+		if(idx != str.length && isTrailSurrogate(str[idx]))
 		{
 			assert(idx, "String starts from UTF-16 trail surrogate.");
 			--idx;
-			assert(isSequenceStart(str[idx]), "UTF-16 lead surrogate expected before trail surrogate.");
+			assert(isLeadSurrogate(str[idx]), "UTF-16 lead surrogate expected before trail surrogate.");
 		}
 	}
 	else
@@ -108,19 +152,19 @@ body
 		{
 			foreach(_; 0 .. 4 - 1) // Don't expect 5 and 6 byte combinations
 			{
-				if(idx == str.length || isSequenceStart(str[idx]))
+				if(idx == str.length || !isContinuationByte(str[idx]))
 					return idx;
 				++idx;
 			}
-			assert(idx == str.length || isSequenceStart(str[idx]), "UTF-8 sequence length exceeds 4 bytes.");
+			assert(idx == str.length || !isContinuationByte(str[idx]), "UTF-8 sequence length exceeds 4 bytes.");
 		}
 	}
 	else static if(is(C : wchar))
 	{
-		if(idx != str.length && !isSequenceStart(str[idx]))
+		if(idx != str.length && isTrailSurrogate(str[idx]))
 		{
 			++idx;
-			assert(idx == str.length || isSequenceStart(str[idx]), "UTF-16 lead surrogate expected after trail surrogate.");
+			assert(idx == str.length || isLeadSurrogate(str[idx]), "UTF-16 lead surrogate expected after trail surrogate.");
 		}
 	}
 	else
