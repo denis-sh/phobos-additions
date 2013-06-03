@@ -46,12 +46,11 @@ struct RawAutoalignedBuff(size_t alignment, size_t maxBytes)
 	in { assert(bytes <= maxBytes); }
 	body
 	{
-		void* alignedPtr = cast(void*) alignUp!alignment(cast(size_t) _data.ptr);
 		version(assert) *cast(size_t*) &_data[$ - size_t.sizeof * 3] = _stamp;
-		*cast(size_t*) &_data[$ - size_t.sizeof * 2] = alignedPtr - _data.ptr;
+		*cast(size_t*) &_data[$ - size_t.sizeof * 2] = -1;
 		*cast(size_t*) &_data[$ - size_t.sizeof] = bytes;
 		if(zeroFill)
-			memset(alignedPtr, 0, bytes);
+			memset(_data.ptr, 0, bytes + alignment - 1);
 	}
 
 	/**
@@ -76,7 +75,8 @@ struct RawAutoalignedBuff(size_t alignment, size_t maxBytes)
 		const size_t d = alignedPtr - _data.ptr, prevD = *dPtr;
 		if(prevD != d)
 		{
-			rawCopy(_data.ptr + prevD, alignedPtr, bytes);
+			if(prevD != -1)
+				rawCopy(_data.ptr + prevD, alignedPtr, bytes);
 			*dPtr = d;
 		}
 		return alignedPtr[0 .. bytes];
