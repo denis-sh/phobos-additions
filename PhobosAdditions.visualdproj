@@ -288,6 +288,7 @@
     <File path="unstd\c\string.d" />
    </Folder>
    <Folder name="memory">
+    <File path="unstd\memory\misc.d" />
     <File path="unstd\memory\allocation.d" />
     <File path="unstd\memory\weakref.d" />
    </Folder>

@@ -9,6 +9,7 @@ MODULES =
 	$(MODULE unstd.lifetime)
 	$(MODULE unstd.utf)
 	$(MODULE unstd.casts)
+	$(MODULE unstd.memory.misc)
 	$(MODULE unstd.memory.allocation)
 	$(MODULE unstd.memory.weakref)
 	$(MODULE unstd.c.string)
