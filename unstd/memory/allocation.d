@@ -491,6 +491,34 @@ body
 	return res;
 }
 
+/// ditto
+auto tempAlloc(T, size_t stackCount : 0)(size_t count, bool initialize = true)
+in { assert(count); }
+body
+{
+	static struct Res
+	{
+		@disable this();
+		@disable this(this);
+
+		@property T* ptr()
+		{ return _arr.ptr; }
+
+		@property T[] arr()
+		{ return _arr; }
+
+		~this()
+		{ threadHeap.rawFree(_arr.ptr); }
+
+	private:
+		T[] _arr;
+	}
+
+	Res res = void;
+	res._arr = threadHeap.allocate!T(count, initialize);
+	return res;
+}
+
 unittest
 {
 	{
@@ -499,7 +527,7 @@ unittest
 	}
 	{
 		auto tmp = tempAlloc!(int, 0)(2);
-		assert(tmp.ptr != tmp._buff.ptr && tmp.arr == [0, 0]);
+		assert(tmp.arr == [0, 0]);
 	}
 	assert(tempAlloc!char(2).arr == [0xFF, 0xFF]);
 
