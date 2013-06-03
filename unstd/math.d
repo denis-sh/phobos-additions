@@ -148,12 +148,31 @@ body
 uint alignUp(uint alignment)(uint n) if(isPowerOf2(alignment))
 { return alignUp(alignment, n); }
 
+/**
+Aligns $(D n) up or down.
+
+Preconditions:
+$(D alignment) must be power of 2.
+*/
+bool isAligned()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
+in { assert(isPowerOf2(alignment)); }
+body
+{
+	return !(n & (alignment - 1)); // alignment - 1: 0b11, 0b111, ...
+}
+
+/// ditto
+bool isAligned(uint alignment)(uint n) if(isPowerOf2(alignment))
+{ return isAligned(alignment, n); }
+
 unittest
 {
 	static assert(!__traits(compiles, alignDown!0(1)));
 	static assert(!__traits(compiles, alignUp!  0(1)));
+	static assert(!__traits(compiles, isAligned!0(1)));
 	static assert(!__traits(compiles, { enum e = alignDown(0, 1); }));
 	static assert(!__traits(compiles, { enum e = alignUp  (0, 1); }));
+	static assert(!__traits(compiles, { enum e = isAligned(0, 1); }));
 
 	import unstd.generictuple: iotaTuple;
 	foreach(n; iotaTuple!5)
@@ -162,6 +181,8 @@ unittest
 		static assert(alignUp!1(n) == n);
 		static assert(alignDown(1, n) == n);
 		static assert(alignUp(1, n) == n);
+		static assert(isAligned!1(n));
+		static assert(isAligned(1, n));
 	}
 
 	import unstd.generictuple: expressionTuple;
@@ -172,7 +193,8 @@ unittest
 		
 		alias alignDown!alignment down;
 		alias alignUp!alignment up;
-		static assert(down(0) == 0 && up(0) == 0);
+		alias isAligned!alignment aligned;
+		static assert(down(0) == 0 && up(0) == 0 && aligned(0));
 
 		static assert(down(1) == 0);
 		static assert(down(alignment - 1) == 0);
@@ -183,10 +205,17 @@ unittest
 		static assert(up(alignment - 1) == alignment);
 		static assert(up(alignment) == alignment);
 		static assert(up(alignment + 1) == alignment * 2);
+
+		static assert(!aligned(1));
+		static assert(!aligned(alignment - 1));
+		static assert( aligned(alignment));
+		static assert(!aligned(alignment + 1));
 	}
 
 	static assert(alignDown!2(uint.max) == uint.max - 1);
 	static assert(alignDown!16(uint.max) == uint.max - 15);
 	static assert(alignUp!2(uint.max - 1) == uint.max - 1);
 	static assert(alignUp!2(uint.max) == 0);
+	static assert(!isAligned!2(uint.max));
+	static assert( isAligned!16(uint.max - 15));
 }
