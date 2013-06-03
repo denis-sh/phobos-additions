@@ -16,8 +16,10 @@ import std.traits;
 public import std.utf;
 
 
+@safe:
+
 /// Detect whether $(D c) is the first code unit in a sequence.
-bool isSequenceStart(C)(in C c)
+bool isSequenceStart(C)(in C c) pure nothrow
 if(isSomeChar!C)
 {
 	static if(is(C : char))
@@ -46,7 +48,7 @@ unittest
 Adjust $(D idx) to point at the start of a UTF sequence or
 at the end of $(D str).
 */
-size_t adjustBack(C)(in C[] str, size_t idx)
+size_t adjustBack(C)(in C[] str, size_t idx) pure nothrow
 if(isSomeChar!C)
 in { assert(idx <= str.length); }
 body
@@ -96,7 +98,7 @@ unittest
 }
 
 /// ditto
-size_t adjustForward(C)(in C[] str, size_t idx)
+size_t adjustForward(C)(in C[] str, size_t idx) pure nothrow
 in { assert(idx <= str.length); }
 body
 {
@@ -147,7 +149,7 @@ unittest
 Returns minimum/maximum possible length of string conversion
 to another Unicode Transformation Format result.
 */
-size_t minLength(To, From)(in size_t length) @safe pure nothrow
+size_t minLength(To, From)(in size_t length) pure nothrow
 if(isSomeChar!To && isSomeChar!From)
 {
 	static if (To.sizeof <= From.sizeof)
@@ -165,7 +167,7 @@ if(isSomeChar!To && isSomeChar!From)
 }
 
 /// ditto
-size_t minLength(To, From)(in From[] str) @safe pure nothrow
+size_t minLength(To, From)(in From[] str) pure nothrow
 { return minLength!(To, From)(str.length); }
 
 unittest
@@ -189,7 +191,7 @@ unittest
 
 
 /// ditto
-size_t maxLength(To, From)(in size_t length) @safe pure nothrow
+size_t maxLength(To, From)(in size_t length) pure nothrow
 if(isSomeChar!To && isSomeChar!From)
 {
 	static if (To.sizeof >= From.sizeof)
@@ -206,7 +208,7 @@ if(isSomeChar!To && isSomeChar!From)
 }
 
 /// ditto
-size_t maxLength(To, From)(in From[] str) @safe pure nothrow
+size_t maxLength(To, From)(in From[] str) pure nothrow
 { return maxLength!(To, From)(str.length); }
 
 unittest
@@ -245,7 +247,7 @@ $(D buff.length >= minLength!To(source))
 Returns:
 Slice of the provided buffer $(D buff) with the copy of $(D source).
 */
-To[] copyEncoded(To, From)(in From[] source, To[] buff)
+To[] copyEncoded(To, From)(in From[] source, To[] buff) @trusted
 if(isSomeChar!To && isSomeChar!From)
 in { assert(buff.length >= minLength!To(source)); }
 body
