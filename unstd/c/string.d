@@ -224,8 +224,7 @@ if(isSomeChar!To && isSomeChar!From)
 			cstr = cast(To*) tryAllocate(totalBytes);
 	if(!cstr)
 		onOutOfMemoryError();
-	To[] carr = cstr[0 .. maxLen];
-	copyEncoded(str, carr);
+	To[] carr = copyEncoded(str, cstr[0 .. maxLen]);
 	*(cstr + carr.length) = '\0';
 	return cstr;
 }
@@ -343,9 +342,8 @@ if(isSomeChar!To && isSomeChar!From)
 	if(!totalCount)
 		onOutOfMemoryError();
 	const needAllocate = totalCount > res._buff.length;
-	To[] arr = needAllocate ?
-		threadHeap.allocate!To(totalCount)[0 .. $ - 1] : res._buff[0 .. totalCount - 1];
-	copyEncoded(str, arr);
+	To[] arr = copyEncoded(str, needAllocate ?
+		threadHeap.allocate!To(totalCount)[0 .. $ - 1] : res._buff[0 .. totalCount - 1]);
 	*(arr.ptr + arr.length) = '\0';
 	res._ptr = needAllocate ? arr.ptr : useStack;
 	return res;

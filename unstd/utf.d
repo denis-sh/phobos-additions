@@ -234,27 +234,30 @@ unittest
 
 
 /**
-Copies text from $(D source) to $(D destinition) performing conversion
+Copies text from $(D source) to $(D buff) performing conversion
 to different unicode transformation format if needed.
 
-$(D destinition) must be large enough to hold the result.
+$(D buff) must be large enough to hold the result.
 
 Preconditions:
-$(D destinition.length >= minLength!To(source))
+$(D buff.length >= minLength!To(source))
+
+Returns:
+Slice of the provided buffer $(D buff) with the copy of $(D source).
 */
-void copyEncoded(To, From)(in From[] source, ref To[] destinition)
+To[] copyEncoded(To, From)(in From[] source, To[] buff)
 if(isSomeChar!To && isSomeChar!From)
-in { assert(destinition.length >= minLength!To(source)); }
+in { assert(buff.length >= minLength!To(source)); }
 body
 {
 	static if(is(Unqual!To == Unqual!From))
 	{
-		destinition = destinition[0 .. source.length] = source[];
+		return buff[0 .. source.length] = source[];
 	}
 	else
 	{
-		To* ptr = destinition.ptr;
-		const To* last = ptr + destinition.length;
+		To* ptr = buff.ptr;
+		const To* last = ptr + buff.length;
 		foreach(dchar dc; source)
 		{
 			version(D_NoBoundsChecks) { }
@@ -267,7 +270,7 @@ body
 				// Warning: assume `encode` uses only needed bytes.
 				ptr += encode(*(cast(To[4 / To.sizeof]*) ptr), dc);
 		}
-		destinition = destinition[0 .. ptr - destinition.ptr];
+		return buff[0 .. ptr - buff.ptr];
 	}
 }
 
@@ -276,17 +279,13 @@ unittest
 {
 	const str = "abc-ЭЮЯ";
 	wchar[100] wsbuff;
-	auto wstr = wsbuff[];
-	copyEncoded(str, wstr);
-	assert(wstr == "abc-ЭЮЯ"w);
+	assert(copyEncoded(str, wsbuff) == "abc-ЭЮЯ"w);
 }
 
 unittest
 {
 	wchar[100] wsbuff;
-	auto wstr = wsbuff[];
-	copyEncoded("abc-ЭЮЯ"w, wstr);
-	assert(wstr == "abc-ЭЮЯ"w);
+	assert(copyEncoded("abc-ЭЮЯ"w, wsbuff) == "abc-ЭЮЯ"w);
 }
 
 unittest
@@ -298,22 +297,14 @@ unittest
 
 	{
 		wchar[100] wsbuff;
-		auto wstr = wsbuff[0 .. toUTF16(str).length];
-		copyEncoded(str, wstr);
-		assert(wstr == toUTF16(str));
-
-		auto str2 = sbuff[0 .. str.length];
-		copyEncoded(wstr, str2);
-		assert(str2 == str);
+		const strW = toUTF16(str);
+		assert(copyEncoded(str, wsbuff[0 .. strW.length]) == strW);
+		assert(copyEncoded(strW, sbuff[0 .. str.length]) == str);
 	}
 	{
 		dchar[100] dsbuff;
-		auto dstr = dsbuff[0 .. walkLength(str)];
-		copyEncoded(str, dstr);
-		assert(dstr == toUTF32(str));
-
-		auto str2 = sbuff[0 .. str.length];
-		copyEncoded(dstr, str2);
-		assert(str2 == str);
+		const strD = toUTF32(str);
+		assert(copyEncoded(str, dsbuff[0 .. walkLength(str)]) == strD);
+		assert(copyEncoded(strD, sbuff[0 .. str.length]) == str);
 	}
 }
