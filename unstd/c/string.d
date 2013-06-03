@@ -188,7 +188,7 @@ if(isSomeChar!C)
 	if(!*cstr)
 		return "";
 	const arr = cstr.asArray;
-	static if(is(C == char))
+	static if(is(C : char))
 		return arr.idup;
 	else
 		return arr.toUTF8();

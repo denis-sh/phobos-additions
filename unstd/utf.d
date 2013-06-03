@@ -247,7 +247,7 @@ if(isSomeChar!To && isSomeChar!From)
 in { assert(destinition.length >= minLength!To(source)); }
 body
 {
-	static if(is(To == From))
+	static if(is(Unqual!To == Unqual!From))
 	{
 		destinition = destinition[0 .. source.length] = source[];
 	}
@@ -261,7 +261,7 @@ body
 			else if(ptr + codeLength!To(dc) > last)
 				onRangeError();
 
-			static if(is(To == dchar))
+			static if(is(Unqual!To == dchar))
 				*ptr++ = dc;
 			else
 				// Warning: assume `encode` uses only needed bytes.
