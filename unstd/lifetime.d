@@ -506,7 +506,7 @@ void constructFrom(T, Arg)(T* chunk, auto ref Arg arg)
 	}
 	else
 	{
-		static assert(0, "`" ~ T.stringof ~ " t = " ~ Args.stringof
+		static assert(0, "`" ~ T.stringof ~ " t = " ~ Arg.stringof
 			~ ";` doesn't compile.");
 	}
 }
