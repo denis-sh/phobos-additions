@@ -125,7 +125,7 @@ Aligns $(D n) up or down.
 Preconditions:
 $(D alignment) must be power of 2.
 */
-uint alignDown()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
+uint alignDown(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
 body
 {
@@ -134,10 +134,10 @@ body
 
 /// ditto
 uint alignDown(uint alignment)(uint n) if(isPowerOf2(alignment))
-{ return alignDown(alignment, n); }
+{ return .alignDown(alignment, n); }
 
 /// ditto
-uint alignUp()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
+uint alignUp(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
 body
 {
@@ -146,7 +146,7 @@ body
 
 /// ditto
 uint alignUp(uint alignment)(uint n) if(isPowerOf2(alignment))
-{ return alignUp(alignment, n); }
+{ return .alignUp(alignment, n); }
 
 /**
 Aligns $(D n) up or down.
@@ -154,7 +154,7 @@ Aligns $(D n) up or down.
 Preconditions:
 $(D alignment) must be power of 2.
 */
-bool isAligned()/*@@@BUG1528@@@ workaround*/(uint alignment, uint n)
+bool isAligned(uint alignment, uint n)
 in { assert(isPowerOf2(alignment)); }
 body
 {
@@ -163,7 +163,7 @@ body
 
 /// ditto
 bool isAligned(uint alignment)(uint n) if(isPowerOf2(alignment))
-{ return isAligned(alignment, n); }
+{ return .isAligned(alignment, n); }
 
 unittest
 {
