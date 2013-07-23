@@ -254,12 +254,6 @@ unittest
 		{
 			ubyte[2] srcArr = [1, 2], destArr;
 			f!void(srcArr.ptr, destArr.ptr, 2);
-			// `destArr` is not changed in CT because of dmd @@@BUG10243@@@
-			if(__ctfe)
-			{
-				assert(destArr == [0, 0], "CTFE bug fixed. Remove this workaround.");
-				destArr = [1, 2];
-			}
 			assert(destArr == [1, 2]);
 		}
 	}
